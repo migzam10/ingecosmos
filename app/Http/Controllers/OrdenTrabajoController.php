@@ -1,0 +1,189 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Http\Requests\CrearOTRequest;
+use App\Models\ClientePersona;
+use App\Models\EmpresaCliente;
+use App\Models\InventarioVehiculo;
+use App\Models\MarcaVehiculo;
+use App\Models\OrdenTrabajo;
+use App\Models\Vehiculo;
+use App\Services\OTService;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
+class OrdenTrabajoController extends Controller
+{
+    public function __construct(private OTService $otService) {}
+
+    public function index(Request $request)
+    {
+        $query = OrdenTrabajo::with(['vehiculo.marca', 'vehiculo.modelo', 'empresaCliente'])
+            ->whereNotIn('estado_proceso', ['ENTREGADO', 'ORDEN_ANULADA', 'NO_AUTORIZADO', 'PERDIDA_TOTAL']);
+
+        if ($request->filled('buscar')) {
+            $buscar = $request->buscar;
+            $query->whereHas('vehiculo', fn($q) => $q->where('placa', 'like', "%$buscar%"))
+                  ->orWhere('numero_ot', 'like', "%$buscar%");
+        }
+
+        if ($request->filled('estado')) {
+            $query->where('estado_proceso', $request->estado);
+        }
+
+        if ($request->filled('area')) {
+            $query->where('area', $request->area);
+        }
+
+        $ordenes = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+
+        return view('ordenes.index', compact('ordenes'));
+    }
+
+    public function create()
+    {
+        $marcas   = MarcaVehiculo::orderBy('nombre')->get();
+        $empresas = EmpresaCliente::where('activa', true)->orderBy('nombre')->get();
+
+        return view('ordenes.crear', compact('marcas', 'empresas'));
+    }
+
+    public function store(CrearOTRequest $request)
+    {
+        DB::transaction(function () use ($request) {
+            // 1. Crear o actualizar cliente persona
+            if ($request->filled('cedula_cliente')) {
+                $cliente = ClientePersona::updateOrCreate(
+                    ['cedula' => $request->cedula_cliente],
+                    [
+                        'nombre'   => $request->nombre_cliente,
+                        'telefono' => $request->telefono_cliente,
+                        'email'    => $request->email_cliente,
+                    ]
+                );
+            } else {
+                $cliente = ClientePersona::create([
+                    'nombre'   => $request->nombre_cliente,
+                    'telefono' => $request->telefono_cliente,
+                    'email'    => $request->email_cliente,
+                ]);
+            }
+
+            // 2. Crear o actualizar vehículo
+            $vehiculo = Vehiculo::updateOrCreate(
+                ['placa' => strtoupper($request->placa)],
+                [
+                    'id_marca'           => $request->id_marca,
+                    'id_modelo'          => $request->id_modelo,
+                    'color'              => $request->color,
+                    'anio'               => $request->anio,
+                    'id_cliente_persona' => $cliente->id,
+                ]
+            );
+
+            // 3. Obtener siguiente número OT
+            $numeroOT = $this->otService->siguienteNumeroOT();
+
+            // 4. Crear la OT
+            $ot = OrdenTrabajo::create([
+                'numero_ot'             => $numeroOT,
+                'area'                  => $request->area,
+                'id_vehiculo'           => $vehiculo->id,
+                'id_cliente_persona'    => $cliente->id,
+                'id_empresa_cliente'    => $request->id_empresa_cliente,
+                'km_ingreso'            => $request->km_ingreso,
+                'referencia_forc'       => $request->referencia_forc,
+                'llaves_entregadas'     => $request->boolean('llaves_entregadas'),
+                'documentos_entregados' => $request->boolean('documentos_entregados'),
+                'ingreso_grua'          => $request->boolean('ingreso_grua'),
+                'nivel_combustible'     => $request->nivel_combustible,
+                'fecha_ingreso'         => $request->fecha_ingreso,
+                'estado_proceso'        => 'PTE_COTIZACION',
+                'estado_semaforo'       => 'SIN_FECHA',
+                'observaciones'         => $request->observaciones,
+                'creado_por'            => Auth::id(),
+            ]);
+
+            // 5. Registrar inventario del vehículo
+            InventarioVehiculo::create([
+                'id_ot'                => $ot->id,
+                'parabrisas'           => $request->inv_parabrisas,
+                'vidrio_delantero_izq' => $request->inv_vidrio_delantero_izq,
+                'vidrio_delantero_der' => $request->inv_vidrio_delantero_der,
+                'vidrio_trasero_izq'   => $request->inv_vidrio_trasero_izq,
+                'vidrio_trasero_der'   => $request->inv_vidrio_trasero_der,
+                'vidrio_trasero'       => $request->inv_vidrio_trasero,
+                'espejo_izq'           => $request->inv_espejo_izq,
+                'espejo_der'           => $request->inv_espejo_der,
+                'llanta_del_izq'       => $request->inv_llanta_del_izq,
+                'llanta_del_der'       => $request->inv_llanta_del_der,
+                'llanta_tra_izq'       => $request->inv_llanta_tra_izq,
+                'llanta_tra_der'       => $request->inv_llanta_tra_der,
+                'llanta_repuesto'      => $request->inv_llanta_repuesto,
+                'antena'               => $request->inv_antena,
+                'radio'                => $request->inv_radio,
+                'encendedor'           => $request->inv_encendedor,
+                'gato'                 => $request->inv_gato,
+                'triangulo'            => $request->inv_triangulo,
+                'observaciones'        => $request->inv_observaciones,
+            ]);
+
+            // 6. Registrar en historial
+            $this->otService->cambiarEstado($ot, 'PTE_COTIZACION', 'OT creada en recepción');
+        });
+
+        return redirect()->route('ordenes.index')
+            ->with('success', 'OT creada exitosamente.');
+    }
+
+    public function show(OrdenTrabajo $orden)
+    {
+        $orden->load([
+            'vehiculo.marca', 'vehiculo.modelo', 'clientePersona',
+            'empresaCliente', 'inventario', 'fotos', 'historial.user',
+            'tecnicoLat', 'tecnicoPrep', 'tecnicoPint', 'tecnicoMec', 'tecnicoElec',
+        ]);
+
+        return view('ordenes.show', compact('orden'));
+    }
+
+    // AJAX: buscar vehículo por placa
+    public function buscarPlaca(Request $request)
+    {
+        $placa    = strtoupper(trim($request->placa));
+        $vehiculo = Vehiculo::with(['marca', 'modelo', 'clientePersona'])
+            ->where('placa', $placa)
+            ->first();
+
+        if (!$vehiculo) {
+            return response()->json(['encontrado' => false]);
+        }
+
+        return response()->json([
+            'encontrado'      => true,
+            'id_vehiculo'     => $vehiculo->id,
+            'id_marca'        => $vehiculo->id_marca,
+            'marca_nombre'    => $vehiculo->marca->nombre,
+            'id_modelo'       => $vehiculo->id_modelo,
+            'modelo_nombre'   => $vehiculo->modelo?->nombre,
+            'color'           => $vehiculo->color,
+            'anio'            => $vehiculo->anio,
+            'nombre_cliente'  => $vehiculo->clientePersona?->nombre,
+            'cedula_cliente'  => $vehiculo->clientePersona?->cedula,
+            'telefono_cliente'=> $vehiculo->clientePersona?->telefono,
+            'email_cliente'   => $vehiculo->clientePersona?->email,
+        ]);
+    }
+
+    // AJAX: obtener modelos por marca
+    public function modelosPorMarca(Request $request)
+    {
+        $modelos = \App\Models\ModeloVehiculo::where('id_marca', $request->id_marca)
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+
+        return response()->json($modelos);
+    }
+}

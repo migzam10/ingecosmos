@@ -1,0 +1,257 @@
+@extends('layouts.app')
+
+@section('title', 'OT #' . $orden->numero_ot)
+@section('page_title', 'OT #' . $orden->numero_ot)
+@section('breadcrumb', 'Órdenes de Trabajo')
+
+@section('page_actions')
+<a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm">
+    ← Volver
+</a>
+@endsection
+
+@section('content')
+<div class="row g-3">
+
+    {{-- Encabezado de estado --}}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-auto">
+                        <x-semaforo :estado="$orden->estado_semaforo" />
+                    </div>
+                    <div class="col">
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <x-estado-badge :estado="$orden->estado_proceso" />
+                            <span class="badge bg-secondary-lt">{{ $orden->area }}</span>
+                            @if($orden->tg)
+                            <x-tg-badge :tg="$orden->tg" />
+                            @endif
+                        </div>
+                        <div class="text-muted small mt-1">
+                            Ingreso: {{ $orden->fecha_ingreso->format('d/m/Y') }}
+                            @if($orden->salida_estimada)
+                            · Salida estimada: <strong>{{ $orden->salida_estimada->format('d/m/Y') }}</strong>
+                            @php
+                            $dfal = now()->diffInDays($orden->salida_estimada, false);
+                            @endphp
+                            @if($dfal > 0)
+                            <span class="text-success">({{ $dfal }} días)</span>
+                            @elseif($dfal == 0)
+                            <span class="text-warning">(hoy)</span>
+                            @else
+                            <span class="text-danger">({{ abs($dfal) }} días vencido)</span>
+                            @endif
+                            @endif
+                        </div>
+                    </div>
+                    <div class="col-auto text-end">
+                        <div class="text-muted small">Empresa</div>
+                        <div class="fw-bold">{{ $orden->empresaCliente->nombre }}</div>
+                        @if($orden->referencia_forc)
+                        <div class="text-muted small">FORC: {{ $orden->referencia_forc }}</div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Vehículo y propietario --}}
+    <div class="col-12 col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h3 class="card-title">Vehículo</h3></div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted w-40">Placa</td>
+                        <td><span class="badge bg-blue-lt fw-bold fs-5">{{ $orden->vehiculo->placa }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Marca</td>
+                        <td>{{ $orden->vehiculo->marca->nombre }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Modelo</td>
+                        <td>{{ $orden->vehiculo->modelo?->nombre ?? '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Color</td>
+                        <td>{{ $orden->vehiculo->color ?? '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Año</td>
+                        <td>{{ $orden->vehiculo->anio ?? '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">KM ingreso</td>
+                        <td>{{ number_format($orden->km_ingreso) }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-6">
+        <div class="card h-100">
+            <div class="card-header"><h3 class="card-title">Propietario</h3></div>
+            <div class="card-body">
+                @if($orden->clientePersona)
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted w-40">Nombre</td>
+                        <td>{{ $orden->clientePersona->nombre }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Cédula</td>
+                        <td>{{ $orden->clientePersona->cedula ?? '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Teléfono</td>
+                        <td>{{ $orden->clientePersona->telefono ?? '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Email</td>
+                        <td>{{ $orden->clientePersona->email ?? '—' }}</td>
+                    </tr>
+                </table>
+                @else
+                <p class="text-muted">Sin propietario registrado.</p>
+                @endif
+
+                <hr>
+                <div class="d-flex gap-3">
+                    <div>
+                        <span class="badge {{ $orden->llaves_entregadas ? 'bg-success-lt' : 'bg-secondary-lt' }}">
+                            {{ $orden->llaves_entregadas ? '✓' : '✗' }} Llaves
+                        </span>
+                    </div>
+                    <div>
+                        <span class="badge {{ $orden->documentos_entregados ? 'bg-success-lt' : 'bg-secondary-lt' }}">
+                            {{ $orden->documentos_entregados ? '✓' : '✗' }} Documentos
+                        </span>
+                    </div>
+                    <div>
+                        <span class="badge {{ $orden->ingreso_grua ? 'bg-warning-lt' : 'bg-secondary-lt' }}">
+                            {{ $orden->ingreso_grua ? '🚛 Grúa' : 'Propio' }}
+                        </span>
+                    </div>
+                </div>
+                <div class="mt-2 text-muted small">
+                    Combustible: {{ $orden->nivel_combustible }}/10
+                    <div class="progress mt-1" style="height:6px;">
+                        <div class="progress-bar bg-warning" style="width: {{ $orden->nivel_combustible * 10 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Inventario B/R/G --}}
+    @if($orden->inventario)
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Inventario del Vehículo</h3>
+                <div class="card-options small text-muted">
+                    <span class="badge bg-success-lt me-1">B</span>Bueno
+                    <span class="badge bg-warning-lt me-1 ms-1">R</span>Regular
+                    <span class="badge bg-danger-lt ms-1">M</span>Malo
+                </div>
+            </div>
+            <div class="card-body">
+                @php
+                $inv = $orden->inventario;
+                $itemsInv = [
+                    'parabrisas'           => 'Parabrisas',
+                    'vidrio_delantero_izq' => 'Vidrio Del. Izq',
+                    'vidrio_delantero_der' => 'Vidrio Del. Der',
+                    'vidrio_trasero_izq'   => 'Vidrio Tra. Izq',
+                    'vidrio_trasero_der'   => 'Vidrio Tra. Der',
+                    'vidrio_trasero'       => 'Vidrio Trasero',
+                    'espejo_izq'           => 'Espejo Izq',
+                    'espejo_der'           => 'Espejo Der',
+                    'llanta_del_izq'       => 'Llanta Del. Izq',
+                    'llanta_del_der'       => 'Llanta Del. Der',
+                    'llanta_tra_izq'       => 'Llanta Tra. Izq',
+                    'llanta_tra_der'       => 'Llanta Tra. Der',
+                    'llanta_repuesto'      => 'Llanta Repuesto',
+                    'antena'               => 'Antena',
+                    'radio'                => 'Radio',
+                    'encendedor'           => 'Encendedor',
+                    'gato'                 => 'Gato',
+                    'triangulo'            => 'Triángulo',
+                ];
+                $colorMap = ['B' => 'success', 'R' => 'warning', 'M' => 'danger'];
+                @endphp
+                <div class="row g-2">
+                    @foreach($itemsInv as $campo => $etiqueta)
+                    @php $val = $inv->$campo; @endphp
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="small text-muted">{{ $etiqueta }}</span>
+                            @if($val)
+                            <span class="badge bg-{{ $colorMap[$val] }}-lt fw-bold">{{ $val }}</span>
+                            @else
+                            <span class="text-muted small">—</span>
+                            @endif
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @if($inv->observaciones)
+                <div class="mt-3 p-2 bg-light rounded small">
+                    <strong>Obs. inventario:</strong> {{ $inv->observaciones }}
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Observaciones --}}
+    @if($orden->observaciones)
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Observaciones</h3></div>
+            <div class="card-body">{{ $orden->observaciones }}</div>
+        </div>
+    </div>
+    @endif
+
+    {{-- Historial --}}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Historial de Estados</h3></div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Estado</th>
+                                <th>Usuario</th>
+                                <th>Comentario</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($orden->historial as $h)
+                            <tr>
+                                <td class="text-muted small">{{ $h->created_at->format('d/m/Y H:i') }}</td>
+                                <td><x-estado-badge :estado="$h->estado_nuevo" /></td>
+                                <td class="small">{{ $h->user->name }}</td>
+                                <td class="small text-muted">{{ $h->comentario ?? '—' }}</td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="4" class="text-muted text-center">Sin historial.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+@endsection

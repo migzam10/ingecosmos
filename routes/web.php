@@ -1,15 +1,12 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
-// Redirigir raíz al dashboard
-Route::get('/', function () {
-    return redirect()->route('dashboard');
-});
+Route::get('/', fn() => redirect()->route('dashboard'));
 
-// Dashboard — accesible para todos los roles autenticados
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard');
@@ -20,18 +17,27 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Rutas placeholder para el sidebar (se implementan en fases posteriores)
+// Órdenes de Trabajo
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION'])->group(function () {
-    Route::get('/ordenes', fn() => redirect()->route('dashboard'))->name('ordenes.index');
+    Route::resource('ordenes', OrdenTrabajoController::class)
+        ->only(['index', 'create', 'store', 'show'])
+        ->parameters(['ordenes' => 'orden']);
 });
 
+// AJAX endpoints
+Route::middleware(['auth'])->group(function () {
+    Route::get('/api/placa', [OrdenTrabajoController::class, 'buscarPlaca'])->name('api.placa');
+    Route::get('/api/modelos', [OrdenTrabajoController::class, 'modelosPorMarca'])->name('api.modelos');
+});
+
+// Placeholders fases futuras
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
-    Route::get('/torre', fn() => redirect()->route('dashboard'))->name('torre.index');
+    Route::get('/torre',      fn() => redirect()->route('dashboard'))->name('torre.index');
     Route::get('/cotizaciones', fn() => redirect()->route('dashboard'))->name('cotizaciones.index');
-    Route::get('/catalogo', fn() => redirect()->route('dashboard'))->name('catalogo.index');
+    Route::get('/catalogo',   fn() => redirect()->route('dashboard'))->name('catalogo.index');
     Route::get('/liquidacion', fn() => redirect()->route('dashboard'))->name('liquidacion.index');
     Route::get('/produccion', fn() => redirect()->route('dashboard'))->name('produccion.index');
-    Route::get('/admin', fn() => redirect()->route('dashboard'))->name('admin.index');
+    Route::get('/admin',      fn() => redirect()->route('dashboard'))->name('admin.index');
 });
 
 Route::middleware(['auth', 'role:TECNICO'])->group(function () {
