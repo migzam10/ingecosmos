@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', 'Dashboard')
+@section('title', 'Panel de Control')
 
-@section('page_title', 'Dashboard')
+@section('page_title', 'Panel de Control')
 @section('breadcrumb', 'INGECOSMOS')
 
 @section('content')

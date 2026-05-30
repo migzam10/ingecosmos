@@ -47,8 +47,8 @@
                 </select>
             </div>
             <div class="col-6 col-md-1 d-flex gap-1">
-                <button type="submit" class="btn btn-sm btn-secondary flex-grow-1">OK</button>
-                <a href="{{ route('catalogo.index') }}" class="btn btn-sm btn-outline-secondary">✕</a>
+                <button type="submit" class="btn btn-sm btn-secondary flex-grow-1">Filtrar</button>
+                <a href="{{ route('catalogo.index') }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">✕</a>
             </div>
         </form>
     </div>
