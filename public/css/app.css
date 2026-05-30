@@ -38,6 +38,16 @@
     .btn-mobile-block { display: block; width: 100%; margin-bottom: 0.5rem; }
 }
 
+/* Torre de Control — filas coloreadas por semáforo */
+.fila-incumplido { background-color: rgba(214, 57, 57, 0.08) !important; }
+.fila-entregar   { background-color: rgba(247, 103, 7, 0.08) !important; }
+.fila-a-tiempo   { background-color: rgba(66, 153, 225, 0.05) !important; }
+
+/* D_FAL colores */
+.dfal-positivo { color: #2fb344; font-weight: 600; }
+.dfal-hoy      { color: #f76707; font-weight: 700; }
+.dfal-negativo { color: #d63939; font-weight: 700; }
+
 /* Foto de OT */
 .foto-preview {
     width: 80px;

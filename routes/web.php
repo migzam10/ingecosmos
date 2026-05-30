@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\TorreController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -32,7 +33,7 @@ Route::middleware(['auth'])->group(function () {
 
 // Placeholders fases futuras
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
-    Route::get('/torre',      fn() => redirect()->route('dashboard'))->name('torre.index');
+    Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
     Route::get('/cotizaciones', fn() => redirect()->route('dashboard'))->name('cotizaciones.index');
     Route::get('/catalogo',   fn() => redirect()->route('dashboard'))->name('catalogo.index');
     Route::get('/liquidacion', fn() => redirect()->route('dashboard'))->name('liquidacion.index');
