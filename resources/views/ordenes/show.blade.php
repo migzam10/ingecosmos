@@ -220,6 +220,111 @@
     </div>
     @endif
 
+    {{-- Panel de técnicos asignados --}}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Técnicos Asignados</h3>
+            </div>
+            <div class="card-body">
+
+                {{-- Listado de trabajos --}}
+                @if($orden->trabajosTecnico->count() > 0)
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm table-vcenter mb-0">
+                        <thead>
+                            <tr>
+                                <th>Técnico</th>
+                                <th>Especialidad</th>
+                                <th>Estado</th>
+                                <th>Inicio</th>
+                                <th>Fin</th>
+                                <th>Comentario</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($orden->trabajosTecnico as $trabajo)
+                            <tr>
+                                <td class="fw-medium">{{ $trabajo->tecnico->nombre }}</td>
+                                <td><span class="badge bg-secondary-lt">{{ $trabajo->especialidad }}</span></td>
+                                <td>
+                                    @if($trabajo->estado === 'FINALIZADO')
+                                    <span class="badge bg-success-lt">Finalizado</span>
+                                    @elseif($trabajo->estado === 'EN_PROCESO')
+                                    <span class="badge bg-warning-lt">En Proceso</span>
+                                    @else
+                                    <span class="badge bg-secondary-lt">Pendiente</span>
+                                    @endif
+                                </td>
+                                <td class="small text-muted">{{ $trabajo->inicio_en?->format('d/m H:i') ?? '—' }}</td>
+                                <td class="small text-muted">{{ $trabajo->fin_en?->format('d/m H:i') ?? '—' }}</td>
+                                <td class="small text-muted">{{ $trabajo->comentarios ?? '—' }}</td>
+                                <td>
+                                    @if($trabajo->estado === 'PENDIENTE')
+                                    @php $r = Auth::user()->roles ?: []; @endphp
+                                    @if(in_array('ADMIN',$r) || in_array('COORDINADOR',$r))
+                                    <form method="POST"
+                                          action="{{ route('ordenes.tecnicos.destroy', [$orden, $trabajo]) }}"
+                                          data-confirm="¿Quitar este técnico?">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-outline-danger">✕</button>
+                                    </form>
+                                    @endif
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <p class="text-muted small mb-3">Sin técnicos asignados aún.</p>
+                @endif
+
+                {{-- Formulario asignar técnico --}}
+                @php $roles = Auth::user()->roles ?: []; @endphp
+                @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles))
+                <form method="POST" action="{{ route('ordenes.tecnicos.store', $orden) }}"
+                      class="row g-2 align-items-end border-top pt-3">
+                    @csrf
+                    <div class="col-12 col-md-5">
+                        <label class="form-label mb-1 small">Técnico</label>
+                        <select name="id_tecnico" class="form-select form-select-sm" required>
+                            <option value="">Seleccionar técnico...</option>
+                            @foreach($tecnicos as $tec)
+                            <option value="{{ $tec->id }}">
+                                {{ $tec->nombre }}
+                                ({{ implode(', ', $tec->especialidades ?: []) }})
+                            </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label mb-1 small">Especialidad</label>
+                        <select name="especialidad" class="form-select form-select-sm" required>
+                            <option value="">Seleccionar...</option>
+                            <option value="LAT">LAT — Latonero</option>
+                            <option value="PREP">PREP — Preparador</option>
+                            <option value="PINT">PINT — Pintor</option>
+                            <option value="MEC">MEC — Mecánico</option>
+                            <option value="ELEC">ELEC — Electricista</option>
+                            <option value="AA">AA — Aire Acondicionado</option>
+                            <option value="SCANNER">SCANNER — Diagnóstico</option>
+                        </select>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            Asignar
+                        </button>
+                    </div>
+                </form>
+                @endif
+
+            </div>
+        </div>
+    </div>
+
     {{-- Historial --}}
     <div class="col-12">
         <div class="card">
