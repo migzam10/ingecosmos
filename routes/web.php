@@ -86,8 +86,6 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
         ->parameters(['catalogo' => 'catalogo'])
         ->except(['show']);
     Route::post('/catalogo/{catalogo}/restaurar', [CatalogoMoController::class, 'restaurar'])->name('catalogo.restaurar');
-    Route::get('/liquidacion', fn() => redirect()->route('dashboard'))->name('liquidacion.index');
-    Route::get('/produccion', fn() => redirect()->route('dashboard'))->name('produccion.index');
     // Admin index
     Route::get('/admin', fn() => redirect()->route('admin.usuarios.index'))->name('admin.index');
 
