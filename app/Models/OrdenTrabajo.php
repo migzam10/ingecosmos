@@ -111,4 +111,9 @@ class OrdenTrabajo extends Model
     {
         return $this->hasMany(TrabajoTecnico::class, 'id_ot');
     }
+
+    public function entregasParciales()
+    {
+        return $this->hasMany(EntregaParcial::class, 'id_ot')->orderByDesc('fecha_entrega');
+    }
 }

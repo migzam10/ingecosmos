@@ -363,6 +363,125 @@
         </div>
     </div>
 
+    {{-- Entregas Parciales --}}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Entregas Parciales</h3>
+            </div>
+            <div class="card-body">
+
+                @if($orden->entregasParciales->count())
+                <div class="table-responsive mb-3">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Fecha salida</th>
+                                <th>Descripción</th>
+                                <th>Fecha retorno</th>
+                                <th>Motivo</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($orden->entregasParciales as $ep)
+                            <tr>
+                                <td class="small">{{ $ep->fecha_entrega->format('d/m/Y') }}</td>
+                                <td class="small">{{ $ep->descripcion }}</td>
+                                <td class="small">
+                                    {{ $ep->fecha_retorno?->format('d/m/Y') ?? '' }}
+                                    @if(!$ep->fecha_retorno)
+                                    <span class="badge bg-warning-lt">Pendiente retorno</span>
+                                    @endif
+                                </td>
+                                <td class="small text-muted">{{ $ep->motivo_retorno ?? '—' }}</td>
+                                <td>
+                                    @if(!$ep->fecha_retorno)
+                                    @php $r2 = Auth::user()->roles ?: []; @endphp
+                                    @if(in_array('ADMIN',$r2) || in_array('COORDINADOR',$r2))
+                                    <button class="btn btn-sm btn-outline-success" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#retorno-{{ $ep->id }}">
+                                        Registrar retorno
+                                    </button>
+                                    @endif
+                                    @else
+                                    <span class="badge bg-success-lt">Retornó</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @if(!$ep->fecha_retorno)
+                            <tr>
+                                <td colspan="5" class="p-0">
+                                    <div class="collapse" id="retorno-{{ $ep->id }}">
+                                        <div class="p-3 bg-light">
+                                            <form method="POST"
+                                                  action="{{ route('entregas-parciales.retorno', $ep) }}"
+                                                  class="row g-2 align-items-end">
+                                                @csrf
+                                                <div class="col-12 col-md-3">
+                                                    <label class="form-label small fw-bold">Fecha de retorno</label>
+                                                    <input type="date" name="fecha_retorno"
+                                                           class="form-control form-control-sm"
+                                                           value="{{ now()->toDateString() }}"
+                                                           min="{{ $ep->fecha_entrega->format('Y-m-d') }}"
+                                                           max="{{ now()->toDateString() }}" required>
+                                                </div>
+                                                <div class="col-12 col-md-6">
+                                                    <label class="form-label small fw-bold">Motivo del retorno <span class="text-danger">*</span></label>
+                                                    <input type="text" name="motivo_retorno"
+                                                           class="form-control form-control-sm"
+                                                           placeholder="¿Por qué retornó el vehículo?"
+                                                           required maxlength="500">
+                                                </div>
+                                                <div class="col-auto">
+                                                    <button class="btn btn-success btn-sm">Confirmar retorno</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endif
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <p class="text-muted small mb-3">Sin entregas parciales registradas.</p>
+                @endif
+
+                {{-- Formulario nueva entrega parcial --}}
+                @php $r2 = Auth::user()->roles ?: []; @endphp
+                @if((in_array('ADMIN',$r2) || in_array('COORDINADOR',$r2)) && $orden->estado_proceso === 'EN_PROCESO')
+                <form method="POST" action="{{ route('entregas-parciales.store', $orden) }}"
+                      class="row g-2 align-items-end border-top pt-3">
+                    @csrf
+                    <div class="col-12 col-md-3">
+                        <label class="form-label small fw-bold">Fecha de salida</label>
+                        <input type="date" name="fecha_entrega" class="form-control form-control-sm"
+                               value="{{ now()->toDateString() }}"
+                               max="{{ now()->toDateString() }}" required>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label small fw-bold">Descripción <span class="text-danger">*</span></label>
+                        <input type="text" name="descripcion" class="form-control form-control-sm"
+                               placeholder="Ej: Cliente recoge vehículo mientras llegan repuestos..."
+                               required maxlength="500">
+                    </div>
+                    <div class="col-auto">
+                        <button class="btn btn-warning btn-sm"
+                                data-confirm="¿Registrar esta entrega parcial? El estado cambiará a Entrega Parcial.">
+                            Registrar entrega parcial
+                        </button>
+                    </div>
+                </form>
+                @endif
+
+            </div>
+        </div>
+    </div>
+
     {{-- Historial --}}
     <div class="col-12">
         <div class="card">

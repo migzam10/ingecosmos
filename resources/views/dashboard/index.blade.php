@@ -153,4 +153,85 @@
     </div>
 
 </div>
+
+{{-- Panel de alertas --}}
+@if($totalAlertas > 0)
+<div class="row g-3 mt-1">
+    <div class="col-12">
+        <div class="card border-0">
+            <div class="card-header">
+                <h3 class="card-title">
+                    Alertas activas
+                    <span class="badge bg-danger ms-2">{{ $totalAlertas }}</span>
+                </h3>
+            </div>
+            <div class="card-body p-0">
+
+                @php
+                $tiposAlerta = [
+                    'incumplida'           => 'Entrega vencida',
+                    'entregar_hoy'         => 'Entregar hoy',
+                    'sin_cotizacion'       => 'Sin cotizar',
+                    'sin_autorizacion'     => 'Sin autorización',
+                    'autorizada_sin_iniciar' => 'Autorizada sin iniciar',
+                    'repuestos_demorados'  => 'Repuestos demorados',
+                    'entrega_parcial'      => 'Entrega parcial sin retorno',
+                ];
+                $grupos = [
+                    'roja'    => ['color' => 'danger', 'icono' => '🔴'],
+                    'naranja' => ['color' => 'warning', 'icono' => '🟠'],
+                    'amarilla'=> ['color' => 'yellow',  'icono' => '🟡'],
+                ];
+                @endphp
+
+                @foreach($grupos as $nivel => $cfg)
+                @if(count($alertas[$nivel]))
+                <div class="p-3 border-bottom">
+                    <div class="fw-bold text-{{ $cfg['color'] }} mb-2">
+                        {{ $cfg['icono'] }}
+                        {{ ['roja'=>'Urgente','naranja'=>'Atención requerida','amarilla'=>'Aviso'][$nivel] }}
+                        <span class="badge bg-{{ $cfg['color'] }}-lt text-{{ $cfg['color'] }} ms-1">
+                            {{ count($alertas[$nivel]) }}
+                        </span>
+                    </div>
+                    <div class="row g-2">
+                        @foreach($alertas[$nivel] as $alerta)
+                        <div class="col-12 col-md-6 col-lg-4">
+                            <div class="d-flex align-items-start gap-2 p-2 rounded border">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex gap-2 align-items-center">
+                                        <span class="fw-bold text-primary small">
+                                            # {{ $alerta['ot']->numero_ot }}
+                                        </span>
+                                        <span class="badge bg-blue-lt small">
+                                            {{ $alerta['ot']->vehiculo->placa }}
+                                        </span>
+                                    </div>
+                                    <div class="small text-muted">
+                                        {{ $alerta['ot']->vehiculo->marca->nombre }}
+                                        · {{ $alerta['ot']->empresaCliente->nombre }}
+                                    </div>
+                                    <div class="small mt-1">
+                                        <span class="badge bg-{{ $cfg['color'] }}-lt">
+                                            {{ $tiposAlerta[$alerta['tipo']] ?? $alerta['tipo'] }}
+                                        </span>
+                                        <span class="text-muted ms-1">{{ $alerta['mensaje'] }}</span>
+                                    </div>
+                                </div>
+                                <a href="{{ route('ordenes.show', $alerta['ot']) }}"
+                                   class="btn btn-sm btn-outline-{{ $cfg['color'] }}">Ver</a>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+                @endforeach
+
+            </div>
+        </div>
+    </div>
+</div>
+@endif
+
 @endsection

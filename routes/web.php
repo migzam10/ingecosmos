@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\EmpresaClienteController;
 use App\Http\Controllers\Admin\TecnicoAdminController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\AsignarTecnicoController;
+use App\Http\Controllers\EntregaParcialController;
 use App\Http\Controllers\EstadoOTController;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\CatalogoMoController;
@@ -51,6 +52,12 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->prefix('ordenes/{orden}/e
     Route::post('/programar-entrega',  [EstadoOTController::class, 'programarEntrega'])->name('ot.programar-entrega');
     Route::post('/entregar',           [EstadoOTController::class, 'entregar'])->name('ot.entregar');
     Route::post('/especial',           [EstadoOTController::class, 'estadoEspecial'])->name('ot.especial');
+});
+
+// Entregas parciales
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
+    Route::post('/ordenes/{orden}/entrega-parcial',          [EntregaParcialController::class, 'store'])->name('entregas-parciales.store');
+    Route::post('/entregas-parciales/{entregaParcial}/retorno', [EntregaParcialController::class, 'retorno'])->name('entregas-parciales.retorno');
 });
 
 // Asignación de técnicos (Coordinador/Admin)

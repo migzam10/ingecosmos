@@ -146,6 +146,7 @@ class OrdenTrabajoController extends Controller
             'empresaCliente', 'inventario', 'fotos', 'historial.user',
             'tecnicoLat', 'tecnicoPrep', 'tecnicoPint', 'tecnicoMec', 'tecnicoElec',
             'trabajosTecnico.tecnico',
+            'entregasParciales',
         ]);
 
         $tecnicos = Tecnico::where('activo', true)->orderBy('nombre')->get();
