@@ -186,7 +186,7 @@
             <div class="card-body p-0">
                 <table class="table table-sm mb-0">
                     <thead>
-                        <tr><th>Tipo</th><th class="text-end">Monto</th><th>Fecha</th></tr>
+                        <tr><th>Tipo</th><th class="text-end">Monto</th><th>Fecha</th><th></th></tr>
                     </thead>
                     <tbody>
                         @forelse($data['avances'] as $pago)
@@ -199,9 +199,16 @@
                             </td>
                             <td class="text-end fw-bold">$ {{ number_format($pago->monto, 0, ',', '.') }}</td>
                             <td class="text-muted small">{{ $pago->created_at->format('d/m') }}</td>
+                            <td>
+                                <form method="POST" action="{{ route('pagos.eliminar', $pago) }}"
+                                      data-confirm="¿Eliminar este pago de $ {{ number_format($pago->monto, 0, ',', '.') }}?">
+                                    @csrf @method('DELETE')
+                                    <button class="btn btn-sm btn-ghost-danger py-0 px-1">✕</button>
+                                </form>
+                            </td>
                         </tr>
                         @empty
-                        <tr><td colspan="3" class="text-center text-muted py-2">Sin pagos registrados.</td></tr>
+                        <tr><td colspan="4" class="text-center text-muted py-2">Sin pagos registrados.</td></tr>
                         @endforelse
                     </tbody>
                 </table>

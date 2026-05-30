@@ -71,6 +71,18 @@ class LiquidacionController extends Controller
         return back()->with('success', 'Pago registrado correctamente.');
     }
 
+    public function eliminarPago(PagoTecnico $pago)
+    {
+        $tecnico = $pago->tecnico;
+        $mes     = $pago->mes;
+        $anio    = $pago->anio;
+
+        $pago->delete();
+
+        return redirect()->route('liquidacion.show', [$tecnico, 'mes' => $mes, 'anio' => $anio])
+            ->with('success', 'Pago eliminado correctamente.');
+    }
+
     public function pdf(Request $request, Tecnico $tecnico)
     {
         $mes  = (int) $request->get('mes',  now()->month);
