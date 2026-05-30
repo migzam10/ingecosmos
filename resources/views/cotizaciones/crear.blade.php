@@ -380,7 +380,7 @@ function agregarFilaSum(descripcion = '', costo = 0) {
                 <span class="input-group-text">$</span>
                 <input type="number" name="items_suministro[${i}][costo]"
                        class="form-control text-end inp-costo-sum"
-                       value="${costo}" min="0" step="1000"
+                       value="${costo}" min="0" step="1"
                        oninput="actualizarPrecioSum(this)">
             </div>
         </td>
@@ -389,7 +389,7 @@ function agregarFilaSum(descripcion = '', costo = 0) {
                 <span class="input-group-text">$</span>
                 <input type="number" name="items_suministro[${i}][precio]"
                        class="form-control text-end inp-precio-sum"
-                       value="${precio}" min="0" step="1000"
+                       value="${precio}" min="0" step="1"
                        oninput="recalcularTotal()">
             </div>
         </td>

@@ -3,6 +3,9 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\EmpresaClienteController;
+use App\Http\Controllers\Admin\TecnicoAdminController;
+use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\AsignarTecnicoController;
 use App\Http\Controllers\EstadoOTController;
 use App\Http\Controllers\CotizacionController;
@@ -68,7 +71,27 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::post('/catalogo/{catalogo}/restaurar', [CatalogoMoController::class, 'restaurar'])->name('catalogo.restaurar');
     Route::get('/liquidacion', fn() => redirect()->route('dashboard'))->name('liquidacion.index');
     Route::get('/produccion', fn() => redirect()->route('dashboard'))->name('produccion.index');
-    Route::get('/admin',      fn() => redirect()->route('dashboard'))->name('admin.index');
+    // Admin index
+    Route::get('/admin', fn() => redirect()->route('admin.usuarios.index'))->name('admin.index');
+
+    // Usuarios
+    Route::resource('admin/usuarios', UsuarioController::class)
+        ->names('admin.usuarios')
+        ->parameters(['usuarios' => 'usuario']);
+
+    // Técnicos
+    Route::resource('admin/tecnicos', TecnicoAdminController::class)
+        ->names('admin.tecnicos')
+        ->parameters(['tecnicos' => 'tecnico'])
+        ->except(['show']);
+
+    // Empresas cliente
+    Route::resource('admin/empresas', EmpresaClienteController::class)
+        ->names('admin.empresas')
+        ->parameters(['empresas' => 'empresa'])
+        ->except(['show']);
+    Route::post('admin/empresas/{empresa}/restaurar', [EmpresaClienteController::class, 'restaurar'])
+        ->name('admin.empresas.restaurar');
 });
 
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,TECNICO'])->group(function () {

@@ -80,8 +80,16 @@ class CotizacionService
 
             // Actualizar OT con los valores de la cotización
             $empresa = $ot->empresaCliente;
+
+            // HA = TOTAL / tarifa_hora (igual que el Excel — usa el total facturado)
+            $totalParaHA = $subtotalMo + $subtotalSum
+                         + ($data['subtotal_terceros'] ?? 0)
+                         + ($data['subtotal_op']       ?? 0);
+            if ($empresa->tipo === 'A') {
+                $totalParaHA += ($data['subtotal_rto'] ?? 0);
+            }
             $ha = $empresa->tarifa_hora > 0
-                ? round($subtotalMo / $empresa->tarifa_hora, 2)
+                ? round($totalParaHA / $empresa->tarifa_hora, 2)
                 : 0;
             $dr = $ha > 0 ? (int) ceil($ha / 8 * 1.5) : null;
             $tg = $dr ? $this->otService->calcularTG($dr) : null;

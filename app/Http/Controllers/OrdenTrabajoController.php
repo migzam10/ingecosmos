@@ -8,6 +8,7 @@ use App\Models\EmpresaCliente;
 use App\Models\InventarioVehiculo;
 use App\Models\MarcaVehiculo;
 use App\Models\OrdenTrabajo;
+use App\Models\Tecnico;
 use App\Models\Vehiculo;
 use App\Services\OTService;
 use Illuminate\Http\Request;
@@ -144,9 +145,12 @@ class OrdenTrabajoController extends Controller
             'vehiculo.marca', 'vehiculo.modelo', 'clientePersona',
             'empresaCliente', 'inventario', 'fotos', 'historial.user',
             'tecnicoLat', 'tecnicoPrep', 'tecnicoPint', 'tecnicoMec', 'tecnicoElec',
+            'trabajosTecnico.tecnico',
         ]);
 
-        return view('ordenes.show', compact('orden'));
+        $tecnicos = Tecnico::where('activo', true)->orderBy('nombre')->get();
+
+        return view('ordenes.show', compact('orden', 'tecnicos'));
     }
 
     // AJAX: buscar vehículo por placa

@@ -179,9 +179,9 @@
                     @endif
 
                     @if(in_array('ADMIN', $roles))
-                    <li class="nav-item">
-                        <a class="nav-link {{ request()->routeIs('admin.*') ? 'active' : '' }}"
-                           href="{{ route('admin.index') }}">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {{ request()->routeIs('admin.*') ? 'active' : '' }}"
+                           href="#admin-menu" data-bs-toggle="dropdown">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                      fill="none" stroke="currentColor" stroke-width="2">
@@ -192,6 +192,17 @@
                             </span>
                             <span class="nav-link-title">Administración</span>
                         </a>
+                        <div class="dropdown-menu">
+                            <a href="{{ route('admin.usuarios.index') }}" class="dropdown-item {{ request()->routeIs('admin.usuarios.*') ? 'active' : '' }}">
+                                Usuarios
+                            </a>
+                            <a href="{{ route('admin.tecnicos.index') }}" class="dropdown-item {{ request()->routeIs('admin.tecnicos.*') ? 'active' : '' }}">
+                                Técnicos
+                            </a>
+                            <a href="{{ route('admin.empresas.index') }}" class="dropdown-item {{ request()->routeIs('admin.empresas.*') ? 'active' : '' }}">
+                                Empresas / CIAs
+                            </a>
+                        </div>
                     </li>
                     @endif
 

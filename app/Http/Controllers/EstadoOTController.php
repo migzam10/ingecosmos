@@ -121,8 +121,10 @@ class EstadoOTController extends Controller
 
         abort_if($orden->estado_proceso !== 'PROGRAMADO_ENTREGA', 422, 'Estado incorrecto.');
 
-        $oportuno = Carbon::parse($request->fecha_entrega_cliente)
-            ->lte($orden->salida_estimada ?? Carbon::parse($request->fecha_entrega_cliente));
+        // OPORTUNO: se mide contra fecha_terminacion_proceso (igual que el Excel)
+        $fechaTerm = $orden->fecha_terminacion ?? Carbon::parse($request->fecha_entrega_cliente);
+        $oportuno  = Carbon::parse($fechaTerm)
+            ->lte($orden->salida_estimada ?? Carbon::parse($fechaTerm));
 
         $orden->update([
             'fecha_entrega_cliente' => $request->fecha_entrega_cliente,
