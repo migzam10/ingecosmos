@@ -11,6 +11,7 @@ use App\Http\Controllers\EstadoOTController;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\CatalogoMoController;
 use App\Http\Controllers\LiquidacionController;
+use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\MisTareasController;
 use App\Http\Controllers\TorreController;
 use Illuminate\Support\Facades\Route;
@@ -65,6 +66,12 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/liquidacion/{tecnico}',                 [LiquidacionController::class, 'show'])->name('liquidacion.show');
     Route::post('/liquidacion/{tecnico}/avance',         [LiquidacionController::class, 'registrarAvance'])->name('liquidacion.avance');
     Route::get('/liquidacion/{tecnico}/pdf',             [LiquidacionController::class, 'pdf'])->name('liquidacion.pdf');
+});
+
+// Producción y KPIs
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
+    Route::get('/produccion',          [ProduccionController::class, 'index'])->name('produccion.index');
+    Route::get('/produccion/exportar', [ProduccionController::class, 'exportar'])->name('produccion.exportar');
 });
 
 // Placeholders fases futuras
