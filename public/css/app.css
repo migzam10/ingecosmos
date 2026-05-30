@@ -1,0 +1,58 @@
+/* INGECOSMOS — Estilos propios del taller */
+
+/* Semáforo */
+.semaforo-ok         { background-color: #2fb344; color: #fff; }
+.semaforo-a-tiempo   { background-color: #4299e1; color: #fff; }
+.semaforo-entregar   { background-color: #f76707; color: #fff; }
+.semaforo-incumplido { background-color: #d63939; color: #fff; }
+.semaforo-sin-fecha  { background-color: #868e96; color: #fff; }
+
+/* Badges TG */
+.tg-leve   { background-color: #2fb344; color: #fff; }
+.tg-medio  { background-color: #f76707; color: #fff; }
+.tg-fuerte { background-color: #d63939; color: #fff; }
+
+/* Cards de KPI */
+.kpi-card .kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    line-height: 1;
+}
+.kpi-card .kpi-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--tblr-muted);
+}
+
+/* Sidebar activo */
+.navbar-vertical .nav-link.active {
+    background-color: rgba(255,255,255,0.1);
+    border-radius: 4px;
+}
+
+/* Tablas responsive — ocultar columnas secundarias en móvil */
+@media (max-width: 767px) {
+    .d-mobile-none { display: none !important; }
+    .table-responsive th, .table-responsive td { white-space: nowrap; }
+    .btn-mobile-block { display: block; width: 100%; margin-bottom: 0.5rem; }
+}
+
+/* Foto de OT */
+.foto-preview {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+/* Estado badges */
+.estado-badge {
+    font-size: 0.7rem;
+    padding: 0.25em 0.5em;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
