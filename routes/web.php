@@ -16,6 +16,7 @@ use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\MisTareasController;
 use App\Http\Controllers\FotoOtController;
+use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\TorreController;
 use Illuminate\Support\Facades\Route;
 
@@ -47,6 +48,8 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION'])->group(function 
     // Fotos de OT
     Route::post('/ordenes/{orden}/fotos', [FotoOtController::class, 'store'])->name('fotos.store');
     Route::delete('/fotos/{foto}', [FotoOtController::class, 'destroy'])->name('fotos.destroy');
+    // Inventario B/R/G
+    Route::put('/ordenes/{orden}/inventario', [InventarioController::class, 'update'])->name('inventario.update');
 });
 
 // AJAX endpoints

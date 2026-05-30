@@ -188,6 +188,21 @@
 
     {{-- Inventario B/R/G --}}
     @if($orden->inventario)
+    @php
+    $inv = $orden->inventario;
+    $itemsInv = [
+        'parabrisas'=>'Parabrisas','vidrio_delantero_izq'=>'Vidrio Del. Izq','vidrio_delantero_der'=>'Vidrio Del. Der',
+        'vidrio_trasero_izq'=>'Vidrio Tra. Izq','vidrio_trasero_der'=>'Vidrio Tra. Der','vidrio_trasero'=>'Vidrio Trasero',
+        'espejo_izq'=>'Espejo Izq','espejo_der'=>'Espejo Der',
+        'llanta_del_izq'=>'Llanta Del. Izq','llanta_del_der'=>'Llanta Del. Der',
+        'llanta_tra_izq'=>'Llanta Tra. Izq','llanta_tra_der'=>'Llanta Tra. Der','llanta_repuesto'=>'Llanta Repuesto',
+        'antena'=>'Antena','radio'=>'Radio','encendedor'=>'Encendedor','gato'=>'Gato','triangulo'=>'Triángulo',
+    ];
+    $colorMap = ['B'=>'success','R'=>'warning','M'=>'danger'];
+    $puedeEditarInv = in_array('ADMIN', Auth::user()->roles ?: [])
+                   || in_array('COORDINADOR', Auth::user()->roles ?: [])
+                   || in_array('RECEPCION', Auth::user()->roles ?: []);
+    @endphp
     <div class="col-12">
         <div class="card">
             <div class="card-header">
@@ -199,30 +214,38 @@
                 </div>
             </div>
             <div class="card-body">
-                @php
-                $inv = $orden->inventario;
-                $itemsInv = [
-                    'parabrisas'           => 'Parabrisas',
-                    'vidrio_delantero_izq' => 'Vidrio Del. Izq',
-                    'vidrio_delantero_der' => 'Vidrio Del. Der',
-                    'vidrio_trasero_izq'   => 'Vidrio Tra. Izq',
-                    'vidrio_trasero_der'   => 'Vidrio Tra. Der',
-                    'vidrio_trasero'       => 'Vidrio Trasero',
-                    'espejo_izq'           => 'Espejo Izq',
-                    'espejo_der'           => 'Espejo Der',
-                    'llanta_del_izq'       => 'Llanta Del. Izq',
-                    'llanta_del_der'       => 'Llanta Del. Der',
-                    'llanta_tra_izq'       => 'Llanta Tra. Izq',
-                    'llanta_tra_der'       => 'Llanta Tra. Der',
-                    'llanta_repuesto'      => 'Llanta Repuesto',
-                    'antena'               => 'Antena',
-                    'radio'                => 'Radio',
-                    'encendedor'           => 'Encendedor',
-                    'gato'                 => 'Gato',
-                    'triangulo'            => 'Triángulo',
-                ];
-                $colorMap = ['B' => 'success', 'R' => 'warning', 'M' => 'danger'];
-                @endphp
+                @if($puedeEditarInv)
+                <form method="POST" action="{{ route('inventario.update', $orden) }}" id="form-inventario">
+                @csrf @method('PUT')
+                <div class="row g-2">
+                    @foreach($itemsInv as $campo => $etiqueta)
+                    @php $val = $inv->$campo; @endphp
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label small mb-1">{{ $etiqueta }}</label>
+                        <div class="btn-group w-100" role="group">
+                            @foreach(['B'=>'success','R'=>'warning','M'=>'danger'] as $v => $color)
+                            <input type="radio" class="btn-check" name="inv_{{ $campo }}"
+                                   id="inv_{{ $campo }}_{{ $v }}_edit" value="{{ $v }}"
+                                   {{ $val === $v ? 'checked' : '' }}>
+                            <label class="btn btn-sm btn-outline-{{ $color }}"
+                                   for="inv_{{ $campo }}_{{ $v }}_edit">{{ $v }}</label>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="row g-2 mt-2 align-items-end">
+                    <div class="col-12 col-md-8">
+                        <label class="form-label small">Observaciones del inventario</label>
+                        <input type="text" name="inv_observaciones" class="form-control form-control-sm"
+                               value="{{ $inv->observaciones }}" placeholder="Rayones, accesorios...">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Guardar inventario</button>
+                    </div>
+                </div>
+                </form>
+                @else
                 <div class="row g-2">
                     @foreach($itemsInv as $campo => $etiqueta)
                     @php $val = $inv->$campo; @endphp
@@ -240,8 +263,9 @@
                 </div>
                 @if($inv->observaciones)
                 <div class="mt-3 p-2 bg-light rounded small">
-                    <strong>Obs. inventario:</strong> {{ $inv->observaciones }}
+                    <strong>Obs.:</strong> {{ $inv->observaciones }}
                 </div>
+                @endif
                 @endif
             </div>
         </div>
