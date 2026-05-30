@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AsignarTecnicoController;
+use App\Http\Controllers\CatalogoMoController;
 use App\Http\Controllers\MisTareasController;
 use App\Http\Controllers\TorreController;
 use Illuminate\Support\Facades\Route;
@@ -29,8 +30,9 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION'])->group(function 
 
 // AJAX endpoints
 Route::middleware(['auth'])->group(function () {
-    Route::get('/api/placa', [OrdenTrabajoController::class, 'buscarPlaca'])->name('api.placa');
-    Route::get('/api/modelos', [OrdenTrabajoController::class, 'modelosPorMarca'])->name('api.modelos');
+    Route::get('/api/placa',       [OrdenTrabajoController::class, 'buscarPlaca'])->name('api.placa');
+    Route::get('/api/modelos',     [OrdenTrabajoController::class, 'modelosPorMarca'])->name('api.modelos');
+    Route::get('/api/catalogo-mo', [CatalogoMoController::class,  'porVehiculo'])->name('api.catalogo-mo');
 });
 
 // Asignación de técnicos (Coordinador/Admin)
@@ -43,7 +45,10 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
     Route::get('/cotizaciones', fn() => redirect()->route('dashboard'))->name('cotizaciones.index');
-    Route::get('/catalogo',   fn() => redirect()->route('dashboard'))->name('catalogo.index');
+    Route::resource('catalogo', CatalogoMoController::class)
+        ->parameters(['catalogo' => 'catalogo'])
+        ->except(['show']);
+    Route::post('/catalogo/{catalogo}/restaurar', [CatalogoMoController::class, 'restaurar'])->name('catalogo.restaurar');
     Route::get('/liquidacion', fn() => redirect()->route('dashboard'))->name('liquidacion.index');
     Route::get('/produccion', fn() => redirect()->route('dashboard'))->name('produccion.index');
     Route::get('/admin',      fn() => redirect()->route('dashboard'))->name('admin.index');
