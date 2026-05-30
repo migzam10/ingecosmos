@@ -66,6 +66,19 @@
         </div>
     </div>
 
+    {{-- Panel de avance de estado (solo Coordinador/Admin) --}}
+    @php $r = Auth::user()->roles ?: []; $esCoor = in_array('ADMIN',$r) || in_array('COORDINADOR',$r); @endphp
+    @if($esCoor)
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Avanzar Estado</h3></div>
+            <div class="card-body">
+                @include('ordenes._panel-estado', ['orden' => $orden])
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Vehículo y propietario --}}
     <div class="col-12 col-md-6">
         <div class="card h-100">

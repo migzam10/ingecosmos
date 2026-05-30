@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AsignarTecnicoController;
+use App\Http\Controllers\EstadoOTController;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\CatalogoMoController;
 use App\Http\Controllers\MisTareasController;
@@ -34,6 +35,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/placa',       [OrdenTrabajoController::class, 'buscarPlaca'])->name('api.placa');
     Route::get('/api/modelos',     [OrdenTrabajoController::class, 'modelosPorMarca'])->name('api.modelos');
     Route::get('/api/catalogo-mo', [CatalogoMoController::class,  'porVehiculo'])->name('api.catalogo-mo');
+});
+
+// Transiciones de estado OT (Coordinador/Admin)
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->prefix('ordenes/{orden}/estado')->group(function () {
+    Route::post('/autorizar',          [EstadoOTController::class, 'autorizar'])->name('ot.autorizar');
+    Route::post('/orden-repuestos',    [EstadoOTController::class, 'ordenRepuestos'])->name('ot.orden-repuestos');
+    Route::post('/repuestos-llegaron', [EstadoOTController::class, 'repuestosLlegaron'])->name('ot.repuestos-llegaron');
+    Route::post('/iniciar-proceso',    [EstadoOTController::class, 'iniciarProceso'])->name('ot.iniciar-proceso');
+    Route::post('/programar-entrega',  [EstadoOTController::class, 'programarEntrega'])->name('ot.programar-entrega');
+    Route::post('/entregar',           [EstadoOTController::class, 'entregar'])->name('ot.entregar');
+    Route::post('/especial',           [EstadoOTController::class, 'estadoEspecial'])->name('ot.especial');
 });
 
 // Asignación de técnicos (Coordinador/Admin)
