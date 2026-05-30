@@ -68,7 +68,7 @@
             <div class="col-6 col-md-2">
                 <select name="area" class="form-select form-select-sm">
                     <option value="">Todas las áreas</option>
-                    <option value="LYP"      {{ request('area')=='LYP'      ? 'selected' : '' }}>LYP</option>
+                    <option value="LYP"      {{ request('area')=='LYP'      ? 'selected' : '' }}>Latonería y Pintura</option>
                     <option value="MECANICA" {{ request('area')=='MECANICA' ? 'selected' : '' }}>Mecánica</option>
                 </select>
             </div>
@@ -76,13 +76,13 @@
             <div class="col-6 col-md-2">
                 <select name="estado" class="form-select form-select-sm">
                     <option value="">Todos los estados</option>
-                    <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected':'' }}>Pte. Cotización</option>
-                    <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected':'' }}>Pte. Autorización</option>
-                    <option value="PTE_ORDEN"          {{ request('estado')=='PTE_ORDEN'          ? 'selected':'' }}>Pte. Orden</option>
-                    <option value="PTE_REPUESTOS"      {{ request('estado')=='PTE_REPUESTOS'      ? 'selected':'' }}>Pte. Repuestos</option>
-                    <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected':'' }}>Rto. Instalado</option>
-                    <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected':'' }}>En Proceso</option>
-                    <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected':'' }}>Prog. Entrega</option>
+                    <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected':'' }}>Pendiente cotización</option>
+                    <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected':'' }}>Pendiente autorización</option>
+                    <option value="PTE_ORDEN"          {{ request('estado')=='PTE_ORDEN'          ? 'selected':'' }}>Pendiente orden repuestos</option>
+                    <option value="PTE_REPUESTOS"      {{ request('estado')=='PTE_REPUESTOS'      ? 'selected':'' }}>Esperando repuestos</option>
+                    <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected':'' }}>Repuestos instalados</option>
+                    <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected':'' }}>En proceso</option>
+                    <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected':'' }}>Programado para entrega</option>
                 </select>
             </div>
 
@@ -122,17 +122,17 @@
         <table class="table table-vcenter table-hover card-table table-sm">
             <thead>
                 <tr>
-                    <th style="width:60px"># OT</th>
+                    <th style="width:60px"># Orden</th>
                     <th style="width:80px">Placa</th>
                     <th>Vehículo</th>
                     <th style="width:110px">Empresa</th>
-                    <th style="width:55px">Área</th>
+                    <th style="width:70px">Área</th>
                     <th>Estado</th>
-                    <th style="width:70px">Semáforo</th>
-                    <th style="width:75px">D_FAL</th>
-                    <th style="width:85px">Sal. Estimada</th>
-                    <th style="width:80px">Técnicos</th>
-                    <th style="width:60px">DR/TG</th>
+                    <th style="width:90px">Semáforo</th>
+                    <th style="width:85px">Días faltantes</th>
+                    <th style="width:95px">Salida estimada</th>
+                    <th style="width:110px">Técnicos</th>
+                    <th style="width:80px">Días / Daño</th>
                     <th style="width:60px"></th>
                 </tr>
             </thead>
@@ -161,7 +161,7 @@
                         @endif
                     </td>
                     <td class="small">{{ $ot->empresaCliente->nombre }}</td>
-                    <td><span class="badge bg-secondary-lt small">{{ $ot->area }}</span></td>
+                    <td><x-area-badge :area="$ot->area" /></td>
                     <td><x-estado-badge :estado="$ot->estado_proceso" /></td>
                     <td><x-semaforo :estado="$ot->estado_semaforo" /></td>
                     <td class="text-center">
@@ -182,22 +182,22 @@
                     </td>
                     <td class="small">
                         @foreach([
-                            [$ot->tecnicoLat,  'LAT'],
-                            [$ot->tecnicoPrep, 'PRE'],
-                            [$ot->tecnicoPint, 'PIN'],
-                            [$ot->tecnicoMec,  'MEC'],
+                            [$ot->tecnicoLat,  'Latonero'],
+                            [$ot->tecnicoPrep, 'Preparador'],
+                            [$ot->tecnicoPint, 'Pintor'],
+                            [$ot->tecnicoMec,  'Mecánico'],
                         ] as [$tec, $esp])
                         @if($tec)
-                        <div class="text-nowrap">
-                            <span class="badge bg-secondary-lt me-1">{{ $esp }}</span>
-                            <span class="text-muted">{{ explode(' ', $tec->nombre)[0] }}</span>
+                        <div class="text-nowrap small">
+                            <span class="text-muted">{{ $esp }}:</span>
+                            {{ explode(' ', $tec->nombre)[0] }}
                         </div>
                         @endif
                         @endforeach
                     </td>
                     <td class="small text-center">
                         @if($ot->dr)
-                        <div>DR: <strong>{{ $ot->dr }}</strong></div>
+                        <div><span class="text-muted">Días:</span> <strong>{{ $ot->dr }}</strong></div>
                         <x-tg-badge :tg="$ot->tg" />
                         @else
                         <span class="text-muted">—</span>
@@ -251,7 +251,7 @@
                 <div>
                     <span class="fw-bold text-primary me-1">#{{ $ot->numero_ot }}</span>
                     <span class="badge bg-blue-lt fw-bold">{{ $ot->vehiculo->placa }}</span>
-                    <span class="badge bg-secondary-lt ms-1">{{ $ot->area }}</span>
+                    <x-area-badge :area="$ot->area" />
                 </div>
                 <x-semaforo :estado="$ot->estado_semaforo" />
             </div>

@@ -86,18 +86,18 @@
                     <tr><td class="text-muted">Repuestos</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_rto, 0, ',', '.') }}</td></tr>
                     @endif
                     @if($cotizacion->subtotal_terceros > 0)
-                    <tr><td class="text-muted">Terceros</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_terceros, 0, ',', '.') }}</td></tr>
+                    <tr><td class="text-muted">Trabajos subcontratados</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_terceros, 0, ',', '.') }}</td></tr>
                     @endif
                     @if($cotizacion->subtotal_op > 0)
-                    <tr><td class="text-muted">Otros</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_op, 0, ',', '.') }}</td></tr>
+                    <tr><td class="text-muted">Otros gastos</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_op, 0, ',', '.') }}</td></tr>
                     @endif
                     <tr class="table-active"><td class="fw-bold">TOTAL</td><td class="text-end fw-bold fs-5">$ {{ number_format($cotizacion->total, 0, ',', '.') }}</td></tr>
                 </table>
                 <hr>
                 <div class="row text-center">
-                    <div class="col"><div class="text-muted small">HA</div><strong>{{ $cotizacion->ot->ha ?? '—' }}</strong></div>
-                    <div class="col"><div class="text-muted small">DR</div><strong>{{ $cotizacion->ot->dr ?? '—' }}</strong></div>
-                    <div class="col"><div class="text-muted small">TG</div><x-tg-badge :tg="$cotizacion->ot->tg" /></div>
+                    <div class="col"><div class="text-muted small">Horas artesano</div><strong>{{ $cotizacion->ot->ha ?? '—' }}</strong></div>
+                    <div class="col"><div class="text-muted small">Días estimados</div><strong>{{ $cotizacion->ot->dr ?? '—' }}</strong></div>
+                    <div class="col"><div class="text-muted small">Tamaño daño</div><x-tg-badge :tg="$cotizacion->ot->tg" /></div>
                 </div>
                 @if($cotizacion->observaciones)
                 <div class="mt-3 small text-muted">{{ $cotizacion->observaciones }}</div>

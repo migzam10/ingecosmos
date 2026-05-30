@@ -82,7 +82,7 @@
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title mb-0">
-                    Insumos de Pintura <small class="text-muted fw-normal">(markup 25%)</small>
+                    Insumos de Pintura <small class="text-muted fw-normal">(precio al cliente: costo + 25%)</small>
                 </h3>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-sum">
                     + Agregar insumo
@@ -119,9 +119,9 @@
                 <div class="row g-2">
                     <div class="col-12 col-md-4">
                         <label class="form-label small">
-                            Repuestos (RTO)
+                            Repuestos
                             @if($orden->empresaCliente->tipo === 'B')
-                            <span class="badge bg-warning-lt ms-1">Tipo B — cliente pone RTO</span>
+                            <span class="badge bg-warning-lt ms-1">Cliente pone sus repuestos</span>
                             @endif
                         </label>
                         <div class="input-group input-group-sm">
@@ -132,7 +132,7 @@
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-label small">Terceros (subcontrato)</label>
+                        <label class="form-label small">Trabajos subcontratados</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">$</span>
                             <input type="number" name="subtotal_terceros" id="inp-terceros"
@@ -141,7 +141,7 @@
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-label small">Otros (OP)</label>
+                        <label class="form-label small">Otros gastos</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">$</span>
                             <input type="number" name="subtotal_op" id="inp-op"
@@ -206,21 +206,21 @@
                 {{-- HA / DR / TG calculados --}}
                 <div class="row g-2 text-center mb-3">
                     <div class="col-4">
-                        <div class="text-muted small">HA</div>
+                        <div class="text-muted small">Horas artesano</div>
                         <div class="fw-bold fs-5" id="res-ha">—</div>
                     </div>
                     <div class="col-4">
-                        <div class="text-muted small">DR</div>
+                        <div class="text-muted small">Días estimados</div>
                         <div class="fw-bold fs-5" id="res-dr">—</div>
                     </div>
                     <div class="col-4">
-                        <div class="text-muted small">TG</div>
+                        <div class="text-muted small">Tamaño del daño</div>
                         <div id="res-tg">—</div>
                     </div>
                 </div>
 
                 <div class="text-center mb-3">
-                    <div class="text-muted small">Salida Estimada</div>
+                    <div class="text-muted small">Salida estimada</div>
                     <div class="fw-bold" id="res-salida">— (sin fecha inicio proceso)</div>
                 </div>
 

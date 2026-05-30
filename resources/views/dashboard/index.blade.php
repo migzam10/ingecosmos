@@ -13,7 +13,7 @@
         <div class="card kpi-card">
             <div class="card-body text-center">
                 <div class="kpi-value text-primary">{{ $kpis['total_activas'] }}</div>
-                <div class="kpi-label mt-1">OTs Activas</div>
+                <div class="kpi-label mt-1">Órdenes activas</div>
             </div>
         </div>
     </div>
@@ -47,7 +47,7 @@
         <div class="card kpi-card">
             <div class="card-body text-center">
                 <div class="kpi-value text-secondary">{{ $kpis['pte_cotizacion'] }}</div>
-                <div class="kpi-label mt-1">Pte. Cotización</div>
+                <div class="kpi-label mt-1">Sin cotizar</div>
             </div>
         </div>
     </div>
@@ -57,7 +57,7 @@
         <div class="card kpi-card">
             <div class="card-body text-center">
                 <div class="kpi-value text-secondary">{{ $kpis['pte_autorizacion'] }}</div>
-                <div class="kpi-label mt-1">Pte. Autorización</div>
+                <div class="kpi-label mt-1">Sin autorizar</div>
             </div>
         </div>
     </div>

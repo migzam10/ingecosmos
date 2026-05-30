@@ -123,7 +123,7 @@
                     <div class="col-6 col-md-3">
                         <label class="form-label">Área <span class="text-danger">*</span></label>
                         <select name="area" class="form-select @error('area') is-invalid @enderror" required>
-                            <option value="LYP"      {{ old('area','LYP')=='LYP'      ? 'selected' : '' }}>LYP</option>
+                            <option value="LYP"      {{ old('area','LYP')=='LYP'      ? 'selected' : '' }}>Latonería y Pintura</option>
                             <option value="MECANICA" {{ old('area')=='MECANICA' ? 'selected' : '' }}>Mecánica</option>
                         </select>
                         @error('area')<div class="invalid-feedback">{{ $message }}</div>@enderror
@@ -143,7 +143,7 @@
                         @error('km_ingreso')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-label">Referencia FORC <small class="text-muted">(# caso aseguradora)</small></label>
+                        <label class="form-label">Número de caso <small class="text-muted">(asignado por la aseguradora)</small></label>
                         <input type="text" name="referencia_forc" class="form-control"
                                value="{{ old('referencia_forc') }}" placeholder="Ej: SURA-2026-00123">
                     </div>

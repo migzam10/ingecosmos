@@ -29,17 +29,17 @@
             <div class="col-6 col-md-3">
                 <select name="estado" class="form-select">
                     <option value="">Todos los estados</option>
-                    <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected' : '' }}>Pte. Cotización</option>
-                    <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected' : '' }}>Pte. Autorización</option>
-                    <option value="PTE_REPUESTOS"      {{ request('estado')=='PTE_REPUESTOS'      ? 'selected' : '' }}>Pte. Repuestos</option>
-                    <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected' : '' }}>En Proceso</option>
-                    <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected' : '' }}>Prog. Entrega</option>
+                    <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected' : '' }}>Pendiente cotización</option>
+                    <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected' : '' }}>Pendiente autorización</option>
+                    <option value="PTE_REPUESTOS"      {{ request('estado')=='PTE_REPUESTOS'      ? 'selected' : '' }}>Esperando repuestos</option>
+                    <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected' : '' }}>En proceso</option>
+                    <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected' : '' }}>Programado para entrega</option>
                 </select>
             </div>
             <div class="col-6 col-md-2">
                 <select name="area" class="form-select">
                     <option value="">Todas las áreas</option>
-                    <option value="LYP"      {{ request('area')=='LYP'      ? 'selected' : '' }}>LYP</option>
+                    <option value="LYP"      {{ request('area')=='LYP'      ? 'selected' : '' }}>Latonería y Pintura</option>
                     <option value="MECANICA" {{ request('area')=='MECANICA' ? 'selected' : '' }}>Mecánica</option>
                 </select>
             </div>
@@ -83,7 +83,7 @@
                         @endif
                     </td>
                     <td>{{ $ot->empresaCliente->nombre }}</td>
-                    <td><span class="badge bg-secondary-lt">{{ $ot->area }}</span></td>
+                    <td><x-area-badge :area="$ot->area" /></td>
                     <td><x-estado-badge :estado="$ot->estado_proceso" /></td>
                     <td><x-semaforo :estado="$ot->estado_semaforo" /></td>
                     <td class="text-muted small">{{ $ot->fecha_ingreso->format('d/m/Y') }}</td>
@@ -126,7 +126,7 @@
                 {{ $ot->vehiculo->marca->nombre }} {{ $ot->vehiculo->modelo?->nombre }}
             </div>
             <div class="text-muted small mb-2">
-                {{ $ot->empresaCliente->nombre }} · {{ $ot->area }}
+                {{ $ot->empresaCliente->nombre }} · {{ $ot->area === 'LYP' ? 'Latonería y Pintura' : 'Mecánica' }}
                 · {{ $ot->fecha_ingreso->format('d/m/Y') }}
             </div>
             <div class="d-flex justify-content-between align-items-center">

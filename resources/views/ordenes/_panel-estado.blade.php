@@ -10,9 +10,21 @@ $activo = !in_array($estado, $cerrados);
     $pasos = ['PTE_COTIZACION','PTE_AUTORIZACION','PTE_ORDEN','PTE_REPUESTOS','RTO_INSTALADO','EN_PROCESO','PROGRAMADO_ENTREGA','ENTREGADO'];
     $idxActual = array_search($estado, $pasos);
     @endphp
+    @php
+    $nombresPasos = [
+        'PTE_COTIZACION'    => 'Cotización',
+        'PTE_AUTORIZACION'  => 'Autorización',
+        'PTE_ORDEN'         => 'Orden repuestos',
+        'PTE_REPUESTOS'     => 'Esperando repuestos',
+        'RTO_INSTALADO'     => 'Repuestos instalados',
+        'EN_PROCESO'        => 'En proceso',
+        'PROGRAMADO_ENTREGA'=> 'Programado entrega',
+        'ENTREGADO'         => 'Entregado',
+    ];
+    @endphp
     @foreach($pasos as $i => $paso)
     <span class="badge {{ $i < $idxActual ? 'bg-success' : ($i === $idxActual ? 'bg-primary' : 'bg-secondary-lt text-muted') }} small">
-        {{ str_replace('_',' ',$paso) }}
+        {{ $nombresPasos[$paso] ?? $paso }}
     </span>
     @if($i < count($pasos)-1)
     <span class="text-muted">›</span>

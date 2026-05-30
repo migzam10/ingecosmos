@@ -42,7 +42,11 @@
         <div class="card kpi-card text-center">
             <div class="card-body py-3">
                 <div class="kpi-value text-info">
-                    {{ implode(', ', $tecnico->especialidades ?: []) ?: '—' }}
+                    @php
+                    $nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'];
+                    $espLegibles = array_map(fn($e) => $nombresEsp[$e] ?? $e, $tecnico->especialidades ?: []);
+                    @endphp
+                    {{ implode(', ', $espLegibles) ?: '—' }}
                 </div>
                 <div class="kpi-label mt-1">Especialidades</div>
             </div>
@@ -70,9 +74,10 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                     <span class="fw-bold text-primary fs-5"># {{ $ot->numero_ot }}</span>
                     <span class="badge bg-blue-lt fw-bold">{{ $ot->vehiculo->placa }}</span>
                     <span class="badge bg-secondary-lt">{{ $ot->area }}</span>
+                    @php $nombresEsp2 = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico']; @endphp
                     <span class="badge {{ $enProceso ? 'bg-warning text-dark' : 'bg-secondary-lt' }}">
-                        {{ $trabajo->especialidad }}
-                        — {{ $enProceso ? 'EN PROCESO' : 'PENDIENTE' }}
+                        {{ $nombresEsp2[$trabajo->especialidad] ?? $trabajo->especialidad }}
+                        — {{ $enProceso ? 'En proceso' : 'Pendiente' }}
                     </span>
                 </div>
                 <div class="text-muted small mt-1">

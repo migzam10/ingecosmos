@@ -32,7 +32,7 @@
                     <div class="col">
                         <div class="d-flex flex-wrap gap-2 align-items-center">
                             <x-estado-badge :estado="$orden->estado_proceso" />
-                            <span class="badge bg-secondary-lt">{{ $orden->area }}</span>
+                            <x-area-badge :area="$orden->area" />
                             @if($orden->tg)
                             <x-tg-badge :tg="$orden->tg" />
                             @endif
@@ -40,7 +40,7 @@
                         <div class="text-muted small mt-1">
                             Ingreso: {{ $orden->fecha_ingreso->format('d/m/Y') }}
                             @if($orden->salida_estimada)
-                            · Salida estimada: <strong>{{ $orden->salida_estimada->format('d/m/Y') }}</strong>
+                            · Entrega estimada: <strong>{{ $orden->salida_estimada->format('d/m/Y') }}</strong>
                             @php
                             $dfal = now()->diffInDays($orden->salida_estimada, false);
                             @endphp
@@ -58,7 +58,7 @@
                         <div class="text-muted small">Empresa</div>
                         <div class="fw-bold">{{ $orden->empresaCliente->nombre }}</div>
                         @if($orden->referencia_forc)
-                        <div class="text-muted small">FORC: {{ $orden->referencia_forc }}</div>
+                        <div class="text-muted small">Caso aseguradora: {{ $orden->referencia_forc }}</div>
                         @endif
                     </div>
                 </div>
@@ -325,13 +325,13 @@
                         <label class="form-label mb-1 small">Especialidad</label>
                         <select name="especialidad" class="form-select form-select-sm" required>
                             <option value="">Seleccionar...</option>
-                            <option value="LAT">LAT — Latonero</option>
-                            <option value="PREP">PREP — Preparador</option>
-                            <option value="PINT">PINT — Pintor</option>
-                            <option value="MEC">MEC — Mecánico</option>
-                            <option value="ELEC">ELEC — Electricista</option>
-                            <option value="AA">AA — Aire Acondicionado</option>
-                            <option value="SCANNER">SCANNER — Diagnóstico</option>
+                            <option value="LAT">Latonero</option>
+                            <option value="PREP">Preparador</option>
+                            <option value="PINT">Pintor</option>
+                            <option value="MEC">Mecánico</option>
+                            <option value="ELEC">Electricista</option>
+                            <option value="AA">Aire Acondicionado</option>
+                            <option value="SCANNER">Diagnóstico electrónico</option>
                         </select>
                     </div>
                     <div class="col-6 col-md-2">
