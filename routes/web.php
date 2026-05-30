@@ -99,11 +99,14 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
 
 // Cotizaciones (COTIZADOR también puede gestionar cotizaciones)
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,COTIZADOR'])->group(function () {
-    Route::get('/cotizaciones',                    [CotizacionController::class, 'index'])->name('cotizaciones.index');
-    Route::get('/cotizaciones/{cotizacion}',       [CotizacionController::class, 'show'])->name('cotizaciones.show');
-    Route::get('/cotizaciones/{cotizacion}/pdf',   [CotizacionController::class, 'pdf'])->name('cotizaciones.pdf');
-    Route::get('/ordenes/{orden}/cotizar',         [CotizacionController::class, 'create'])->name('cotizaciones.create');
-    Route::post('/ordenes/{orden}/cotizar',        [CotizacionController::class, 'store'])->name('cotizaciones.store');
+    Route::get('/cotizaciones',                          [CotizacionController::class, 'index'])->name('cotizaciones.index');
+    Route::get('/cotizaciones/{cotizacion}',             [CotizacionController::class, 'show'])->name('cotizaciones.show');
+    Route::get('/cotizaciones/{cotizacion}/pdf',         [CotizacionController::class, 'pdf'])->name('cotizaciones.pdf');
+    Route::get('/cotizaciones/{cotizacion}/editar',      [CotizacionController::class, 'edit'])->name('cotizaciones.edit');
+    Route::put('/cotizaciones/{cotizacion}',             [CotizacionController::class, 'update'])->name('cotizaciones.update');
+    Route::delete('/cotizaciones/{cotizacion}',          [CotizacionController::class, 'destroy'])->name('cotizaciones.destroy');
+    Route::get('/ordenes/{orden}/cotizar',               [CotizacionController::class, 'create'])->name('cotizaciones.create');
+    Route::post('/ordenes/{orden}/cotizar',              [CotizacionController::class, 'store'])->name('cotizaciones.store');
 });
 
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {

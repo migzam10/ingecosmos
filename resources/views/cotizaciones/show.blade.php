@@ -5,10 +5,20 @@
 @section('breadcrumb', 'Cotizaciones')
 
 @section('page_actions')
-<div class="d-flex gap-2">
+<div class="d-flex gap-2 flex-wrap">
     <a href="{{ route('cotizaciones.pdf', $cotizacion) }}" class="btn btn-primary btn-sm" target="_blank">
         Descargar PDF
     </a>
+    @if($cotizacion->estado === 'BORRADOR')
+    <a href="{{ route('cotizaciones.edit', $cotizacion) }}" class="btn btn-outline-warning btn-sm">
+        Editar
+    </a>
+    <form method="POST" action="{{ route('cotizaciones.destroy', $cotizacion) }}"
+          data-confirm="¿Eliminar la cotización #{{ $cotizacion->numero_cot }}? La OT regresará a Pendiente de Cotización.">
+        @csrf @method('DELETE')
+        <button class="btn btn-outline-danger btn-sm">Eliminar</button>
+    </form>
+    @endif
     <a href="{{ route('ordenes.show', $cotizacion->ot) }}" class="btn btn-outline-secondary btn-sm">
         Ver OT #{{ $cotizacion->ot->numero_ot }}
     </a>

@@ -1,13 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Nueva Cotización — OT #' . $orden->numero_ot)
-@section('page_title', 'Cotización OT #' . $orden->numero_ot)
+@section('title', isset($cotizacion) ? 'Editar Cotización #' . $cotizacion->numero_cot : 'Nueva Cotización — OT #' . $orden->numero_ot)
+@section('page_title', isset($cotizacion) ? 'Editar Cotización #' . $cotizacion->numero_cot : 'Cotización OT #' . $orden->numero_ot)
 @section('breadcrumb', 'Cotizaciones')
 
 @section('content')
 
+@if(isset($cotizacion))
+<form method="POST" action="{{ route('cotizaciones.update', $cotizacion) }}" id="form-cot">
+@csrf @method('PUT')
+@else
 <form method="POST" action="{{ route('cotizaciones.store', $orden) }}" id="form-cot">
 @csrf
+@endif
 
 <div class="row g-3">
 

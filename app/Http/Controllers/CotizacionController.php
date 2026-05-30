@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Cotizacion;
 use App\Models\OrdenTrabajo;
 use App\Services\CotizacionService;
+use App\Services\OTService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
 class CotizacionController extends Controller
 {
-    public function __construct(private CotizacionService $service) {}
+    public function __construct(private CotizacionService $service, private OTService $otService) {}
 
     public function index(Request $request)
     {
@@ -65,6 +66,74 @@ class CotizacionController extends Controller
                            'ot.empresaCliente', 'itemsMo', 'itemsSuministro', 'creadaPor']);
 
         return view('cotizaciones.show', compact('cotizacion'));
+    }
+
+    public function edit(Cotizacion $cotizacion)
+    {
+        abort_if(
+            $cotizacion->estado !== 'BORRADOR',
+            403,
+            'Solo se puede editar una cotización en estado Borrador.'
+        );
+
+        $cotizacion->load(['ot.vehiculo.marca', 'ot.vehiculo.modelo', 'ot.empresaCliente', 'itemsMo', 'itemsSuministro']);
+
+        return view('cotizaciones.crear', ['orden' => $cotizacion->ot, 'cotizacion' => $cotizacion]);
+    }
+
+    public function update(Request $request, Cotizacion $cotizacion)
+    {
+        abort_if(
+            $cotizacion->estado !== 'BORRADOR',
+            403,
+            'Solo se puede editar una cotización en estado Borrador.'
+        );
+
+        $request->validate([
+            'items_mo'               => 'nullable|array',
+            'items_mo.*.descripcion' => 'required_with:items_mo.*.precio|string|max:200',
+            'items_mo.*.precio'      => 'required_with:items_mo.*.descripcion|numeric|min:0',
+            'items_suministro'       => 'nullable|array',
+            'subtotal_rto'           => 'nullable|numeric|min:0',
+            'subtotal_terceros'      => 'nullable|numeric|min:0',
+            'subtotal_op'            => 'nullable|numeric|min:0',
+        ]);
+
+        $cot = $this->service->actualizar($cotizacion, $request->all());
+
+        return redirect()->route('cotizaciones.pdf', $cot)
+            ->with('success', "Cotización #{$cot->numero_cot} actualizada.");
+    }
+
+    public function destroy(Cotizacion $cotizacion)
+    {
+        abort_if(
+            $cotizacion->estado !== 'BORRADOR',
+            403,
+            'Solo se puede eliminar una cotización en estado Borrador.'
+        );
+
+        $ot = $cotizacion->ot;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($cotizacion, $ot) {
+            $cotizacion->itemsMo()->delete();
+            $cotizacion->itemsSuministro()->delete();
+            $cotizacion->delete();
+
+            // Si la OT no tiene más cotizaciones, vuelve a PTE_COTIZACION
+            if (!$ot->cotizaciones()->exists()) {
+                $ot->update([
+                    'valor_mo' => 0, 'valor_rto' => 0, 'valor_insumos_pint' => 0,
+                    'valor_terceros' => 0, 'valor_op' => 0, 'total' => 0,
+                    'ha' => null, 'dr' => null, 'tg' => null, 'salida_estimada' => null,
+                    'fecha_cotizacion' => null,
+                ]);
+                $this->otService->cambiarEstado($ot, 'PTE_COTIZACION', 'Cotización eliminada — OT regresa a Pte. Cotización');
+            }
+        });
+
+        return redirect()->route('ordenes.show', $ot)
+            ->with('success', 'Cotización eliminada. La OT regresó a Pendiente de Cotización.');
     }
 
     public function pdf(Cotizacion $cotizacion)
