@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\EmpresaClienteController;
+use App\Http\Controllers\Admin\MigracionController;
 use App\Http\Controllers\Admin\TecnicoAdminController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\AsignarTecnicoController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\CatalogoMoController;
 use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\MisTareasController;
+use App\Http\Controllers\FotoOtController;
 use App\Http\Controllers\TorreController;
 use Illuminate\Support\Facades\Route;
 
@@ -29,11 +31,22 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Órdenes de Trabajo
+// Órdenes de Trabajo — ver lista y detalle (COTIZADOR también necesita entrar al show para cotizar)
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION,COTIZADOR'])->group(function () {
+    Route::resource('ordenes', OrdenTrabajoController::class)
+        ->only(['index', 'show'])
+        ->parameters(['ordenes' => 'orden']);
+});
+
+// Órdenes de Trabajo — crear (solo quien recepciona)
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION'])->group(function () {
     Route::resource('ordenes', OrdenTrabajoController::class)
-        ->only(['index', 'create', 'store', 'show'])
+        ->only(['create', 'store'])
         ->parameters(['ordenes' => 'orden']);
+
+    // Fotos de OT
+    Route::post('/ordenes/{orden}/fotos', [FotoOtController::class, 'store'])->name('fotos.store');
+    Route::delete('/fotos/{foto}', [FotoOtController::class, 'destroy'])->name('fotos.destroy');
 });
 
 // AJAX endpoints
@@ -81,14 +94,17 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/produccion/exportar', [ProduccionController::class, 'exportar'])->name('produccion.exportar');
 });
 
-// Placeholders fases futuras
-Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
-    Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
+// Cotizaciones (COTIZADOR también puede gestionar cotizaciones)
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR,COTIZADOR'])->group(function () {
     Route::get('/cotizaciones',                    [CotizacionController::class, 'index'])->name('cotizaciones.index');
     Route::get('/cotizaciones/{cotizacion}',       [CotizacionController::class, 'show'])->name('cotizaciones.show');
     Route::get('/cotizaciones/{cotizacion}/pdf',   [CotizacionController::class, 'pdf'])->name('cotizaciones.pdf');
     Route::get('/ordenes/{orden}/cotizar',         [CotizacionController::class, 'create'])->name('cotizaciones.create');
     Route::post('/ordenes/{orden}/cotizar',        [CotizacionController::class, 'store'])->name('cotizaciones.store');
+});
+
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
+    Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
     Route::resource('catalogo', CatalogoMoController::class)
         ->parameters(['catalogo' => 'catalogo'])
         ->except(['show']);
@@ -114,6 +130,10 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
         ->except(['show']);
     Route::post('admin/empresas/{empresa}/restaurar', [EmpresaClienteController::class, 'restaurar'])
         ->name('admin.empresas.restaurar');
+
+    // Migración Excel histórico
+    Route::get('/admin/migracion',        [MigracionController::class, 'index'])->name('admin.migracion.index');
+    Route::post('/admin/migracion/ejecutar', [MigracionController::class, 'ejecutar'])->name('admin.migracion.ejecutar');
 });
 
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,TECNICO'])->group(function () {

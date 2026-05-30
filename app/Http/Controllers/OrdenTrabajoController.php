@@ -21,13 +21,21 @@ class OrdenTrabajoController extends Controller
 
     public function index(Request $request)
     {
-        $query = OrdenTrabajo::with(['vehiculo.marca', 'vehiculo.modelo', 'empresaCliente'])
-            ->whereNotIn('estado_proceso', ['ENTREGADO', 'ORDEN_ANULADA', 'NO_AUTORIZADO', 'PERDIDA_TOTAL']);
+        $verHistoricas = $request->boolean('historicas');
+        $cerrados = ['ENTREGADO', 'ORDEN_ANULADA', 'NO_AUTORIZADO', 'PERDIDA_TOTAL'];
+
+        $query = OrdenTrabajo::with(['vehiculo.marca', 'vehiculo.modelo', 'empresaCliente']);
+
+        if (!$verHistoricas) {
+            $query->whereNotIn('estado_proceso', $cerrados);
+        }
 
         if ($request->filled('buscar')) {
             $buscar = $request->buscar;
-            $query->whereHas('vehiculo', fn($q) => $q->where('placa', 'like', "%$buscar%"))
+            $query->where(function ($q) use ($buscar) {
+                $q->whereHas('vehiculo', fn($vq) => $vq->where('placa', 'like', "%$buscar%"))
                   ->orWhere('numero_ot', 'like', "%$buscar%");
+            });
         }
 
         if ($request->filled('estado')) {
@@ -38,9 +46,12 @@ class OrdenTrabajoController extends Controller
             $query->where('area', $request->area);
         }
 
-        $ordenes = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $ordenes = $query->orderBy('fecha_ingreso', 'desc')->paginate(25)->withQueryString();
 
-        return view('ordenes.index', compact('ordenes'));
+        $totalActivas    = OrdenTrabajo::whereNotIn('estado_proceso', $cerrados)->count();
+        $totalHistoricas = OrdenTrabajo::whereIn('estado_proceso', $cerrados)->count();
+
+        return view('ordenes.index', compact('ordenes', 'verHistoricas', 'totalActivas', 'totalHistoricas'));
     }
 
     public function create()
@@ -143,7 +154,7 @@ class OrdenTrabajoController extends Controller
     {
         $orden->load([
             'vehiculo.marca', 'vehiculo.modelo', 'clientePersona',
-            'empresaCliente', 'inventario', 'fotos', 'historial.user',
+            'empresaCliente', 'inventario', 'fotos.subidaPor', 'historial.user',
             'tecnicoLat', 'tecnicoPrep', 'tecnicoPint', 'tecnicoMec', 'tecnicoElec',
             'trabajosTecnico.tecnico',
             'entregasParciales',

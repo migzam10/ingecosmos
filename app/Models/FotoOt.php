@@ -13,4 +13,9 @@ class FotoOt extends Model
     {
         return $this->belongsTo(OrdenTrabajo::class, 'id_ot');
     }
+
+    public function subidaPor()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'subida_por');
+    }
 }

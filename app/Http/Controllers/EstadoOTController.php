@@ -149,6 +149,13 @@ class EstadoOTController extends Controller
             'VFT', 'GARANTIA', 'ARREGLO_DIRECTO', 'EN_OTRO_TALLER', 'PTE_RETIRO',
         ];
 
+        $cerrados = ['ENTREGADO', 'ORDEN_ANULADA', 'NO_AUTORIZADO', 'PERDIDA_TOTAL'];
+        abort_if(
+            in_array($orden->estado_proceso, $cerrados),
+            422,
+            'No se puede cambiar el estado de una OT ya cerrada.'
+        );
+
         $request->validate([
             'nuevo_estado' => 'required|in:' . implode(',', $especiales),
             'comentario'   => 'required|string|max:500',

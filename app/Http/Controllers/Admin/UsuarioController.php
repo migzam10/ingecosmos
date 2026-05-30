@@ -28,11 +28,17 @@ class UsuarioController extends Controller
     {
         $data = $this->validar($request, null);
 
+        // COORDINADOR no puede asignar el rol ADMIN
+        $roles = $data['roles'] ?? [];
+        if (!auth()->user()->hasRole('ADMIN')) {
+            $roles = array_values(array_filter($roles, fn($r) => $r !== 'ADMIN'));
+        }
+
         User::create([
             'name'     => $data['name'],
             'email'    => $data['email'],
             'password' => Hash::make($data['password']),
-            'roles'    => $data['roles'] ?? [],
+            'roles'    => $roles,
             'activo'   => true,
         ]);
 
@@ -50,10 +56,19 @@ class UsuarioController extends Controller
     {
         $data = $this->validar($request, $usuario);
 
+        // COORDINADOR no puede asignar ni quitar el rol ADMIN
+        $roles = $data['roles'] ?? [];
+        if (!auth()->user()->hasRole('ADMIN')) {
+            // Preservar el rol ADMIN si ya lo tenía, no permitir agregarlo
+            $yaEraAdmin = in_array('ADMIN', $usuario->roles ?? []);
+            $roles = array_values(array_filter($roles, fn($r) => $r !== 'ADMIN'));
+            if ($yaEraAdmin) $roles[] = 'ADMIN';
+        }
+
         $update = [
             'name'   => $data['name'],
             'email'  => $data['email'],
-            'roles'  => $data['roles'] ?? [],
+            'roles'  => $roles,
             'activo' => $request->boolean('activo', true),
         ];
 

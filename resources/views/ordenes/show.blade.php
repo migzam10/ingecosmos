@@ -231,6 +231,88 @@
     </div>
     @endif
 
+    {{-- Fotos del vehículo --}}
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Fotos del Vehículo</h3>
+                <span class="card-subtitle ms-2 text-muted">{{ $orden->fotos->count() }} foto(s)</span>
+            </div>
+            <div class="card-body">
+
+                {{-- Galería --}}
+                @if($orden->fotos->count())
+                <div class="row g-2 mb-3">
+                    @foreach($orden->fotos as $foto)
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <div class="card card-sm">
+                            <a href="{{ asset('storage/' . $foto->ruta) }}" target="_blank"
+                               title="{{ $foto->descripcion ?? 'Ver foto' }}">
+                                <img src="{{ asset('storage/' . $foto->ruta) }}"
+                                     class="card-img-top"
+                                     style="height:120px; object-fit:cover;"
+                                     loading="lazy"
+                                     alt="{{ $foto->descripcion ?? 'Foto OT' }}">
+                            </a>
+                            <div class="card-footer p-1">
+                                @if($foto->descripcion)
+                                <div class="small text-muted text-truncate" title="{{ $foto->descripcion }}">
+                                    {{ $foto->descripcion }}
+                                </div>
+                                @endif
+                                <div class="d-flex justify-content-between align-items-center mt-1">
+                                    <span class="text-muted" style="font-size:0.7rem;">
+                                        {{ $foto->subidaPor?->name ?? '—' }}<br>
+                                        {{ $foto->created_at->format('d/m H:i') }}
+                                    </span>
+                                    @php $rFoto = Auth::user()->roles ?? []; @endphp
+                                    @if(in_array('ADMIN',$rFoto) || in_array('COORDINADOR',$rFoto) || $foto->subida_por === Auth::id())
+                                    <form method="POST" action="{{ route('fotos.destroy', $foto) }}"
+                                          data-confirm="¿Eliminar esta foto? No se puede recuperar.">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-sm btn-ghost-danger py-0 px-1">✕</button>
+                                    </form>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                @else
+                <p class="text-muted small mb-3">Sin fotos registradas.</p>
+                @endif
+
+                {{-- Formulario subir fotos --}}
+                @php $rFoto = Auth::user()->roles ?? []; @endphp
+                @if(in_array('ADMIN',$rFoto) || in_array('COORDINADOR',$rFoto) || in_array('RECEPCION',$rFoto))
+                <form method="POST" action="{{ route('fotos.store', $orden) }}"
+                      enctype="multipart/form-data"
+                      class="row g-2 align-items-end border-top pt-3">
+                    @csrf
+                    <div class="col-12 col-md-5">
+                        <label class="form-label small fw-bold">
+                            Seleccionar fotos
+                            <span class="text-muted fw-normal">(JPG/PNG, máx. 10 fotos de 5MB c/u)</span>
+                        </label>
+                        <input type="file" name="fotos[]" class="form-control form-control-sm"
+                               accept="image/*" multiple required>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label small fw-bold">Descripción <span class="text-muted fw-normal">(opcional)</span></label>
+                        <input type="text" name="descripcion" class="form-control form-control-sm"
+                               placeholder="Ej: Daño lateral derecho" maxlength="150">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary btn-sm">Subir fotos</button>
+                    </div>
+                </form>
+                @endif
+
+            </div>
+        </div>
+    </div>
+
     {{-- Observaciones --}}
     @if($orden->observaciones)
     <div class="col-12">

@@ -53,6 +53,7 @@ class AsignarTecnicoController extends Controller
 
     public function destroy(OrdenTrabajo $orden, TrabajoTecnico $trabajo)
     {
+        abort_if($trabajo->id_ot !== $orden->id, 403, 'Este trabajo no pertenece a la orden indicada.');
         abort_if($trabajo->estado !== 'PENDIENTE', 403, 'No se puede quitar un técnico que ya inició el trabajo.');
 
         $trabajo->delete();

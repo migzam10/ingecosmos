@@ -2,7 +2,7 @@
 
 @section('title', 'Órdenes de Trabajo')
 @section('page_title', 'Órdenes de Trabajo')
-@section('breadcrumb', 'Recepción')
+@section('breadcrumb', $verHistoricas ? 'Historial completo' : 'Activas')
 
 @section('page_actions')
 <a href="{{ route('ordenes.create') }}" class="btn btn-primary">
@@ -17,10 +17,27 @@
 
 @section('content')
 
+{{-- Toggle activas / históricas --}}
+<div class="d-flex gap-2 mb-3">
+    <a href="{{ route('ordenes.index', request()->except('historicas', 'page')) }}"
+       class="btn {{ !$verHistoricas ? 'btn-primary' : 'btn-outline-secondary' }}">
+        Activas
+        <span class="badge bg-white text-dark ms-1">{{ $totalActivas }}</span>
+    </a>
+    <a href="{{ route('ordenes.index', array_merge(request()->except('page'), ['historicas' => 1])) }}"
+       class="btn {{ $verHistoricas ? 'btn-secondary' : 'btn-outline-secondary' }}">
+        Historial completo
+        <span class="badge bg-white text-dark ms-1">{{ $totalActivas + $totalHistoricas }}</span>
+    </a>
+</div>
+
 {{-- Filtros --}}
 <div class="card mb-3">
     <div class="card-body py-2">
         <form method="GET" action="{{ route('ordenes.index') }}" class="row g-2 align-items-end">
+            @if($verHistoricas)
+            <input type="hidden" name="historicas" value="1">
+            @endif
             <div class="col-12 col-md-4">
                 <input type="text" name="buscar" class="form-control"
                        placeholder="Buscar por placa o # OT..."
@@ -29,11 +46,25 @@
             <div class="col-6 col-md-3">
                 <select name="estado" class="form-select">
                     <option value="">Todos los estados</option>
-                    <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected' : '' }}>Pendiente cotización</option>
-                    <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected' : '' }}>Pendiente autorización</option>
+                    @if(!$verHistoricas)
+                    <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected' : '' }}>Pte. cotización</option>
+                    <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected' : '' }}>Pte. autorización</option>
+                    <option value="PTE_ORDEN"          {{ request('estado')=='PTE_ORDEN'          ? 'selected' : '' }}>Pte. orden RTO</option>
                     <option value="PTE_REPUESTOS"      {{ request('estado')=='PTE_REPUESTOS'      ? 'selected' : '' }}>Esperando repuestos</option>
+                    <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected' : '' }}>RTO instalado</option>
                     <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected' : '' }}>En proceso</option>
-                    <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected' : '' }}>Programado para entrega</option>
+                    <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected' : '' }}>Programado entrega</option>
+                    <option value="GARANTIA"           {{ request('estado')=='GARANTIA'           ? 'selected' : '' }}>Garantía</option>
+                    <option value="ENTREGA_PARCIAL"    {{ request('estado')=='ENTREGA_PARCIAL'    ? 'selected' : '' }}>Entrega parcial</option>
+                    @else
+                    <option value="ENTREGADO"          {{ request('estado')=='ENTREGADO'          ? 'selected' : '' }}>Entregado</option>
+                    <option value="NO_AUTORIZADO"      {{ request('estado')=='NO_AUTORIZADO'      ? 'selected' : '' }}>No autorizado</option>
+                    <option value="ORDEN_ANULADA"      {{ request('estado')=='ORDEN_ANULADA'      ? 'selected' : '' }}>Orden anulada</option>
+                    <option value="PERDIDA_TOTAL"      {{ request('estado')=='PERDIDA_TOTAL'      ? 'selected' : '' }}>Pérdida total</option>
+                    <option value="GARANTIA"           {{ request('estado')=='GARANTIA'           ? 'selected' : '' }}>Garantía</option>
+                    <option value="ARREGLO_DIRECTO"    {{ request('estado')=='ARREGLO_DIRECTO'    ? 'selected' : '' }}>Arreglo directo</option>
+                    <option value="VFT"                {{ request('estado')=='VFT'                ? 'selected' : '' }}>Vehículo fuera taller</option>
+                    @endif
                 </select>
             </div>
             <div class="col-6 col-md-2">
@@ -45,7 +76,8 @@
             </div>
             <div class="col-12 col-md-3 d-flex gap-2">
                 <button type="submit" class="btn btn-secondary flex-grow-1">Filtrar</button>
-                <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary">Limpiar</a>
+                <a href="{{ route('ordenes.index', $verHistoricas ? ['historicas'=>1] : []) }}"
+                   class="btn btn-outline-secondary">Limpiar</a>
             </div>
         </form>
     </div>
