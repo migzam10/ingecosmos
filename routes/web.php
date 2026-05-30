@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\AsignarTecnicoController;
+use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\CatalogoMoController;
 use App\Http\Controllers\MisTareasController;
 use App\Http\Controllers\TorreController;
@@ -44,7 +45,11 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
 // Placeholders fases futuras
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
-    Route::get('/cotizaciones', fn() => redirect()->route('dashboard'))->name('cotizaciones.index');
+    Route::get('/cotizaciones',                    [CotizacionController::class, 'index'])->name('cotizaciones.index');
+    Route::get('/cotizaciones/{cotizacion}',       [CotizacionController::class, 'show'])->name('cotizaciones.show');
+    Route::get('/cotizaciones/{cotizacion}/pdf',   [CotizacionController::class, 'pdf'])->name('cotizaciones.pdf');
+    Route::get('/ordenes/{orden}/cotizar',         [CotizacionController::class, 'create'])->name('cotizaciones.create');
+    Route::post('/ordenes/{orden}/cotizar',        [CotizacionController::class, 'store'])->name('cotizaciones.store');
     Route::resource('catalogo', CatalogoMoController::class)
         ->parameters(['catalogo' => 'catalogo'])
         ->except(['show']);

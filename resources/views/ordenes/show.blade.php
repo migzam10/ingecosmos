@@ -5,9 +5,17 @@
 @section('breadcrumb', 'Órdenes de Trabajo')
 
 @section('page_actions')
-<a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm">
-    ← Volver
-</a>
+<div class="d-flex gap-2">
+    @if(in_array($orden->estado_proceso, ['PTE_COTIZACION','PTE_AUTORIZACION']))
+    @php $r = Auth::user()->roles ?: []; @endphp
+    @if(in_array('ADMIN',$r) || in_array('COTIZADOR',$r) || in_array('COORDINADOR',$r))
+    <a href="{{ route('cotizaciones.create', $orden) }}" class="btn btn-primary btn-sm">
+        + Nueva Cotización
+    </a>
+    @endif
+    @endif
+    <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+</div>
 @endsection
 
 @section('content')
