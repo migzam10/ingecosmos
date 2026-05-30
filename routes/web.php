@@ -10,6 +10,7 @@ use App\Http\Controllers\AsignarTecnicoController;
 use App\Http\Controllers\EstadoOTController;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\CatalogoMoController;
+use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\MisTareasController;
 use App\Http\Controllers\TorreController;
 use Illuminate\Support\Facades\Route;
@@ -53,8 +54,17 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->prefix('ordenes/{orden}/e
 
 // Asignación de técnicos (Coordinador/Admin)
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
-    Route::post('/ordenes/{orden}/tecnicos',           [AsignarTecnicoController::class, 'store'])->name('ordenes.tecnicos.store');
+    Route::post('/ordenes/{orden}/tecnicos',            [AsignarTecnicoController::class, 'store'])->name('ordenes.tecnicos.store');
     Route::delete('/ordenes/{orden}/tecnicos/{trabajo}',[AsignarTecnicoController::class, 'destroy'])->name('ordenes.tecnicos.destroy');
+    Route::post('/trabajos/{trabajo}/valor',            [LiquidacionController::class, 'guardarValorOT'])->name('trabajos.valor');
+});
+
+// Liquidación de técnicos
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
+    Route::get('/liquidacion',                           [LiquidacionController::class, 'index'])->name('liquidacion.index');
+    Route::get('/liquidacion/{tecnico}',                 [LiquidacionController::class, 'show'])->name('liquidacion.show');
+    Route::post('/liquidacion/{tecnico}/avance',         [LiquidacionController::class, 'registrarAvance'])->name('liquidacion.avance');
+    Route::get('/liquidacion/{tecnico}/pdf',             [LiquidacionController::class, 'pdf'])->name('liquidacion.pdf');
 });
 
 // Placeholders fases futuras

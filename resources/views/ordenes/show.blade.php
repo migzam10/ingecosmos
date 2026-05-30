@@ -256,31 +256,48 @@
                         <thead>
                             <tr>
                                 <th>Técnico</th>
-                                <th>Especialidad</th>
+                                <th>Función</th>
                                 <th>Estado</th>
                                 <th>Inicio</th>
                                 <th>Fin</th>
-                                <th>Comentario</th>
+                                <th class="text-end">Valor liquidar</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach($orden->trabajosTecnico as $trabajo)
                             <tr>
+                                @php
+                                $nombresEspShow = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'];
+                                @endphp
                                 <td class="fw-medium">{{ $trabajo->tecnico->nombre }}</td>
-                                <td><span class="badge bg-secondary-lt">{{ $trabajo->especialidad }}</span></td>
+                                <td class="small">{{ $nombresEspShow[$trabajo->especialidad] ?? $trabajo->especialidad }}</td>
                                 <td>
                                     @if($trabajo->estado === 'FINALIZADO')
                                     <span class="badge bg-success-lt">Finalizado</span>
                                     @elseif($trabajo->estado === 'EN_PROCESO')
-                                    <span class="badge bg-warning-lt">En Proceso</span>
+                                    <span class="badge bg-warning-lt">En proceso</span>
                                     @else
                                     <span class="badge bg-secondary-lt">Pendiente</span>
                                     @endif
                                 </td>
                                 <td class="small text-muted">{{ $trabajo->inicio_en?->format('d/m H:i') ?? '—' }}</td>
                                 <td class="small text-muted">{{ $trabajo->fin_en?->format('d/m H:i') ?? '—' }}</td>
-                                <td class="small text-muted">{{ $trabajo->comentarios ?? '—' }}</td>
+                                <td class="text-end small">
+                                    @if(in_array('ADMIN', Auth::user()->roles ?: []) || in_array('COORDINADOR', Auth::user()->roles ?: []))
+                                    <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}" class="d-flex gap-1 justify-content-end">
+                                        @csrf
+                                        <div class="input-group input-group-sm" style="max-width:130px">
+                                            <span class="input-group-text">$</span>
+                                            <input type="number" name="valor_liquidar" class="form-control text-end"
+                                                   value="{{ $trabajo->valor_liquidar }}" min="0" step="1000">
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-secondary">✓</button>
+                                    </form>
+                                    @else
+                                    $ {{ number_format($trabajo->valor_liquidar, 0, ',', '.') }}
+                                    @endif
+                                </td>
                                 <td>
                                     @if($trabajo->estado === 'PENDIENTE')
                                     @php $r = Auth::user()->roles ?: []; @endphp
