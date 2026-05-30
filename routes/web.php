@@ -31,17 +31,17 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Órdenes de Trabajo — ver lista y detalle (COTIZADOR también necesita entrar al show para cotizar)
+// Órdenes de Trabajo — ver lista y detalle
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION,COTIZADOR'])->group(function () {
     Route::resource('ordenes', OrdenTrabajoController::class)
         ->only(['index', 'show'])
         ->parameters(['ordenes' => 'orden']);
 });
 
-// Órdenes de Trabajo — crear (solo quien recepciona)
+// Órdenes de Trabajo — crear, editar, eliminar
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION'])->group(function () {
     Route::resource('ordenes', OrdenTrabajoController::class)
-        ->only(['create', 'store'])
+        ->only(['create', 'store', 'edit', 'update', 'destroy'])
         ->parameters(['ordenes' => 'orden']);
 
     // Fotos de OT

@@ -5,15 +5,32 @@
 @section('breadcrumb', 'Órdenes de Trabajo')
 
 @section('page_actions')
-<div class="d-flex gap-2">
+@php $rAcc = Auth::user()->roles ?: []; $esGestor = in_array('ADMIN',$rAcc) || in_array('COORDINADOR',$rAcc) || in_array('RECEPCION',$rAcc); @endphp
+<div class="d-flex gap-2 flex-wrap">
+
+    @if($orden->estado_proceso === 'PTE_COTIZACION' && $esGestor)
+    {{-- Editar OT --}}
+    <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning btn-sm">
+        Editar OT
+    </a>
+    {{-- Eliminar OT (solo si no tiene cotizaciones ni trabajos) --}}
+    @if(!$orden->cotizaciones()->exists() && !$orden->trabajosTecnico()->exists())
+    <form method="POST" action="{{ route('ordenes.destroy', $orden) }}"
+          data-confirm="¿Eliminar la OT #{{ $orden->numero_ot }}? Esta acción no se puede deshacer.">
+        @csrf @method('DELETE')
+        <button class="btn btn-outline-danger btn-sm">Eliminar OT</button>
+    </form>
+    @endif
+    @endif
+
     @if(in_array($orden->estado_proceso, ['PTE_COTIZACION','PTE_AUTORIZACION']))
-    @php $r = Auth::user()->roles ?: []; @endphp
-    @if(in_array('ADMIN',$r) || in_array('COTIZADOR',$r) || in_array('COORDINADOR',$r))
+    @if(in_array('ADMIN',$rAcc) || in_array('COTIZADOR',$rAcc) || in_array('COORDINADOR',$rAcc))
     <a href="{{ route('cotizaciones.create', $orden) }}" class="btn btn-primary btn-sm">
         + Nueva Cotización
     </a>
     @endif
     @endif
+
     <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
 </div>
 @endsection

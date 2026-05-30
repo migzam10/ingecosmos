@@ -14,6 +14,7 @@ use App\Services\OTService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class OrdenTrabajoController extends Controller
 {
@@ -148,6 +149,122 @@ class OrdenTrabajoController extends Controller
 
         return redirect()->route('ordenes.index')
             ->with('success', 'OT creada exitosamente.');
+    }
+
+    public function edit(OrdenTrabajo $orden)
+    {
+        abort_if(
+            $orden->estado_proceso !== 'PTE_COTIZACION',
+            403,
+            'Solo se puede editar una OT en estado Pendiente de Cotización.'
+        );
+
+        $marcas   = MarcaVehiculo::orderBy('nombre')->get();
+        $empresas = EmpresaCliente::where('activa', true)->orderBy('nombre')->get();
+        $modelos  = \App\Models\ModeloVehiculo::where('id_marca', $orden->vehiculo->id_marca)
+            ->orderBy('nombre')->get();
+
+        return view('ordenes.editar', compact('orden', 'marcas', 'empresas', 'modelos'));
+    }
+
+    public function update(Request $request, OrdenTrabajo $orden)
+    {
+        abort_if(
+            $orden->estado_proceso !== 'PTE_COTIZACION',
+            403,
+            'Solo se puede editar una OT en estado Pendiente de Cotización.'
+        );
+
+        $data = $request->validate([
+            'id_marca'               => 'required|exists:marcas_vehiculo,id',
+            'id_modelo'              => 'nullable|exists:modelos_vehiculo,id',
+            'color'                  => 'nullable|string|max:50',
+            'anio'                   => 'nullable|integer|min:1980|max:' . (date('Y') + 1),
+            'nombre_cliente'         => 'required|string|max:150',
+            'cedula_cliente'         => 'nullable|string|max:20',
+            'telefono_cliente'       => 'nullable|string|max:20',
+            'email_cliente'          => 'nullable|email|max:100',
+            'id_empresa_cliente'     => 'required|exists:empresas_cliente,id',
+            'area'                   => 'required|in:LYP,MECANICA',
+            'km_ingreso'             => 'required|integer|min:0',
+            'referencia_forc'        => 'nullable|string|max:50',
+            'llaves_entregadas'      => 'boolean',
+            'documentos_entregados'  => 'boolean',
+            'ingreso_grua'           => 'boolean',
+            'nivel_combustible'      => 'required|integer|min:0|max:10',
+            'fecha_ingreso'          => 'required|date',
+            'observaciones'          => 'nullable|string|max:1000',
+        ]);
+
+        DB::transaction(function () use ($data, $request, $orden) {
+            // Actualizar vehículo (no la placa)
+            $orden->vehiculo->update([
+                'id_marca'  => $data['id_marca'],
+                'id_modelo' => $data['id_modelo'],
+                'color'     => $data['color'],
+                'anio'      => $data['anio'],
+            ]);
+
+            // Actualizar cliente
+            if ($orden->clientePersona) {
+                $orden->clientePersona->update([
+                    'nombre'   => $data['nombre_cliente'],
+                    'cedula'   => $data['cedula_cliente'],
+                    'telefono' => $data['telefono_cliente'],
+                    'email'    => $data['email_cliente'],
+                ]);
+            }
+
+            // Actualizar OT
+            $orden->update([
+                'id_empresa_cliente'    => $data['id_empresa_cliente'],
+                'area'                  => $data['area'],
+                'km_ingreso'            => $data['km_ingreso'],
+                'referencia_forc'       => $data['referencia_forc'],
+                'llaves_entregadas'     => $request->boolean('llaves_entregadas'),
+                'documentos_entregados' => $request->boolean('documentos_entregados'),
+                'ingreso_grua'          => $request->boolean('ingreso_grua'),
+                'nivel_combustible'     => $data['nivel_combustible'],
+                'fecha_ingreso'         => $data['fecha_ingreso'],
+                'observaciones'         => $data['observaciones'],
+                'actualizado_por'       => Auth::id(),
+            ]);
+        });
+
+        return redirect()->route('ordenes.show', $orden)
+            ->with('success', 'OT actualizada correctamente.');
+    }
+
+    public function destroy(OrdenTrabajo $orden)
+    {
+        abort_if(
+            $orden->estado_proceso !== 'PTE_COTIZACION',
+            403,
+            'Solo se puede eliminar una OT en estado Pendiente de Cotización.'
+        );
+        abort_if(
+            $orden->cotizaciones()->exists(),
+            403,
+            'No se puede eliminar: la OT ya tiene cotizaciones. Use el estado Orden Anulada.'
+        );
+        abort_if(
+            $orden->trabajosTecnico()->exists(),
+            403,
+            'No se puede eliminar: la OT tiene técnicos asignados.'
+        );
+
+        DB::transaction(function () use ($orden) {
+            $orden->inventario?->delete();
+            $orden->fotos->each(function ($foto) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($foto->ruta);
+                $foto->delete();
+            });
+            $orden->historial()->delete();
+            $orden->delete();
+        });
+
+        return redirect()->route('ordenes.index')
+            ->with('success', "OT #{$orden->numero_ot} eliminada correctamente.");
     }
 
     public function show(OrdenTrabajo $orden)
