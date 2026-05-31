@@ -124,10 +124,7 @@
         </table>
     </div>
     @if($items->hasPages())
-    <div class="card-footer d-flex align-items-center justify-content-between">
-        <p class="m-0 text-muted small">{{ $items->total() }} ítems en total</p>
-        {{ $items->links() }}
-    </div>
+    <div class="card-footer">{{ $items->links() }}</div>
     @endif
 </div>
 

@@ -219,13 +219,7 @@
         </table>
     </div>
     @if($ordenes->hasPages())
-    <div class="card-footer d-flex align-items-center justify-content-between">
-        <p class="m-0 text-muted small">
-            Mostrando {{ $ordenes->firstItem() }}–{{ $ordenes->lastItem() }}
-            de {{ $ordenes->total() }} OTs
-        </p>
-        {{ $ordenes->links() }}
-    </div>
+    <div class="card-footer">{{ $ordenes->links() }}</div>
     @endif
 </div>
 
