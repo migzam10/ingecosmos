@@ -123,11 +123,11 @@ class CotizacionService
                 'fecha_cotizacion'   => now()->toDateString(),
             ]);
 
-            // Cambiar estado OT a PTE_AUTORIZACION
             $this->otService->cambiarEstado(
                 $ot,
                 'PTE_AUTORIZACION',
-                "Cotización #{$numeroCot} creada por " . Auth::user()->name
+                "Cotización #{$numeroCot} creada por " . Auth::user()->name,
+                now()->toDateString()
             );
 
             return $cot;

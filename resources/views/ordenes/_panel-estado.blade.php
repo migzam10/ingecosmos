@@ -129,7 +129,12 @@ $activo = !in_array($estado, $cerrados);
 @if($estado === 'EN_PROCESO')
 <form method="POST" action="{{ route('ot.programar-entrega', $orden) }}" class="row g-2 align-items-end">
     @csrf
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-3">
+        <label class="form-label small fw-bold">Fecha terminación reparación</label>
+        <input type="date" name="fecha_terminacion" class="form-control form-control-sm"
+               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required>
+    </div>
+    <div class="col-12 col-md-5">
         <label class="form-label small">Comentario</label>
         <input type="text" name="comentario" class="form-control form-control-sm"
                placeholder="Observación...">

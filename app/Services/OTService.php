@@ -99,18 +99,19 @@ class OTService
         });
     }
 
-    public function cambiarEstado(OrdenTrabajo $ot, string $nuevoEstado, ?string $comentario = null): void
+    public function cambiarEstado(OrdenTrabajo $ot, string $nuevoEstado, ?string $comentario = null, ?string $fechaEvento = null): void
     {
         $estadoAnterior = $ot->estado_proceso;
 
         $ot->update(['estado_proceso' => $nuevoEstado]);
 
         HistorialOt::create([
-            'id_ot'          => $ot->id,
-            'id_user'        => Auth::id(),
-            'estado_anterior'=> $estadoAnterior,
-            'estado_nuevo'   => $nuevoEstado,
-            'comentario'     => $comentario,
+            'id_ot'           => $ot->id,
+            'id_user'         => Auth::id(),
+            'estado_anterior' => $estadoAnterior,
+            'estado_nuevo'    => $nuevoEstado,
+            'comentario'      => $comentario,
+            'fecha_evento'    => $fechaEvento,
         ]);
 
         // Recalcular semáforo tras cada cambio de estado

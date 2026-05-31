@@ -143,8 +143,8 @@ class OrdenTrabajoController extends Controller
                 'observaciones'        => $request->inv_observaciones,
             ]);
 
-            // 6. Registrar en historial
-            $this->otService->cambiarEstado($ot, 'PTE_COTIZACION', 'OT creada en recepción');
+            // 6. Registrar en historial — fecha_evento = fecha real de ingreso del vehículo
+            $this->otService->cambiarEstado($ot, 'PTE_COTIZACION', 'OT creada en recepción', $request->fecha_ingreso);
         });
 
         return redirect()->route('ordenes.index')

@@ -27,7 +27,8 @@ class EntregaParcialController extends Controller
         $this->otService->cambiarEstado(
             $orden,
             'ENTREGA_PARCIAL',
-            'Entrega parcial registrada: ' . $request->descripcion
+            'Entrega parcial registrada: ' . $request->descripcion,
+            $request->fecha_entrega
         );
 
         return back()->with('success', 'Entrega parcial registrada.');
@@ -49,7 +50,8 @@ class EntregaParcialController extends Controller
         $this->otService->cambiarEstado(
             $entregaParcial->ot,
             'EN_PROCESO',
-            'Vehículo retornó de entrega parcial: ' . $request->motivo_retorno
+            'Vehículo retornó de entrega parcial: ' . $request->motivo_retorno,
+            $request->fecha_retorno
         );
 
         return back()->with('success', 'Retorno registrado. OT vuelve a En Proceso.');

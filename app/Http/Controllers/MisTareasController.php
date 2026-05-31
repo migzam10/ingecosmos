@@ -53,10 +53,9 @@ class MisTareasController extends Controller
             'inicio_en' => now(),
         ]);
 
-        // Cambiar OT a EN_PROCESO si aún no lo está
         $ot = $trabajo->ot;
         if ($ot->estado_proceso === 'RTO_INSTALADO' || $ot->estado_proceso === 'PTE_REPUESTOS') {
-            $this->otService->cambiarEstado($ot, 'EN_PROCESO', 'Técnico inició el trabajo');
+            $this->otService->cambiarEstado($ot, 'EN_PROCESO', 'Técnico inició el trabajo', now()->toDateString());
         }
 
         return back()->with('success', 'Trabajo iniciado.');
@@ -108,7 +107,8 @@ class MisTareasController extends Controller
             $this->otService->cambiarEstado(
                 $ot,
                 'PROGRAMADO_ENTREGA',
-                'Todos los técnicos finalizaron el trabajo'
+                'Todos los técnicos finalizaron el trabajo',
+                now()->toDateString()
             );
         }
     }

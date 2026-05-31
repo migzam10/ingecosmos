@@ -608,13 +608,19 @@
     {{-- Historial --}}
     <div class="col-12">
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Historial de Estados</h3></div>
+            <div class="card-header">
+                <h3 class="card-title">Historial de Estados</h3>
+                <span class="card-subtitle ms-2 text-muted small">
+                    Fecha evento = fecha real del proceso · Registrado = cuándo se capturó en el sistema
+                </span>
+            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-sm table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>Fecha</th>
+                                <th style="width:110px">Fecha evento</th>
+                                <th style="width:130px">Registrado</th>
                                 <th>Estado</th>
                                 <th>Usuario</th>
                                 <th>Comentario</th>
@@ -623,13 +629,26 @@
                         <tbody>
                             @forelse($orden->historial as $h)
                             <tr>
-                                <td class="text-muted small">{{ $h->created_at->format('d/m/Y H:i') }}</td>
+                                <td>
+                                    @if($h->fecha_evento)
+                                        <span class="fw-medium">{{ $h->fecha_evento->format('d/m/Y') }}</span>
+                                    @else
+                                        <span class="text-muted small">—</span>
+                                    @endif
+                                </td>
+                                <td class="small text-muted">
+                                    {{ $h->created_at->format('d/m/Y') }}
+                                    @if($h->fecha_evento && $h->fecha_evento->format('Y-m-d') !== $h->created_at->format('Y-m-d'))
+                                    <span class="badge bg-warning-lt ms-1" title="La fecha real del evento difiere de cuando se registró">!</span>
+                                    @endif
+                                    <div class="text-muted" style="font-size:0.7rem">{{ $h->created_at->format('H:i') }}</div>
+                                </td>
                                 <td><x-estado-badge :estado="$h->estado_nuevo" /></td>
                                 <td class="small">{{ $h->user->name }}</td>
                                 <td class="small text-muted">{{ $h->comentario ?? '—' }}</td>
                             </tr>
                             @empty
-                            <tr><td colspan="4" class="text-muted text-center">Sin historial.</td></tr>
+                            <tr><td colspan="5" class="text-muted text-center">Sin historial.</td></tr>
                             @endforelse
                         </tbody>
                     </table>

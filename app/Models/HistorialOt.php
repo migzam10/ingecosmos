@@ -9,8 +9,13 @@ class HistorialOt extends Model
     protected $table = 'historial_ot';
 
     protected $fillable = [
-        'id_ot', 'id_user', 'estado_anterior', 'estado_nuevo', 'comentario',
+        'id_ot', 'id_user', 'estado_anterior', 'estado_nuevo', 'comentario', 'fecha_evento',
     ];
+
+    protected function casts(): array
+    {
+        return ['fecha_evento' => 'date'];
+    }
 
     public function ot()
     {
