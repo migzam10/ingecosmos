@@ -11,7 +11,14 @@ class ProduccionController extends Controller
 {
     public function index(Request $request)
     {
-        $anio  = (int) $request->get('anio', now()->year);
+        // Solo listar años que realmente tienen órdenes
+        $aniosConDatos = OrdenTrabajo::selectRaw('YEAR(fecha_ingreso) as anio')
+            ->whereNotNull('fecha_ingreso')
+            ->groupBy('anio')
+            ->orderByDesc('anio')
+            ->pluck('anio');
+
+        $anio  = (int) $request->get('anio', $aniosConDatos->first() ?? now()->year);
         $mes   = $request->get('mes', 'todos');
         $area  = $request->get('area', 'todas');
 
@@ -22,37 +29,49 @@ class ProduccionController extends Controller
                 fn($q) => $q->whereYear('fecha_ingreso', $anio)
             );
 
-        // ── KPIs GENERALES ──────────────────────────────────────────────────
-        $totalOTs       = (clone $base)->count();
-        $entregadas     = (clone $base)->where('estado_proceso', 'ENTREGADO')->count();
-        $activas        = (clone $base)->whereNotIn('estado_proceso', [
+        // ── KPIs ────────────────────────────────────────────────────────────
+        $totalOTs   = (clone $base)->count();
+        $entregadas = (clone $base)->where('estado_proceso', 'ENTREGADO')->count();
+        $activas    = (clone $base)->whereNotIn('estado_proceso', [
             'ENTREGADO','NO_AUTORIZADO','ORDEN_ANULADA','PERDIDA_TOTAL',
         ])->count();
 
-        // Oportuno = fecha_terminacion_proceso <= salida_estimada
+        // Oportuno: fecha_entrega_cliente <= salida_estimada (más datos que fecha_terminacion)
         $oportunas = (clone $base)
             ->where('estado_proceso', 'ENTREGADO')
-            ->whereNotNull('fecha_terminacion')
+            ->whereNotNull('fecha_entrega_cliente')
             ->whereNotNull('salida_estimada')
-            ->whereColumn('fecha_terminacion', '<=', 'salida_estimada')
+            ->whereColumn('fecha_entrega_cliente', '<=', 'salida_estimada')
             ->count();
 
-        $pctOportuno = $entregadas > 0 ? round($oportunas / $entregadas * 100, 1) : 0;
+        $baseOportuno = (clone $base)
+            ->where('estado_proceso', 'ENTREGADO')
+            ->whereNotNull('fecha_entrega_cliente')
+            ->whereNotNull('salida_estimada')
+            ->count();
 
-        // Tiempos promedio (solo OTs entregadas con datos completos)
+        $tardias     = max(0, $baseOportuno - $oportunas);
+        $pctOportuno = $baseOportuno > 0 ? round($oportunas / $baseOportuno * 100, 1) : 0;
+
+        // Promedios — excluir diffs negativos (inconsistencias de datos históricos)
         $promedios = (clone $base)
             ->where('estado_proceso', 'ENTREGADO')
             ->whereNotNull('fecha_entrega_cliente')
             ->whereNotNull('fecha_ingreso')
             ->selectRaw("
-                AVG(DATEDIFF(fecha_entrega_cliente, fecha_ingreso))         as tmp_prom,
-                AVG(DATEDIFF(fecha_terminacion, fecha_inicio_proceso))      as tmr_prom,
-                AVG(DATEDIFF(fecha_cotizacion,  fecha_ingreso))             as cot_prom,
-                AVG(DATEDIFF(fecha_autorizacion, fecha_cotizacion))         as aut_prom,
-                AVG(DATEDIFF(fecha_llegada_ultimo_rto, fecha_autorizacion)) as rto_prom
+                AVG(CASE WHEN DATEDIFF(fecha_entrega_cliente, fecha_ingreso) >= 0
+                         THEN DATEDIFF(fecha_entrega_cliente, fecha_ingreso) END) as tmp_prom,
+                AVG(CASE WHEN DATEDIFF(fecha_terminacion, fecha_inicio_proceso) >= 0
+                         THEN DATEDIFF(fecha_terminacion, fecha_inicio_proceso) END) as tmr_prom,
+                AVG(CASE WHEN DATEDIFF(fecha_cotizacion,  fecha_ingreso) >= 0
+                         THEN DATEDIFF(fecha_cotizacion,  fecha_ingreso) END) as cot_prom,
+                AVG(CASE WHEN DATEDIFF(fecha_autorizacion, fecha_cotizacion) >= 0
+                         THEN DATEDIFF(fecha_autorizacion, fecha_cotizacion) END) as aut_prom,
+                AVG(CASE WHEN DATEDIFF(fecha_llegada_ultimo_rto, fecha_autorizacion) >= 0
+                         THEN DATEDIFF(fecha_llegada_ultimo_rto, fecha_autorizacion) END) as rto_prom
             ")->first();
 
-        // ── GRÁFICA 1: OTs entregadas por mes ───────────────────────────────
+        // ── GRÁFICA 1: OTs por mes ───────────────────────────────────────────
         $porMes = DB::table('ordenes_trabajo')
             ->selectRaw('MONTH(fecha_ingreso) as mes, COUNT(*) as total, SUM(estado_proceso = "ENTREGADO") as entregadas')
             ->whereYear('fecha_ingreso', $anio)
@@ -62,29 +81,18 @@ class ProduccionController extends Controller
             ->get()
             ->keyBy('mes');
 
-        $mesesLabels = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
-        $dataMesTotal     = [];
+        $mesesLabels  = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+        $dataMesTotal = [];
         $dataMesEntregada = [];
         foreach (range(1, 12) as $m) {
             $dataMesTotal[]     = $porMes->get($m)?->total     ?? 0;
             $dataMesEntregada[] = $porMes->get($m)?->entregadas ?? 0;
         }
 
-        // ── GRÁFICA 2: Distribución por TG ──────────────────────────────────
-        $porTG = (clone $base)
-            ->whereNotNull('tg')
-            ->selectRaw('tg, COUNT(*) as total, AVG(DATEDIFF(fecha_terminacion, fecha_inicio_proceso)) as tmr_real')
-            ->groupBy('tg')
-            ->get()
-            ->keyBy('tg');
+        // ── GRÁFICA 2: Oportuno vs tardío ────────────────────────────────────
+        // (ya calculado arriba)
 
-        $tgData = [
-            'Leve'   => ['total' => $porTG->get('Leve')?->total ?? 0,   'meta' => 5,  'tmr' => round($porTG->get('Leve')?->tmr_real ?? 0)],
-            'Medio'  => ['total' => $porTG->get('Medio')?->total ?? 0,  'meta' => 10, 'tmr' => round($porTG->get('Medio')?->tmr_real ?? 0)],
-            'Fuerte' => ['total' => $porTG->get('Fuerte')?->total ?? 0, 'meta' => 13, 'tmr' => round($porTG->get('Fuerte')?->tmr_real ?? 0)],
-        ];
-
-        // ── GRÁFICA 3: Top empresas por volumen ──────────────────────────────
+        // ── GRÁFICA 3: Volumen por empresa (top 10) ──────────────────────────
         $porEmpresa = (clone $base)
             ->join('empresas_cliente', 'empresas_cliente.id', '=', 'ordenes_trabajo.id_empresa_cliente')
             ->selectRaw('empresas_cliente.nombre, COUNT(*) as total')
@@ -93,10 +101,28 @@ class ProduccionController extends Controller
             ->limit(10)
             ->get();
 
-        // ── GRÁFICA 4: Oportuno vs tardío ───────────────────────────────────
-        $tardias = $entregadas - $oportunas;
+        // ── GRÁFICA 4: Facturación mensual total ─────────────────────────────
+        $factMensualRaw = DB::table('ordenes_trabajo')
+            ->selectRaw('MONTH(fecha_ingreso) as mes, SUM(total) as facturado')
+            ->whereYear('fecha_ingreso', $anio)
+            ->when($area !== 'todas', fn($q) => $q->where('area', $area))
+            ->groupByRaw('MONTH(fecha_ingreso)')
+            ->orderBy('mes')
+            ->get()
+            ->keyBy('mes');
 
-        // ── TABLA DETALLADA: últimas OTs entregadas ──────────────────────────
+        $dataFactMensual = [];
+        foreach (range(1, 12) as $m) {
+            $dataFactMensual[] = (float) ($factMensualRaw->get($m)?->facturado ?? 0);
+        }
+
+        // ── TABLA TOP 7: LYP ─────────────────────────────────────────────────
+        $tablaLYP = $this->tablaTop7('LYP', $anio, $mes);
+
+        // ── TABLA TOP 7: MECÁNICA ────────────────────────────────────────────
+        $tablaMEC = $this->tablaTop7('MECANICA', $anio, $mes);
+
+        // ── TABLA ÚLTIMAS ENTREGADAS ──────────────────────────────────────────
         $ultimasEntregadas = OrdenTrabajo::with(['vehiculo.marca', 'empresaCliente'])
             ->where('estado_proceso', 'ENTREGADO')
             ->when($area !== 'todas', fn($q) => $q->where('area', $area))
@@ -107,11 +133,74 @@ class ProduccionController extends Controller
             ->get();
 
         return view('produccion.index', compact(
-            'anio', 'mes', 'area',
-            'totalOTs', 'entregadas', 'activas', 'oportunas', 'pctOportuno', 'tardias',
-            'promedios', 'mesesLabels', 'dataMesTotal', 'dataMesEntregada',
-            'tgData', 'porEmpresa', 'ultimasEntregadas'
+            'anio', 'mes', 'area', 'aniosConDatos',
+            'totalOTs', 'entregadas', 'activas', 'oportunas', 'tardias',
+            'pctOportuno', 'baseOportuno', 'promedios',
+            'mesesLabels', 'dataMesTotal', 'dataMesEntregada',
+            'porEmpresa', 'dataFactMensual',
+            'tablaLYP', 'tablaMEC',
+            'ultimasEntregadas'
         ));
+    }
+
+    // Tabla top 7 clientes por área: filas=empresa, columnas=mes, celdas=facturado
+    private function tablaTop7(string $area, int $anio, string $mes): array
+    {
+        // Top 7 por número de órdenes en el período
+        $q = DB::table('ordenes_trabajo')
+            ->join('empresas_cliente', 'empresas_cliente.id', '=', 'ordenes_trabajo.id_empresa_cliente')
+            ->where('ordenes_trabajo.area', $area)
+            ->whereYear('ordenes_trabajo.fecha_ingreso', $anio)
+            ->when($mes !== 'todos', fn($q) => $q->whereMonth('ordenes_trabajo.fecha_ingreso', $mes))
+            ->selectRaw('ordenes_trabajo.id_empresa_cliente, empresas_cliente.nombre, COUNT(*) as total_ots, SUM(ordenes_trabajo.total) as facturado_total')
+            ->groupBy('ordenes_trabajo.id_empresa_cliente', 'empresas_cliente.nombre')
+            ->orderByDesc('total_ots')
+            ->limit(7)
+            ->get();
+
+        if ($q->isEmpty()) return [];
+
+        $meses = range(1, 12);
+        $rows  = [];
+
+        foreach ($q as $emp) {
+            $porMes = DB::table('ordenes_trabajo')
+                ->where('area', $area)
+                ->where('id_empresa_cliente', $emp->id_empresa_cliente)
+                ->whereYear('fecha_ingreso', $anio)
+                ->when($mes !== 'todos', fn($q) => $q->whereMonth('fecha_ingreso', $mes))
+                ->selectRaw('MONTH(fecha_ingreso) as mes, COUNT(*) as ots, SUM(total) as facturado')
+                ->groupByRaw('MONTH(fecha_ingreso)')
+                ->get()
+                ->keyBy('mes');
+
+            $row = [
+                'empresa'  => $emp->nombre,
+                'ots'      => $emp->total_ots,
+                'meses'    => [],
+                'total'    => 0,
+            ];
+            foreach ($meses as $m) {
+                $val = (float) ($porMes->get($m)?->facturado ?? 0);
+                $row['meses'][$m] = $val;
+                $row['total'] += $val;
+            }
+            $rows[] = $row;
+        }
+
+        // Fila de totales
+        $totales = ['empresa' => 'TOTAL', 'ots' => array_sum(array_column($rows, 'ots')), 'meses' => [], 'total' => 0];
+        foreach ($meses as $m) {
+            $sum = array_sum(array_column($rows, 'meses')[$m] ?? array_map(fn($r) => $r['meses'][$m] ?? 0, $rows));
+            // Recalcular correctamente
+            $s = 0;
+            foreach ($rows as $r) $s += $r['meses'][$m] ?? 0;
+            $totales['meses'][$m] = $s;
+            $totales['total'] += $s;
+        }
+        $rows[] = $totales;
+
+        return $rows;
     }
 
     public function exportar(Request $request)
@@ -138,7 +227,6 @@ class ProduccionController extends Controller
 
         $callback = function () use ($ordenes) {
             $f = fopen('php://output', 'w');
-            // BOM para Excel en español
             fputs($f, "\xEF\xBB\xBF");
 
             fputcsv($f, [
@@ -154,15 +242,15 @@ class ProduccionController extends Controller
                 $tmr = ($ot->fecha_terminacion && $ot->fecha_inicio_proceso)
                     ? Carbon::parse($ot->fecha_inicio_proceso)->diffInDays($ot->fecha_terminacion) : '';
                 $tCot = ($ot->fecha_cotizacion && $ot->fecha_ingreso)
-                    ? $ot->fecha_ingreso->diffInDays($ot->fecha_cotizacion) : '';
+                    ? max(0, $ot->fecha_ingreso->diffInDays($ot->fecha_cotizacion)) : '';
                 $tAut = ($ot->fecha_autorizacion && $ot->fecha_cotizacion)
-                    ? Carbon::parse($ot->fecha_cotizacion)->diffInDays($ot->fecha_autorizacion) : '';
+                    ? max(0, Carbon::parse($ot->fecha_cotizacion)->diffInDays($ot->fecha_autorizacion)) : '';
                 $tRto = ($ot->fecha_llegada_ultimo_rto && $ot->fecha_autorizacion)
-                    ? Carbon::parse($ot->fecha_autorizacion)->diffInDays($ot->fecha_llegada_ultimo_rto) : '';
+                    ? max(0, Carbon::parse($ot->fecha_autorizacion)->diffInDays($ot->fecha_llegada_ultimo_rto)) : '';
 
                 $oportuno = '';
-                if ($ot->fecha_terminacion && $ot->salida_estimada) {
-                    $oportuno = Carbon::parse($ot->fecha_terminacion)->lte($ot->salida_estimada) ? 'Sí' : 'No';
+                if ($ot->fecha_entrega_cliente && $ot->salida_estimada) {
+                    $oportuno = $ot->fecha_entrega_cliente->lte($ot->salida_estimada) ? 'Sí' : 'No';
                 }
 
                 fputcsv($f, [

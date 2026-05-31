@@ -7,7 +7,7 @@
 @section('page_actions')
 <a href="{{ route('produccion.exportar', request()->query()) }}"
    class="btn btn-success btn-sm">
-    ↓ Exportar Excel (CSV)
+    ↓ Exportar CSV
 </a>
 @endsection
 
@@ -20,7 +20,7 @@
             <div class="col-auto">
                 <label class="form-label small">Año</label>
                 <select name="anio" class="form-select form-select-sm">
-                    @foreach(range(now()->year, 2023, -1) as $a)
+                    @foreach($aniosConDatos as $a)
                     <option value="{{ $a }}" {{ $anio == $a ? 'selected':'' }}>{{ $a }}</option>
                     @endforeach
                 </select>
@@ -38,9 +38,9 @@
             <div class="col-auto">
                 <label class="form-label small">Área</label>
                 <select name="area" class="form-select form-select-sm">
-                    <option value="todas"   {{ $area === 'todas'   ? 'selected':'' }}>Todas las áreas</option>
-                    <option value="LYP"     {{ $area === 'LYP'     ? 'selected':'' }}>Latonería y Pintura</option>
-                    <option value="MECANICA"{{ $area === 'MECANICA'? 'selected':'' }}>Mecánica</option>
+                    <option value="todas"    {{ $area === 'todas'    ? 'selected':'' }}>Todas las áreas</option>
+                    <option value="LYP"      {{ $area === 'LYP'      ? 'selected':'' }}>Latonería y Pintura</option>
+                    <option value="MECANICA" {{ $area === 'MECANICA' ? 'selected':'' }}>Mecánica</option>
                 </select>
             </div>
             <div class="col-auto">
@@ -93,7 +93,7 @@
                 <div class="kpi-value text-muted">
                     {{ $promedios->tmp_prom ? round($promedios->tmp_prom) . 'd' : '—' }}
                 </div>
-                <div class="kpi-label mt-1">Tiempo promedio total</div>
+                <div class="kpi-label mt-1">Tiempo prom. total</div>
             </div>
         </div>
     </div>
@@ -130,7 +130,7 @@
     @endforeach
 </div>
 
-{{-- Gráficas --}}
+{{-- Gráficas fila 1 --}}
 <div class="row g-3 mb-4">
 
     {{-- Gráfica 1: OTs por mes --}}
@@ -146,36 +146,96 @@
     {{-- Gráfica 2: Oportuno vs tardío --}}
     <div class="col-12 col-lg-4">
         <div class="card h-100">
-            <div class="card-header"><h3 class="card-title">Cumplimiento de entrega</h3></div>
+            <div class="card-header">
+                <h3 class="card-title">Cumplimiento de entrega</h3>
+                @if($baseOportuno > 0)
+                <span class="card-subtitle ms-2 text-muted small">sobre {{ $baseOportuno }} OTs con datos</span>
+                @endif
+            </div>
             <div class="card-body d-flex align-items-center justify-content-center">
+                @if($baseOportuno > 0)
                 <canvas id="chart-oportuno" style="max-height:220px"></canvas>
-            </div>
-        </div>
-    </div>
-
-    {{-- Gráfica 3: TMR real vs meta por TG --}}
-    <div class="col-12 col-lg-6">
-        <div class="card h-100">
-            <div class="card-header"><h3 class="card-title">Días reales vs meta por tamaño del daño</h3></div>
-            <div class="card-body">
-                <canvas id="chart-tg" height="120"></canvas>
-            </div>
-        </div>
-    </div>
-
-    {{-- Gráfica 4: Volumen por empresa --}}
-    <div class="col-12 col-lg-6">
-        <div class="card h-100">
-            <div class="card-header"><h3 class="card-title">Órdenes por empresa (top 10)</h3></div>
-            <div class="card-body">
-                <canvas id="chart-empresa" height="120"></canvas>
+                @else
+                <div class="text-center text-muted py-4">
+                    <div style="font-size:2rem">📊</div>
+                    <div class="small mt-2">Sin datos suficientes para calcular<br>oportuno (se requiere fecha entrega + salida estimada)</div>
+                </div>
+                @endif
             </div>
         </div>
     </div>
 
 </div>
 
-{{-- Tabla detallada --}}
+{{-- Gráfica 3: Facturación mensual --}}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Facturación mensual — {{ $anio }}</h3></div>
+            <div class="card-body">
+                <canvas id="chart-fact-mensual" height="80"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Gráfica 4: Volumen por empresa --}}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header"><h3 class="card-title">Órdenes por empresa — Top 10</h3></div>
+            <div class="card-body">
+                <canvas id="chart-empresa" height="70"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- Tablas top 7 por área --}}
+@foreach([['LYP','Latonería y Pintura',$tablaLYP], ['MECANICA','Mecánica',$tablaMEC]] as [$areaKey, $areaLabel, $tabla])
+@if(count($tabla) > 1)
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Top 7 clientes — {{ $areaLabel }} — {{ $anio }}</h3>
+        <span class="card-subtitle ms-2 text-muted small">Facturación por mes (COP)</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0" style="font-size:0.8rem">
+            <thead class="table-light">
+                <tr>
+                    <th style="min-width:130px">Empresa</th>
+                    <th class="text-center" style="width:40px">OTs</th>
+                    @foreach(['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] as $ml)
+                    <th class="text-end" style="min-width:75px">{{ $ml }}</th>
+                    @endforeach
+                    <th class="text-end" style="min-width:90px">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($tabla as $i => $fila)
+                @php $esTotal = $fila['empresa'] === 'TOTAL'; @endphp
+                <tr class="{{ $esTotal ? 'fw-bold table-secondary' : '' }}">
+                    <td class="{{ $esTotal ? 'text-uppercase' : '' }}">{{ $fila['empresa'] }}</td>
+                    <td class="text-center text-muted">{{ $fila['ots'] }}</td>
+                    @foreach(range(1,12) as $m)
+                    @php $v = $fila['meses'][$m] ?? 0; @endphp
+                    <td class="text-end {{ $v > 0 ? '' : 'text-muted' }}">
+                        {{ $v > 0 ? '$' . number_format($v/1000000, 1) . 'M' : '—' }}
+                    </td>
+                    @endforeach
+                    <td class="text-end {{ $esTotal ? 'text-primary' : '' }}">
+                        ${{ number_format($fila['total']/1000000, 1) }}M
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+@endforeach
+
+{{-- Tabla últimas entregadas --}}
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Últimas órdenes entregadas</h3>
@@ -187,10 +247,9 @@
                     <th># Orden</th>
                     <th>Placa / Vehículo</th>
                     <th>Empresa</th>
-                    <th>Tamaño daño</th>
-                    <th class="text-center">Días estimados</th>
+                    <th>Daño</th>
+                    <th class="text-center">Días est.</th>
                     <th class="text-center">Tiempo total</th>
-                    <th class="text-center">Tiempo en taller</th>
                     <th class="text-center">Oportuno</th>
                 </tr>
             </thead>
@@ -199,10 +258,8 @@
                 @php
                 $tmp = ($ot->fecha_entrega_cliente && $ot->fecha_ingreso)
                     ? $ot->fecha_ingreso->diffInDays($ot->fecha_entrega_cliente) : null;
-                $tmr = ($ot->fecha_terminacion && $ot->fecha_inicio_proceso)
-                    ? \Carbon\Carbon::parse($ot->fecha_inicio_proceso)->diffInDays($ot->fecha_terminacion) : null;
-                $oportuno = ($ot->fecha_terminacion && $ot->salida_estimada)
-                    ? \Carbon\Carbon::parse($ot->fecha_terminacion)->lte($ot->salida_estimada) : null;
+                $oportuno = ($ot->fecha_entrega_cliente && $ot->salida_estimada)
+                    ? $ot->fecha_entrega_cliente->lte($ot->salida_estimada) : null;
                 @endphp
                 <tr>
                     <td class="fw-bold">{{ $ot->numero_ot }}</td>
@@ -213,10 +270,9 @@
                     <td class="small">{{ $ot->empresaCliente->nombre }}</td>
                     <td><x-tg-badge :tg="$ot->tg" /></td>
                     <td class="text-center">{{ $ot->dr ?? '—' }}</td>
-                    <td class="text-center {{ $tmp > ($ot->dr ?? 999) ? 'text-danger' : '' }}">
+                    <td class="text-center {{ $tmp !== null && $tmp > ($ot->dr ?? 999) ? 'text-danger' : '' }}">
                         {{ $tmp ?? '—' }}
                     </td>
-                    <td class="text-center">{{ $tmr ?? '—' }}</td>
                     <td class="text-center">
                         @if($oportuno === null)
                         <span class="text-muted">—</span>
@@ -228,7 +284,7 @@
                     </td>
                 </tr>
                 @empty
-                <tr><td colspan="8" class="text-center text-muted py-4">Sin datos para el período seleccionado.</td></tr>
+                <tr><td colspan="7" class="text-center text-muted py-4">Sin datos para el período seleccionado.</td></tr>
                 @endforelse
             </tbody>
         </table>
@@ -239,22 +295,22 @@
 
 @push('scripts')
 <script>
-// Datos del servidor
-const MESES    = @json($mesesLabels);
-const MES_TOT  = @json($dataMesTotal);
-const MES_ENT  = @json($dataMesEntregada);
-const OPORTUNO = {{ $oportunas }};
-const TARDIAS  = {{ $tardias }};
-const TG_DATA  = @json($tgData);
-const EMPRESAS = @json($porEmpresa->pluck('nombre'));
-const EMP_TOT  = @json($porEmpresa->pluck('total'));
+const MESES       = @json($mesesLabels);
+const MES_TOT     = @json($dataMesTotal);
+const MES_ENT     = @json($dataMesEntregada);
+const OPORTUNO    = {{ $oportunas }};
+const TARDIAS     = {{ $tardias }};
+const BASE_OPT    = {{ $baseOportuno }};
+const EMPRESAS    = @json($porEmpresa->pluck('nombre'));
+const EMP_TOT     = @json($porEmpresa->pluck('total'));
+const FACT_MENS   = @json($dataFactMensual);
 
-// Colores base
-const COL_AZUL   = 'rgba(66, 153, 225, 0.8)';
-const COL_VERDE  = 'rgba(47, 179, 68, 0.8)';
-const COL_ROJO   = 'rgba(214, 57, 57, 0.8)';
-const COL_NARANJ = 'rgba(247, 103, 7, 0.8)';
-const COL_GRIS   = 'rgba(134, 142, 150, 0.8)';
+const COL_AZUL    = 'rgba(66, 153, 225, 0.85)';
+const COL_VERDE   = 'rgba(47, 179, 68, 0.85)';
+const COL_ROJO    = 'rgba(214, 57, 57, 0.85)';
+const COL_NARANJ  = 'rgba(247, 103, 7, 0.85)';
+const COL_GRIS    = 'rgba(134, 142, 150, 0.6)';
+const COL_MORADO  = 'rgba(132, 99, 221, 0.85)';
 
 // ── GRÁFICA 1: OTs por mes ────────────────────────────────────────────────
 new Chart(document.getElementById('chart-mes'), {
@@ -262,8 +318,8 @@ new Chart(document.getElementById('chart-mes'), {
     data: {
         labels: MESES,
         datasets: [
-            { label: 'Ingresadas', data: MES_TOT,  backgroundColor: COL_AZUL },
-            { label: 'Entregadas', data: MES_ENT,  backgroundColor: COL_VERDE },
+            { label: 'Ingresadas', data: MES_TOT, backgroundColor: COL_AZUL },
+            { label: 'Entregadas', data: MES_ENT, backgroundColor: COL_VERDE },
         ]
     },
     options: {
@@ -274,62 +330,71 @@ new Chart(document.getElementById('chart-mes'), {
 });
 
 // ── GRÁFICA 2: Oportuno vs tardío ─────────────────────────────────────────
-new Chart(document.getElementById('chart-oportuno'), {
-    type: 'doughnut',
+if (BASE_OPT > 0 && document.getElementById('chart-oportuno')) {
+    new Chart(document.getElementById('chart-oportuno'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Entrega oportuna', 'Entrega tardía'],
+            datasets: [{
+                data: [OPORTUNO, TARDIAS],
+                backgroundColor: [COL_VERDE, COL_ROJO],
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                            const pct   = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
+                            return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ── GRÁFICA 3: Facturación mensual ────────────────────────────────────────
+new Chart(document.getElementById('chart-fact-mensual'), {
+    type: 'bar',
     data: {
-        labels: ['Entrega oportuna', 'Entrega tardía'],
+        labels: MESES,
         datasets: [{
-            data: [OPORTUNO, TARDIAS],
-            backgroundColor: [COL_VERDE, COL_ROJO],
+            label: 'Facturado ($)',
+            data: FACT_MENS,
+            backgroundColor: COL_MORADO,
+            borderRadius: 4,
         }]
     },
     options: {
         responsive: true,
         plugins: {
-            legend: { position: 'bottom' },
+            legend: { display: false },
             tooltip: {
                 callbacks: {
-                    label: ctx => {
-                        const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                        const pct   = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
-                        return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
-                    }
+                    label: ctx => ' $' + new Intl.NumberFormat('es-CO').format(ctx.parsed.y)
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: val => '$' + (val >= 1000000
+                        ? (val/1000000).toFixed(1) + 'M'
+                        : (val/1000).toFixed(0) + 'K')
                 }
             }
         }
     }
 });
 
-// ── GRÁFICA 3: TMR real vs meta por TG ───────────────────────────────────
-new Chart(document.getElementById('chart-tg'), {
-    type: 'bar',
-    data: {
-        labels: Object.keys(TG_DATA),
-        datasets: [
-            {
-                label: 'Días reales promedio',
-                data: Object.values(TG_DATA).map(d => d.tmr),
-                backgroundColor: [COL_VERDE, COL_NARANJ, COL_ROJO],
-            },
-            {
-                label: 'Meta CIA (días)',
-                data: Object.values(TG_DATA).map(d => d.meta),
-                backgroundColor: 'transparent',
-                borderColor: 'rgba(26, 86, 219, 0.8)',
-                borderWidth: 2,
-                type: 'line',
-                pointRadius: 5,
-            }
-        ]
-    },
-    options: {
-        responsive: true,
-        plugins: { legend: { position: 'top' } },
-        scales: { y: { beginAtZero: true } }
-    }
-});
-
 // ── GRÁFICA 4: Volumen por empresa ────────────────────────────────────────
+const coloresEmp = EMPRESAS.map((_, i) => `hsl(${(i * 47) % 360}, 65%, 55%)`);
 new Chart(document.getElementById('chart-empresa'), {
     type: 'bar',
     data: {
@@ -337,14 +402,24 @@ new Chart(document.getElementById('chart-empresa'), {
         datasets: [{
             label: 'Órdenes',
             data: EMP_TOT,
-            backgroundColor: COL_AZUL,
+            backgroundColor: coloresEmp,
+            borderRadius: 4,
         }]
     },
     options: {
         indexAxis: 'y',
         responsive: true,
-        plugins: { legend: { display: false } },
-        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ` ${ctx.parsed.x} órdenes`
+                }
+            }
+        },
+        scales: {
+            x: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
     }
 });
 </script>
