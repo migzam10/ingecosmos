@@ -109,6 +109,8 @@ class CotizacionService
                 $totalOT += ($data['subtotal_rto'] ?? 0);
             }
 
+            $fechaCot = $data['fecha_cotizacion'] ?? now()->toDateString();
+
             $ot->update([
                 'valor_mo'           => $subtotalMo,
                 'valor_insumos_pint' => $subtotalSum,
@@ -120,14 +122,14 @@ class CotizacionService
                 'dr'                 => $dr,
                 'tg'                 => $tg,
                 'salida_estimada'    => $salida,
-                'fecha_cotizacion'   => now()->toDateString(),
+                'fecha_cotizacion'   => $fechaCot,
             ]);
 
             $this->otService->cambiarEstado(
                 $ot,
                 'PTE_AUTORIZACION',
                 "Cotización #{$numeroCot} creada por " . Auth::user()->name,
-                now()->toDateString()
+                $fechaCot
             );
 
             return $cot;
@@ -194,7 +196,7 @@ class CotizacionService
             $totalOT = $subtotalMo + $subtotalSum + ($data['subtotal_terceros'] ?? 0) + ($data['subtotal_op'] ?? 0);
             if ($empresa->tipo === 'A') $totalOT += ($data['subtotal_rto'] ?? 0);
 
-            $ot->update([
+            $actualizarOT = [
                 'valor_mo'           => $subtotalMo,
                 'valor_insumos_pint' => $subtotalSum,
                 'valor_rto'          => $data['subtotal_rto']     ?? 0,
@@ -205,7 +207,14 @@ class CotizacionService
                 'dr'                 => $dr,
                 'tg'                 => $tg,
                 'salida_estimada'    => $salida,
-            ]);
+            ];
+
+            // Si el usuario corrige la fecha de cotización también la actualizamos en la OT
+            if (!empty($data['fecha_cotizacion'])) {
+                $actualizarOT['fecha_cotizacion'] = $data['fecha_cotizacion'];
+            }
+
+            $ot->update($actualizarOT);
 
             return $cot;
         });

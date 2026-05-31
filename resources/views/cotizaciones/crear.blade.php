@@ -206,6 +206,17 @@
                     </tr>
                 </table>
 
+                {{-- Fecha real de la cotización --}}
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">
+                        Fecha de cotización <span class="text-danger">*</span>
+                        <span class="text-muted fw-normal">(fecha real, puede ser anterior a hoy)</span>
+                    </label>
+                    <input type="date" name="fecha_cotizacion" class="form-control form-control-sm"
+                           value="{{ isset($cotizacion) ? $cotizacion->ot->fecha_cotizacion?->format('Y-m-d') : now()->toDateString() }}"
+                           max="{{ now()->toDateString() }}" required>
+                </div>
+
                 <hr>
 
                 {{-- HA / DR / TG calculados --}}

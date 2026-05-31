@@ -45,6 +45,7 @@ class CotizacionController extends Controller
     public function store(Request $request, OrdenTrabajo $orden)
     {
         $request->validate([
+            'fecha_cotizacion'      => 'required|date|before_or_equal:today',
             'items_mo'              => 'nullable|array',
             'items_mo.*.descripcion'=> 'required_with:items_mo.*.precio|string|max:200',
             'items_mo.*.precio'     => 'required_with:items_mo.*.descripcion|numeric|min:0',
@@ -90,6 +91,7 @@ class CotizacionController extends Controller
         );
 
         $request->validate([
+            'fecha_cotizacion'       => 'required|date|before_or_equal:today',
             'items_mo'               => 'nullable|array',
             'items_mo.*.descripcion' => 'required_with:items_mo.*.precio|string|max:200',
             'items_mo.*.precio'      => 'required_with:items_mo.*.descripcion|numeric|min:0',
