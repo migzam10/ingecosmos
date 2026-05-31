@@ -32,17 +32,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Órdenes de Trabajo — ver lista y detalle
+// Órdenes de Trabajo
+// Acceso al módulo: COTIZADOR puede ver. Crear/editar/borrar lo controla
+// CrearOTRequest::authorize() y los abort_if del controller.
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION,COTIZADOR'])->group(function () {
     Route::resource('ordenes', OrdenTrabajoController::class)
-        ->only(['index', 'show'])
-        ->parameters(['ordenes' => 'orden']);
-});
-
-// Órdenes de Trabajo — crear, editar, eliminar
-Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION'])->group(function () {
-    Route::resource('ordenes', OrdenTrabajoController::class)
-        ->only(['create', 'store', 'edit', 'update', 'destroy'])
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy'])
         ->parameters(['ordenes' => 'orden']);
 
     // Fotos de OT
