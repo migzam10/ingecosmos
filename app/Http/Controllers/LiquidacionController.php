@@ -50,11 +50,12 @@ class LiquidacionController extends Controller
     public function registrarAvance(Request $request, Tecnico $tecnico)
     {
         $request->validate([
-            'monto'    => 'required|numeric|min:1',
-            'tipo'     => 'required|in:ABONO,ANTICIPO,PAGO_FINAL',
-            'mes'      => 'required|integer|min:1|max:12',
-            'anio'     => 'required|integer|min:2020',
-            'concepto' => 'nullable|string|max:200',
+            'monto'      => 'required|numeric|min:1',
+            'tipo'       => 'required|in:ABONO,ANTICIPO,PAGO_FINAL',
+            'mes'        => 'required|integer|min:1|max:12',
+            'anio'       => 'required|integer|min:2020',
+            'concepto'   => 'nullable|string|max:200',
+            'fecha_pago' => 'required|date|before_or_equal:today',
         ]);
 
         PagoTecnico::create([
@@ -66,9 +67,24 @@ class LiquidacionController extends Controller
             'monto'      => $request->monto,
             'tipo'       => $request->tipo,
             'concepto'   => $request->concepto,
+            'fecha_pago' => $request->fecha_pago,
         ]);
 
         return back()->with('success', 'Pago registrado correctamente.');
+    }
+
+    // PDF recibo de un pago individual
+    public function pagoReciboPdf(PagoTecnico $pago)
+    {
+        $pago->load('tecnico', 'registradoPor');
+
+        $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+        $pdf = Pdf::loadView('liquidacion.recibo-pdf', compact('pago', 'meses'))
+            ->setPaper([0, 0, 226, 340], 'portrait'); // media carta / recibo
+
+        return $pdf->stream("recibo-pago-{$pago->id}.pdf");
     }
 
     public function eliminarPago(PagoTecnico $pago)

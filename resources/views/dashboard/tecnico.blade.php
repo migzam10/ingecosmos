@@ -82,6 +82,66 @@
     </div>
 </div>
 
+{{-- Liquidación --}}
+<div class="row g-3 mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Mi Liquidación</h3>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-4 text-center">
+                        <div class="text-muted small">Total ganado</div>
+                        <div class="fw-bold text-success">$ {{ number_format($totalGanado, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="text-muted small">Total pagado</div>
+                        <div class="fw-bold text-primary">$ {{ number_format($totalPagado, 0, ',', '.') }}</div>
+                    </div>
+                    <div class="col-4 text-center">
+                        <div class="text-muted small">Saldo pendiente</div>
+                        <div class="fw-bold {{ $saldoPendiente > 0 ? 'text-warning' : 'text-muted' }}">
+                            $ {{ number_format($saldoPendiente, 0, ',', '.') }}
+                        </div>
+                    </div>
+                </div>
+
+                @if($ultimosPagos->count() > 0)
+                <div class="small text-muted mb-2">Últimos pagos recibidos</div>
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th class="text-end">Monto</th>
+                            <th>Concepto</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($ultimosPagos as $pago)
+                        <tr>
+                            <td class="small">{{ ($pago->fecha_pago ?? $pago->created_at)->format('d/m/Y') }}</td>
+                            <td class="small">{{ ['ABONO'=>'Abono','ANTICIPO'=>'Anticipo','PAGO_FINAL'=>'Pago final'][$pago->tipo] ?? $pago->tipo }}</td>
+                            <td class="text-end fw-bold small">$ {{ number_format($pago->monto, 0, ',', '.') }}</td>
+                            <td class="small text-muted">{{ $pago->concepto ?? '—' }}</td>
+                            <td>
+                                <a href="{{ route('pagos.pdf', $pago) }}" target="_blank"
+                                   class="btn btn-xs btn-outline-secondary">PDF</a>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+                @else
+                <div class="text-muted small text-center py-2">Sin pagos registrados aún.</div>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
 {{-- Tareas activas (resumen) --}}
 @if($tareasActivas->count() > 0)
 <h3 class="mb-2">Tareas asignadas ahora</h3>

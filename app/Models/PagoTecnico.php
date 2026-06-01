@@ -9,8 +9,18 @@ class PagoTecnico extends Model
     protected $table = 'pagos_tecnicos';
 
     protected $fillable = [
-        'id_tecnico', 'id_user', 'id_ot', 'anio', 'mes', 'monto', 'tipo', 'concepto',
+        'id_tecnico', 'id_user', 'id_ot', 'anio', 'mes', 'monto', 'tipo', 'concepto', 'fecha_pago',
     ];
+
+    protected function casts(): array
+    {
+        return ['fecha_pago' => 'date'];
+    }
+
+    public function registradoPor()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'id_user');
+    }
 
     public function tecnico()
     {

@@ -142,6 +142,11 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::post('/admin/migracion/ejecutar', [MigracionController::class, 'ejecutar'])->name('admin.migracion.ejecutar');
 });
 
+// Recibo PDF de pago — visible también para el técnico dueño del pago
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR,TECNICO'])->group(function () {
+    Route::get('/pagos/{pago}/pdf', [LiquidacionController::class, 'pagoReciboPdf'])->name('pagos.pdf');
+});
+
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,TECNICO'])->group(function () {
     Route::get('/mis-tareas',                         [MisTareasController::class, 'index'])->name('mis-tareas.index');
     Route::get('/mis-tareas/historial',               [MisTareasController::class, 'historial'])->name('mis-tareas.historial');

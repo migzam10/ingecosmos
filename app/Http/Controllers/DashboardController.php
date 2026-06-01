@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\OrdenTrabajo;
+use App\Models\PagoTecnico;
 use App\Models\TrabajoTecnico;
 use App\Services\AlertaService;
 use Illuminate\Http\Request;
@@ -65,6 +66,22 @@ class DashboardController extends Controller
             ->orderBy('created_at')
             ->get();
 
-        return view('dashboard.tecnico', compact('tecnico', 'kpis', 'tareasActivas'));
+        // Liquidación: lo ganado vs lo pagado (total histórico)
+        $totalGanado  = TrabajoTecnico::where('id_tecnico', $tecnico->id)
+            ->where('estado', 'FINALIZADO')
+            ->sum('valor_liquidar');
+        $totalPagado  = PagoTecnico::where('id_tecnico', $tecnico->id)->sum('monto');
+        $saldoPendiente = $totalGanado - $totalPagado;
+
+        $ultimosPagos = PagoTecnico::where('id_tecnico', $tecnico->id)
+            ->orderByDesc('fecha_pago')
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.tecnico', compact(
+            'tecnico', 'kpis', 'tareasActivas',
+            'totalGanado', 'totalPagado', 'saldoPendiente', 'ultimosPagos'
+        ));
     }
 }

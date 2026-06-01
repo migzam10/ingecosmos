@@ -163,6 +163,12 @@
                         </select>
                     </div>
                     <div class="mb-2">
+                        <label class="form-label small">Fecha del pago</label>
+                        <input type="date" name="fecha_pago" class="form-control form-control-sm"
+                               value="{{ now()->toDateString() }}"
+                               max="{{ now()->toDateString() }}" required>
+                    </div>
+                    <div class="mb-2">
                         <label class="form-label small">Monto</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">$</span>
@@ -199,13 +205,19 @@
                                 @endif
                             </td>
                             <td class="text-end fw-bold">$ {{ number_format($pago->monto, 0, ',', '.') }}</td>
-                            <td class="text-muted small">{{ $pago->created_at->format('d/m') }}</td>
+                            <td class="text-muted small">
+                                {{ ($pago->fecha_pago ?? $pago->created_at)->format('d/m/Y') }}
+                            </td>
                             <td>
+                                <div class="d-flex gap-1">
+                                <a href="{{ route('pagos.pdf', $pago) }}" target="_blank"
+                                   class="btn btn-xs btn-outline-secondary py-0 px-1" title="Recibo PDF">PDF</a>
                                 <form method="POST" action="{{ route('pagos.eliminar', $pago) }}"
                                       data-confirm="¿Eliminar este pago de $ {{ number_format($pago->monto, 0, ',', '.') }}?">
                                     @csrf @method('DELETE')
                                     <button class="btn btn-sm btn-ghost-danger py-0 px-1">✕</button>
                                 </form>
+                                </div>
                             </td>
                         </tr>
                         @empty
