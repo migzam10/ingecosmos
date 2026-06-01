@@ -271,6 +271,7 @@ class OrdenTrabajoController extends Controller
             'trabajosTecnico.tecnico',
             'trabajosTecnico.historialComentarios.tecnico',
             'trabajosTecnico.fotos',
+            'cotizaciones.creadaPor',
             'entregasParciales',
         ]);
 

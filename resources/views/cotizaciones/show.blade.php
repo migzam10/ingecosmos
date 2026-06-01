@@ -1,7 +1,16 @@
 @extends('layouts.app')
 
 @section('title', 'Cotización #' . $cotizacion->numero_cot)
-@section('page_title', 'Cotización #' . $cotizacion->numero_cot)
+@php
+$badgeEstadoCot = match($cotizacion->estado) {
+    'AUTORIZADA' => '<span class="badge bg-success ms-2">Autorizada</span>',
+    'RECHAZADA'  => '<span class="badge bg-danger ms-2">Rechazada</span>',
+    default      => '<span class="badge bg-secondary ms-2">Borrador</span>',
+};
+@endphp
+@section('page_title')
+Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
+@endsection
 @section('breadcrumb', 'Cotizaciones')
 
 @section('page_actions')

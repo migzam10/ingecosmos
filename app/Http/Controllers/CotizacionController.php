@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Cotizacion;
+use App\Models\HistorialOt;
 use App\Models\OrdenTrabajo;
 use App\Services\CotizacionService;
 use App\Services\OTService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CotizacionController extends Controller
 {
@@ -115,9 +117,10 @@ class CotizacionController extends Controller
             'Solo se puede eliminar una cotización en estado Borrador.'
         );
 
-        $ot = $cotizacion->ot;
+        $ot        = $cotizacion->ot;
+        $numeroCot = $cotizacion->numero_cot;
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($cotizacion, $ot) {
+        \Illuminate\Support\Facades\DB::transaction(function () use ($cotizacion, $ot, $numeroCot) {
             $cotizacion->itemsMo()->delete();
             $cotizacion->itemsSuministro()->delete();
             $cotizacion->delete();
@@ -130,7 +133,17 @@ class CotizacionController extends Controller
                     'ha' => null, 'dr' => null, 'tg' => null, 'salida_estimada' => null,
                     'fecha_cotizacion' => null,
                 ]);
-                $this->otService->cambiarEstado($ot, 'PTE_COTIZACION', 'Cotización eliminada — OT regresa a Pte. Cotización');
+                $this->otService->cambiarEstado($ot, 'PTE_COTIZACION', "Cotización #{$numeroCot} eliminada — OT regresa a Pte. Cotización");
+            } else {
+                // Quedan otras cotizaciones: solo registrar nota sin cambiar estado
+                HistorialOt::create([
+                    'id_ot'           => $ot->id,
+                    'id_user'         => Auth::id(),
+                    'estado_anterior' => $ot->estado_proceso,
+                    'estado_nuevo'    => $ot->estado_proceso,
+                    'comentario'      => "Cotización #{$numeroCot} eliminada",
+                    'fecha_evento'    => now()->toDateString(),
+                ]);
             }
         });
 

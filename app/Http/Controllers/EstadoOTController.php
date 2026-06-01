@@ -6,6 +6,7 @@ use App\Models\OrdenTrabajo;
 use App\Services\OTService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class EstadoOTController extends Controller
 {
@@ -20,14 +21,19 @@ class EstadoOTController extends Controller
 
         abort_if($orden->estado_proceso !== 'PTE_AUTORIZACION', 422, 'Estado incorrecto.');
 
-        $orden->update(['fecha_autorizacion' => $request->fecha_autorizacion]);
+        DB::transaction(function () use ($orden, $request) {
+            $orden->update(['fecha_autorizacion' => $request->fecha_autorizacion]);
 
-        $this->otService->cambiarEstado(
-            $orden,
-            'PTE_ORDEN',
-            $request->comentario ?? 'CIA autorizó la reparación',
-            $request->fecha_autorizacion
-        );
+            // Marcar la(s) cotización(es) activa(s) como AUTORIZADA
+            $orden->cotizaciones()->where('estado', 'BORRADOR')->update(['estado' => 'AUTORIZADA']);
+
+            $this->otService->cambiarEstado(
+                $orden,
+                'PTE_ORDEN',
+                $request->comentario ?? 'CIA autorizó la reparación',
+                $request->fecha_autorizacion
+            );
+        });
 
         return back()->with('success', 'Autorización registrada. OT pasa a PTE_ORDEN.');
     }
@@ -164,12 +170,19 @@ class EstadoOTController extends Controller
             'comentario'   => 'required|string|max:500',
         ]);
 
-        $this->otService->cambiarEstado(
-            $orden,
-            $request->nuevo_estado,
-            $request->comentario,
-            now()->toDateString()
-        );
+        DB::transaction(function () use ($orden, $request) {
+            // Si la CIA rechaza, marcar cotización(es) activa(s) como RECHAZADA
+            if ($request->nuevo_estado === 'NO_AUTORIZADO') {
+                $orden->cotizaciones()->where('estado', 'BORRADOR')->update(['estado' => 'RECHAZADA']);
+            }
+
+            $this->otService->cambiarEstado(
+                $orden,
+                $request->nuevo_estado,
+                $request->comentario,
+                now()->toDateString()
+            );
+        });
 
         return back()->with('success', "OT marcada como {$request->nuevo_estado}.");
     }

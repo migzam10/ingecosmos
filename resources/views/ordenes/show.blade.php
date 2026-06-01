@@ -746,7 +746,68 @@
         </div>
     </div>
 
+    {{-- Cotizaciones --}}
+    @if($orden->cotizaciones->count() > 0)
+    @php $rCot = Auth::user()->roles ?: []; $puedeVerCot = in_array('ADMIN',$rCot)||in_array('COORDINADOR',$rCot)||in_array('COTIZADOR',$rCot); @endphp
+    @if($puedeVerCot)
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Cotizaciones</h3>
+                <span class="card-subtitle ms-2 text-muted">{{ $orden->cotizaciones->count() }} registrada(s)</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th># COT</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Total</th>
+                                <th>Creada por</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($orden->cotizaciones->sortByDesc('created_at') as $cot)
+                            <tr>
+                                <td class="fw-bold text-primary">{{ $cot->numero_cot }}</td>
+                                <td>
+                                    @if($cot->estado === 'AUTORIZADA')
+                                    <span class="badge bg-success-lt">Autorizada</span>
+                                    @elseif($cot->estado === 'RECHAZADA')
+                                    <span class="badge bg-danger-lt">Rechazada</span>
+                                    @elseif($cot->estado === 'BORRADOR')
+                                    <span class="badge bg-secondary-lt">Borrador</span>
+                                    @else
+                                    <span class="badge bg-warning-lt">{{ $cot->estado }}</span>
+                                    @endif
+                                </td>
+                                <td class="small text-muted">{{ $cot->created_at->format('d/m/Y') }}</td>
+                                <td class="small fw-medium">$ {{ number_format($cot->total, 0, ',', '.') }}</td>
+                                <td class="small text-muted">{{ $cot->creadaPor?->name ?? '—' }}</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ route('cotizaciones.show', $cot) }}"
+                                           class="btn btn-xs btn-outline-primary">Ver</a>
+                                        <a href="{{ route('cotizaciones.pdf', $cot) }}"
+                                           class="btn btn-xs btn-outline-secondary" target="_blank">PDF</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+    @endif
+
     {{-- Historial --}}
+    @php $puedeVerCot = in_array('ADMIN', Auth::user()->roles ?: []) || in_array('COORDINADOR', Auth::user()->roles ?: []) || in_array('COTIZADOR', Auth::user()->roles ?: []); @endphp
     <div class="col-12">
         <div class="card">
             <div class="card-header">
@@ -786,7 +847,22 @@
                                 </td>
                                 <td><x-estado-badge :estado="$h->estado_nuevo" /></td>
                                 <td class="small">{{ $h->user->name }}</td>
-                                <td class="small text-muted">{{ $h->comentario ?? '—' }}</td>
+                                <td class="small text-muted">
+                                    @if($h->comentario && preg_match('/Cotización #(\d+)/', $h->comentario, $m))
+                                        @php $cotLink = $orden->cotizaciones->firstWhere('numero_cot', (int)$m[1]); @endphp
+                                        @if($cotLink && $puedeVerCot ?? false)
+                                            {!! preg_replace(
+                                                '/Cotización #(\d+)/',
+                                                '<a href="' . route('cotizaciones.show', $cotLink) . '" class="fw-medium">Cotización #$1</a>',
+                                                e($h->comentario)
+                                            ) !!}
+                                        @else
+                                            {{ $h->comentario }}
+                                        @endif
+                                    @else
+                                        {{ $h->comentario ?? '—' }}
+                                    @endif
+                                </td>
                             </tr>
                             @empty
                             <tr><td colspan="5" class="text-muted text-center">Sin historial.</td></tr>
