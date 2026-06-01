@@ -123,7 +123,7 @@
                                         <input type="number" name="valor_liquidar"
                                                class="form-control text-end"
                                                value="{{ $trabajo->valor_liquidar }}"
-                                               min="0" step="1000" style="width:90px">
+                                               min="0" step="1" style="width:90px">
                                     </div>
                                     <button class="btn btn-sm btn-outline-secondary">✓</button>
                                 </form>
@@ -167,7 +167,8 @@
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">$</span>
                             <input type="number" name="monto" class="form-control"
-                                   min="1" step="1000" required>
+                                   min="1" max="{{ max(1, (int)$data['saldo']) }}"
+                                   step="1" value="1" required>
                         </div>
                     </div>
                     <div class="mb-3">

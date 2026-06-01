@@ -500,7 +500,7 @@
                                         <div class="input-group input-group-sm" style="max-width:130px">
                                             <span class="input-group-text">$</span>
                                             <input type="number" name="valor_liquidar" class="form-control text-end"
-                                                   value="{{ $trabajo->valor_liquidar }}" min="0" step="1000">
+                                                   value="{{ $trabajo->valor_liquidar }}" min="0" step="1">
                                         </div>
                                         <button class="btn btn-sm btn-outline-secondary">✓</button>
                                     </form>

@@ -134,7 +134,7 @@
                             <input type="number" name="subtotal_rto" id="inp-rto"
                                    class="form-control text-end"
                                    value="{{ isset($cotizacion) ? $cotizacion->subtotal_rto : 0 }}"
-                                   min="0" step="1000" oninput="recalcularTotal()">
+                                   min="0" step="1" oninput="recalcularTotal()">
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
@@ -144,7 +144,7 @@
                             <input type="number" name="subtotal_terceros" id="inp-terceros"
                                    class="form-control text-end"
                                    value="{{ isset($cotizacion) ? $cotizacion->subtotal_terceros : 0 }}"
-                                   min="0" step="1000" oninput="recalcularTotal()">
+                                   min="0" step="1" oninput="recalcularTotal()">
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
@@ -154,7 +154,7 @@
                             <input type="number" name="subtotal_op" id="inp-op"
                                    class="form-control text-end"
                                    value="{{ isset($cotizacion) ? $cotizacion->subtotal_op : 0 }}"
-                                   min="0" step="1000" oninput="recalcularTotal()">
+                                   min="0" step="1" oninput="recalcularTotal()">
                         </div>
                     </div>
                 </div>
@@ -376,7 +376,7 @@ function agregarFilaMO(descripcion = '', precio = 0, idCatalogo = null) {
                 <span class="input-group-text">$</span>
                 <input type="number" name="items_mo[${i}][precio]"
                        class="form-control text-end inp-precio-mo"
-                       value="${precio}" min="0" step="1000"
+                       value="${precio}" min="0" step="1"
                        oninput="recalcularTotal()" required>
             </div>
         </td>

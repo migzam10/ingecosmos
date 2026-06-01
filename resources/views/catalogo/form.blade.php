@@ -103,7 +103,7 @@
                     <input type="number" name="precio_referencia"
                            class="form-control @error('precio_referencia') is-invalid @enderror"
                            value="{{ old('precio_referencia', $catalogo->precio_referencia ?? 0) }}"
-                           min="0" step="1000" required>
+                           min="0" step="1" required>
                 </div>
                 <div class="form-text">El cotizador puede cambiar este precio en la cotización — es solo referencia.</div>
                 @error('precio_referencia')<div class="text-danger small">{{ $message }}</div>@enderror
