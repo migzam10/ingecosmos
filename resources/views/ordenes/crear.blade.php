@@ -97,6 +97,17 @@
                         <input type="email" name="email_cliente" id="input-email"
                                class="form-control" value="{{ old('email_cliente') }}">
                     </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" name="direccion_cliente" id="input-direccion"
+                               class="form-control" value="{{ old('direccion_cliente') }}"
+                               placeholder="Calle, barrio, ciudad">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Fecha de cumpleaños</label>
+                        <input type="date" name="fecha_cumpleanos_cliente" id="input-cumpleanos"
+                               class="form-control" value="{{ old('fecha_cumpleanos_cliente') }}">
+                    </div>
                 </div>
             </div>
         </div>
@@ -166,44 +177,84 @@
             <div class="card-body">
 
                 @php
-                $items = [
-                    'parabrisas'           => 'Parabrisas',
-                    'vidrio_delantero_izq' => 'Vidrio Del. Izq',
-                    'vidrio_delantero_der' => 'Vidrio Del. Der',
-                    'vidrio_trasero_izq'   => 'Vidrio Tra. Izq',
-                    'vidrio_trasero_der'   => 'Vidrio Tra. Der',
-                    'vidrio_trasero'       => 'Vidrio Trasero',
-                    'espejo_izq'           => 'Espejo Izq',
-                    'espejo_der'           => 'Espejo Der',
-                    'llanta_del_izq'       => 'Llanta Del. Izq',
-                    'llanta_del_der'       => 'Llanta Del. Der',
-                    'llanta_tra_izq'       => 'Llanta Tra. Izq',
-                    'llanta_tra_der'       => 'Llanta Tra. Der',
-                    'llanta_repuesto'      => 'Llanta Repuesto',
-                    'antena'               => 'Antena',
-                    'radio'                => 'Radio',
-                    'encendedor'           => 'Encendedor',
-                    'gato'                 => 'Gato',
-                    'triangulo'            => 'Triángulo',
+                $invSimples = [
+                    'retrovisores'     => 'Retrovisores',
+                    'retrovisor_interno'=> 'Retrovisor Interno',
+                    'radio'            => 'Radio',
+                    'encendedor'       => 'Encendedor',
+                    'pito'             => 'Pito',
+                    'tapizado'         => 'Tapizado',
+                    'luz_techo'        => 'Luz techo',
+                    'tapa_gasolina'    => 'Tapa gasolina',
+                    'llave_pernos'     => 'Llave Pernos',
+                    'herramientas'     => 'Herramientas',
+                    'kit_carretera'    => 'Kit de Carretera',
+                    'gato'             => 'Gato',
+                    'extintor'         => 'Extintor',
+                    'sensores'         => 'Sensores',
+                    'camara_reversa'   => 'Cámara reversa',
+                    'control_alarma'   => 'Control alarma',
+                    'bateria'          => 'Batería',
+                    'comando_ptas'     => 'Comando ptas',
+                ];
+                $invCantidad = [
+                    'panoramicos' => 'Panorámicos',
+                    'parlantes'   => 'Parlantes',
+                    'rejillas_aa' => 'Rejillas A/A',
+                    'plumillas'   => 'Plumillas',
+                    'cinturones'  => 'Cinturones',
+                    'manijas'     => 'Manijas',
+                    'tapa_soles'  => 'Tapa soles',
+                    'tapetes'     => 'Tapetes',
                 ];
                 @endphp
 
-                <div class="row g-2">
-                    @foreach($items as $campo => $etiqueta)
+                {{-- Ítems sin cantidad --}}
+                <div class="row g-2 mb-3">
+                    @foreach($invSimples as $campo => $etiqueta)
                     <div class="col-6 col-md-4 col-lg-3">
                         <label class="form-label small mb-1">{{ $etiqueta }}</label>
                         <div class="btn-group w-100" role="group">
-                            @foreach(['B' => 'B', 'R' => 'R', 'M' => 'M'] as $val => $label)
+                            @foreach(['B'=>'success','R'=>'warning','M'=>'danger'] as $val => $color)
                             <input type="radio" class="btn-check"
-                                   name="inv_{{ $campo }}" id="inv_{{ $campo }}_{{ $val }}"
+                                   name="inv_{{ $campo }}" id="inv_{{ $campo }}_{{ $val }}_c"
                                    value="{{ $val }}"
                                    {{ old("inv_{$campo}") == $val ? 'checked' : '' }}>
-                            <label class="btn btn-sm btn-outline-{{ $val === 'B' ? 'success' : ($val === 'R' ? 'warning' : 'danger') }}"
-                                   for="inv_{{ $campo }}_{{ $val }}">{{ $label }}</label>
+                            <label class="btn btn-sm btn-outline-{{ $color }}"
+                                   for="inv_{{ $campo }}_{{ $val }}_c">{{ $val }}</label>
                             @endforeach
                         </div>
                     </div>
                     @endforeach
+                </div>
+
+                {{-- Ítems con cantidad --}}
+                <div class="border-top pt-3">
+                    <div class="text-muted small mb-2">Ítems con cantidad</div>
+                    <div class="row g-2">
+                        @foreach($invCantidad as $campo => $etiqueta)
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <label class="form-label small mb-1">{{ $etiqueta }}</label>
+                            <div class="d-flex gap-1 align-items-center">
+                                <input type="number" name="inv_{{ $campo }}_qty"
+                                       class="form-control form-control-sm text-center"
+                                       style="max-width:60px"
+                                       value="{{ old("inv_{$campo}_qty") }}"
+                                       min="0" max="99" placeholder="#">
+                                <div class="btn-group flex-grow-1" role="group">
+                                    @foreach(['B'=>'success','R'=>'warning','M'=>'danger'] as $val => $color)
+                                    <input type="radio" class="btn-check"
+                                           name="inv_{{ $campo }}" id="inv_{{ $campo }}_{{ $val }}_c"
+                                           value="{{ $val }}"
+                                           {{ old("inv_{$campo}") == $val ? 'checked' : '' }}>
+                                    <label class="btn btn-sm btn-outline-{{ $color }}"
+                                           for="inv_{{ $campo }}_{{ $val }}_c">{{ $val }}</label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
                 </div>
 
                 <div class="mt-3">
@@ -363,10 +414,12 @@ function buscarPlaca() {
                 setValue('input-anio',  data.anio);
 
                 // Precargar cliente
-                setValue('input-nombre',   data.nombre_cliente);
-                setValue('input-cedula',   data.cedula_cliente);
-                setValue('input-telefono', data.telefono_cliente);
-                setValue('input-email',    data.email_cliente);
+                setValue('input-nombre',      data.nombre_cliente);
+                setValue('input-cedula',      data.cedula_cliente);
+                setValue('input-telefono',    data.telefono_cliente);
+                setValue('input-email',       data.email_cliente);
+                setValue('input-direccion',   data.direccion_cliente);
+                setValue('input-cumpleanos',  data.fecha_cumpleanos_cliente);
             } else {
                 msg.textContent = 'Placa nueva — complete los datos del vehículo';
                 msg.className   = 'form-text text-info';

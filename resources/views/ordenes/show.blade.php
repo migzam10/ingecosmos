@@ -153,6 +153,18 @@
                         <td class="text-muted">Email</td>
                         <td>{{ $orden->clientePersona->email ?? '—' }}</td>
                     </tr>
+                    @if($orden->clientePersona->direccion)
+                    <tr>
+                        <td class="text-muted">Dirección</td>
+                        <td>{{ $orden->clientePersona->direccion }}</td>
+                    </tr>
+                    @endif
+                    @if($orden->clientePersona->fecha_cumpleanos)
+                    <tr>
+                        <td class="text-muted">Cumpleaños</td>
+                        <td>{{ $orden->clientePersona->fecha_cumpleanos->format('d/m') }}</td>
+                    </tr>
+                    @endif
                 </table>
                 @else
                 <p class="text-muted">Sin propietario registrado.</p>
@@ -190,13 +202,35 @@
     @if($orden->inventario)
     @php
     $inv = $orden->inventario;
-    $itemsInv = [
-        'parabrisas'=>'Parabrisas','vidrio_delantero_izq'=>'Vidrio Del. Izq','vidrio_delantero_der'=>'Vidrio Del. Der',
-        'vidrio_trasero_izq'=>'Vidrio Tra. Izq','vidrio_trasero_der'=>'Vidrio Tra. Der','vidrio_trasero'=>'Vidrio Trasero',
-        'espejo_izq'=>'Espejo Izq','espejo_der'=>'Espejo Der',
-        'llanta_del_izq'=>'Llanta Del. Izq','llanta_del_der'=>'Llanta Del. Der',
-        'llanta_tra_izq'=>'Llanta Tra. Izq','llanta_tra_der'=>'Llanta Tra. Der','llanta_repuesto'=>'Llanta Repuesto',
-        'antena'=>'Antena','radio'=>'Radio','encendedor'=>'Encendedor','gato'=>'Gato','triangulo'=>'Triángulo',
+    $invSimples = [
+        'retrovisores'     => 'Retrovisores',
+        'retrovisor_interno'=> 'Retrovisor Interno',
+        'radio'            => 'Radio',
+        'encendedor'       => 'Encendedor',
+        'pito'             => 'Pito',
+        'tapizado'         => 'Tapizado',
+        'luz_techo'        => 'Luz techo',
+        'tapa_gasolina'    => 'Tapa gasolina',
+        'llave_pernos'     => 'Llave Pernos',
+        'herramientas'     => 'Herramientas',
+        'kit_carretera'    => 'Kit de Carretera',
+        'gato'             => 'Gato',
+        'extintor'         => 'Extintor',
+        'sensores'         => 'Sensores',
+        'camara_reversa'   => 'Cámara reversa',
+        'control_alarma'   => 'Control alarma',
+        'bateria'          => 'Batería',
+        'comando_ptas'     => 'Comando ptas',
+    ];
+    $invCantidad = [
+        'panoramicos' => 'Panorámicos',
+        'parlantes'   => 'Parlantes',
+        'rejillas_aa' => 'Rejillas A/A',
+        'plumillas'   => 'Plumillas',
+        'cinturones'  => 'Cinturones',
+        'manijas'     => 'Manijas',
+        'tapa_soles'  => 'Tapa soles',
+        'tapetes'     => 'Tapetes',
     ];
     $colorMap = ['B'=>'success','R'=>'warning','M'=>'danger'];
     $puedeEditarInv = in_array('ADMIN', Auth::user()->roles ?: [])
@@ -217,24 +251,55 @@
                 @if($puedeEditarInv)
                 <form method="POST" action="{{ route('inventario.update', $orden) }}" id="form-inventario">
                 @csrf @method('PUT')
-                <div class="row g-2">
-                    @foreach($itemsInv as $campo => $etiqueta)
+
+                {{-- Ítems sin cantidad --}}
+                <div class="row g-2 mb-3">
+                    @foreach($invSimples as $campo => $etiqueta)
                     @php $val = $inv->$campo; @endphp
                     <div class="col-6 col-md-3 col-lg-2">
                         <label class="form-label small mb-1">{{ $etiqueta }}</label>
                         <div class="btn-group w-100" role="group">
-                            @foreach(['B'=>'success','R'=>'warning','M'=>'danger'] as $v => $color)
+                            @foreach($colorMap as $v => $color)
                             <input type="radio" class="btn-check" name="inv_{{ $campo }}"
-                                   id="inv_{{ $campo }}_{{ $v }}_edit" value="{{ $v }}"
+                                   id="inv_{{ $campo }}_{{ $v }}_e" value="{{ $v }}"
                                    {{ $val === $v ? 'checked' : '' }}>
                             <label class="btn btn-sm btn-outline-{{ $color }}"
-                                   for="inv_{{ $campo }}_{{ $v }}_edit">{{ $v }}</label>
+                                   for="inv_{{ $campo }}_{{ $v }}_e">{{ $v }}</label>
                             @endforeach
                         </div>
                     </div>
                     @endforeach
                 </div>
-                <div class="row g-2 mt-2 align-items-end">
+
+                {{-- Ítems con cantidad --}}
+                <div class="border-top pt-3 mb-3">
+                    <div class="text-muted small mb-2">Ítems con cantidad</div>
+                    <div class="row g-2">
+                        @foreach($invCantidad as $campo => $etiqueta)
+                        @php $val = $inv->$campo; $qty = $inv->{$campo.'_qty'}; @endphp
+                        <div class="col-6 col-md-4 col-lg-3">
+                            <label class="form-label small mb-1">{{ $etiqueta }}</label>
+                            <div class="d-flex gap-1 align-items-center">
+                                <input type="number" name="inv_{{ $campo }}_qty"
+                                       class="form-control form-control-sm text-center"
+                                       style="max-width:60px"
+                                       value="{{ $qty }}" min="0" max="99" placeholder="#">
+                                <div class="btn-group flex-grow-1" role="group">
+                                    @foreach($colorMap as $v => $color)
+                                    <input type="radio" class="btn-check" name="inv_{{ $campo }}"
+                                           id="inv_{{ $campo }}_{{ $v }}_e" value="{{ $v }}"
+                                           {{ $val === $v ? 'checked' : '' }}>
+                                    <label class="btn btn-sm btn-outline-{{ $color }}"
+                                           for="inv_{{ $campo }}_{{ $v }}_e">{{ $v }}</label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="row g-2 align-items-end">
                     <div class="col-12 col-md-8">
                         <label class="form-label small">Observaciones del inventario</label>
                         <input type="text" name="inv_observaciones" class="form-control form-control-sm"
@@ -246,8 +311,8 @@
                 </div>
                 </form>
                 @else
-                <div class="row g-2">
-                    @foreach($itemsInv as $campo => $etiqueta)
+                <div class="row g-2 mb-3">
+                    @foreach($invSimples as $campo => $etiqueta)
                     @php $val = $inv->$campo; @endphp
                     <div class="col-6 col-md-3 col-lg-2">
                         <div class="d-flex justify-content-between align-items-center">
@@ -260,6 +325,28 @@
                         </div>
                     </div>
                     @endforeach
+                </div>
+                <div class="border-top pt-2">
+                    <div class="row g-2">
+                        @foreach($invCantidad as $campo => $etiqueta)
+                        @php $val = $inv->$campo; $qty = $inv->{$campo.'_qty'}; @endphp
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="small text-muted">
+                                    {{ $etiqueta }}
+                                    @if($qty !== null)
+                                    <span class="badge bg-secondary-lt ms-1">{{ $qty }}</span>
+                                    @endif
+                                </span>
+                                @if($val)
+                                <span class="badge bg-{{ $colorMap[$val] }}-lt fw-bold">{{ $val }}</span>
+                                @else
+                                <span class="text-muted small">—</span>
+                                @endif
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
                 </div>
                 @if($inv->observaciones)
                 <div class="mt-3 p-2 bg-light rounded small">
@@ -441,6 +528,60 @@
                 </div>
                 @else
                 <p class="text-muted small mb-3">Sin técnicos asignados aún.</p>
+                @endif
+
+                {{-- Actividad de técnicos: comentarios y fotos --}}
+                @php
+                $conActividad = $orden->trabajosTecnico->filter(
+                    fn($t) => $t->historialComentarios->count() > 0 || $t->fotos->count() > 0
+                );
+                @endphp
+                @if($conActividad->count() > 0)
+                <div class="border-top pt-3 mt-2">
+                    <div class="fw-semibold small text-muted mb-2">Actividad de técnicos</div>
+                    @php $nombresEspAct = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico']; @endphp
+                    @foreach($conActividad as $trb)
+                    <div class="mb-3 p-2 border rounded">
+                        <div class="fw-semibold small mb-2">
+                            {{ $trb->tecnico->nombre }}
+                            <span class="badge bg-secondary-lt ms-1">{{ $nombresEspAct[$trb->especialidad] ?? $trb->especialidad }}</span>
+                        </div>
+
+                        {{-- Comentarios del técnico --}}
+                        @if($trb->historialComentarios->count() > 0)
+                        <div class="mb-2">
+                            <div class="text-muted small mb-1">Comentarios ({{ $trb->historialComentarios->count() }})</div>
+                            @foreach($trb->historialComentarios as $com)
+                            <div class="d-flex gap-2 small mb-1">
+                                <span class="text-muted text-nowrap" style="font-size:.7rem;min-width:90px">
+                                    {{ $com->created_at->format('d/m H:i') }}
+                                </span>
+                                <span>{{ $com->texto }}</span>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
+
+                        {{-- Fotos del técnico --}}
+                        @if($trb->fotos->count() > 0)
+                        <div>
+                            <div class="text-muted small mb-1">Fotos ({{ $trb->fotos->count() }})</div>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach($trb->fotos as $foto)
+                                <a href="{{ asset('storage/' . $foto->ruta) }}" target="_blank">
+                                    <img src="{{ asset('storage/' . $foto->ruta) }}"
+                                         alt="{{ $foto->descripcion ?? 'Foto técnico' }}"
+                                         class="rounded border"
+                                         style="height:60px;width:60px;object-fit:cover"
+                                         title="{{ $foto->descripcion ?? '' }} — {{ $foto->created_at->format('d/m H:i') }}">
+                                </a>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
                 @endif
 
                 {{-- Formulario asignar técnico --}}

@@ -13,7 +13,18 @@ class CrearOTRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
+        $invSimples = [
+            'retrovisores', 'retrovisor_interno', 'radio', 'encendedor', 'pito',
+            'tapizado', 'luz_techo', 'tapa_gasolina', 'llave_pernos', 'herramientas',
+            'kit_carretera', 'gato', 'extintor', 'sensores', 'camara_reversa',
+            'control_alarma', 'bateria', 'comando_ptas',
+        ];
+        $invCantidad = [
+            'panoramicos', 'parlantes', 'rejillas_aa', 'plumillas',
+            'cinturones', 'manijas', 'tapa_soles', 'tapetes',
+        ];
+
+        $rules = [
             'placa'                  => 'required|string|max:10',
             'id_marca'               => 'required|exists:marcas_vehiculo,id',
             'id_modelo'              => 'nullable|exists:modelos_vehiculo,id',
@@ -23,6 +34,8 @@ class CrearOTRequest extends FormRequest
             'cedula_cliente'         => 'nullable|string|max:20',
             'telefono_cliente'       => 'nullable|string|max:20',
             'email_cliente'          => 'nullable|email|max:100',
+            'direccion_cliente'      => 'nullable|string|max:200',
+            'fecha_cumpleanos_cliente'=> 'nullable|date',
             'id_empresa_cliente'     => 'required|exists:empresas_cliente,id',
             'area'                   => 'required|in:LYP,MECANICA',
             'km_ingreso'             => 'required|integer|min:0',
@@ -33,27 +46,18 @@ class CrearOTRequest extends FormRequest
             'nivel_combustible'      => 'required|integer|min:0|max:10',
             'fecha_ingreso'          => 'required|date',
             'observaciones'          => 'nullable|string|max:1000',
-            // Inventario B/R/G
-            'inv_parabrisas'              => 'nullable|in:B,R,M',
-            'inv_vidrio_delantero_izq'    => 'nullable|in:B,R,M',
-            'inv_vidrio_delantero_der'    => 'nullable|in:B,R,M',
-            'inv_vidrio_trasero_izq'      => 'nullable|in:B,R,M',
-            'inv_vidrio_trasero_der'      => 'nullable|in:B,R,M',
-            'inv_vidrio_trasero'          => 'nullable|in:B,R,M',
-            'inv_espejo_izq'              => 'nullable|in:B,R,M',
-            'inv_espejo_der'              => 'nullable|in:B,R,M',
-            'inv_llanta_del_izq'          => 'nullable|in:B,R,M',
-            'inv_llanta_del_der'          => 'nullable|in:B,R,M',
-            'inv_llanta_tra_izq'          => 'nullable|in:B,R,M',
-            'inv_llanta_tra_der'          => 'nullable|in:B,R,M',
-            'inv_llanta_repuesto'         => 'nullable|in:B,R,M',
-            'inv_antena'                  => 'nullable|in:B,R,M',
-            'inv_radio'                   => 'nullable|in:B,R,M',
-            'inv_encendedor'              => 'nullable|in:B,R,M',
-            'inv_gato'                    => 'nullable|in:B,R,M',
-            'inv_triangulo'               => 'nullable|in:B,R,M',
-            'inv_observaciones'           => 'nullable|string|max:500',
+            'inv_observaciones'      => 'nullable|string|max:500',
         ];
+
+        foreach ($invSimples as $c) {
+            $rules["inv_{$c}"] = 'nullable|in:B,R,M';
+        }
+        foreach ($invCantidad as $c) {
+            $rules["inv_{$c}_qty"] = 'nullable|integer|min:0|max:99';
+            $rules["inv_{$c}"]     = 'nullable|in:B,R,M';
+        }
+
+        return $rules;
     }
 
     public function messages(): array

@@ -89,6 +89,17 @@
                         <input type="email" name="email_cliente" class="form-control"
                                value="{{ old('email_cliente', $orden->clientePersona?->email) }}">
                     </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" name="direccion_cliente" class="form-control"
+                               value="{{ old('direccion_cliente', $orden->clientePersona?->direccion) }}"
+                               placeholder="Calle, barrio, ciudad">
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Fecha de cumpleaños</label>
+                        <input type="date" name="fecha_cumpleanos_cliente" class="form-control"
+                               value="{{ old('fecha_cumpleanos_cliente', $orden->clientePersona?->fecha_cumpleanos?->format('Y-m-d')) }}">
+                    </div>
                 </div>
             </div>
         </div>

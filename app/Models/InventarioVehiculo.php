@@ -10,11 +10,20 @@ class InventarioVehiculo extends Model
 
     protected $fillable = [
         'id_ot',
-        'parabrisas', 'vidrio_delantero_izq', 'vidrio_delantero_der',
-        'vidrio_trasero_izq', 'vidrio_trasero_der', 'vidrio_trasero',
-        'espejo_izq', 'espejo_der',
-        'llanta_del_izq', 'llanta_del_der', 'llanta_tra_izq', 'llanta_tra_der',
-        'llanta_repuesto', 'antena', 'radio', 'encendedor', 'gato', 'triangulo',
+        // sin cantidad
+        'retrovisores', 'retrovisor_interno', 'radio', 'encendedor', 'pito',
+        'tapizado', 'luz_techo', 'tapa_gasolina', 'llave_pernos', 'herramientas',
+        'kit_carretera', 'gato', 'extintor', 'sensores', 'camara_reversa',
+        'control_alarma', 'bateria', 'comando_ptas',
+        // con cantidad
+        'panoramicos_qty', 'panoramicos',
+        'parlantes_qty', 'parlantes',
+        'rejillas_aa_qty', 'rejillas_aa',
+        'plumillas_qty', 'plumillas',
+        'cinturones_qty', 'cinturones',
+        'manijas_qty', 'manijas',
+        'tapa_soles_qty', 'tapa_soles',
+        'tapetes_qty', 'tapetes',
         'observaciones',
     ];
 

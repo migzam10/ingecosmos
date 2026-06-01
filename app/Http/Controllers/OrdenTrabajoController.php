@@ -67,21 +67,21 @@ class OrdenTrabajoController extends Controller
     {
         DB::transaction(function () use ($request) {
             // 1. Crear o actualizar cliente persona
+            $datosCliente = [
+                'nombre'            => $request->nombre_cliente,
+                'telefono'          => $request->telefono_cliente,
+                'email'             => $request->email_cliente,
+                'direccion'         => $request->direccion_cliente,
+                'fecha_cumpleanos'  => $request->fecha_cumpleanos_cliente ?: null,
+            ];
+
             if ($request->filled('cedula_cliente')) {
                 $cliente = ClientePersona::updateOrCreate(
                     ['cedula' => $request->cedula_cliente],
-                    [
-                        'nombre'   => $request->nombre_cliente,
-                        'telefono' => $request->telefono_cliente,
-                        'email'    => $request->email_cliente,
-                    ]
+                    $datosCliente
                 );
             } else {
-                $cliente = ClientePersona::create([
-                    'nombre'   => $request->nombre_cliente,
-                    'telefono' => $request->telefono_cliente,
-                    'email'    => $request->email_cliente,
-                ]);
+                $cliente = ClientePersona::create($datosCliente);
             }
 
             // 2. Crear o actualizar vehículo
@@ -120,28 +120,19 @@ class OrdenTrabajoController extends Controller
             ]);
 
             // 5. Registrar inventario del vehículo
-            InventarioVehiculo::create([
-                'id_ot'                => $ot->id,
-                'parabrisas'           => $request->inv_parabrisas,
-                'vidrio_delantero_izq' => $request->inv_vidrio_delantero_izq,
-                'vidrio_delantero_der' => $request->inv_vidrio_delantero_der,
-                'vidrio_trasero_izq'   => $request->inv_vidrio_trasero_izq,
-                'vidrio_trasero_der'   => $request->inv_vidrio_trasero_der,
-                'vidrio_trasero'       => $request->inv_vidrio_trasero,
-                'espejo_izq'           => $request->inv_espejo_izq,
-                'espejo_der'           => $request->inv_espejo_der,
-                'llanta_del_izq'       => $request->inv_llanta_del_izq,
-                'llanta_del_der'       => $request->inv_llanta_del_der,
-                'llanta_tra_izq'       => $request->inv_llanta_tra_izq,
-                'llanta_tra_der'       => $request->inv_llanta_tra_der,
-                'llanta_repuesto'      => $request->inv_llanta_repuesto,
-                'antena'               => $request->inv_antena,
-                'radio'                => $request->inv_radio,
-                'encendedor'           => $request->inv_encendedor,
-                'gato'                 => $request->inv_gato,
-                'triangulo'            => $request->inv_triangulo,
-                'observaciones'        => $request->inv_observaciones,
-            ]);
+            $invSimples   = \App\Http\Controllers\InventarioController::CAMPOS_SIMPLES;
+            $invCantidad  = \App\Http\Controllers\InventarioController::CAMPOS_CON_CANTIDAD;
+
+            $invData = ['id_ot' => $ot->id, 'observaciones' => $request->inv_observaciones];
+            foreach ($invSimples as $c) {
+                $invData[$c] = $request->input("inv_{$c}");
+            }
+            foreach ($invCantidad as $c) {
+                $invData["{$c}_qty"] = $request->input("inv_{$c}_qty");
+                $invData[$c]         = $request->input("inv_{$c}");
+            }
+
+            InventarioVehiculo::create($invData);
 
             // 6. Registrar en historial — fecha_evento = fecha real de ingreso del vehículo
             $this->otService->cambiarEstado($ot, 'PTE_COTIZACION', 'OT creada en recepción', $request->fecha_ingreso);
@@ -176,24 +167,26 @@ class OrdenTrabajoController extends Controller
         );
 
         $data = $request->validate([
-            'id_marca'               => 'required|exists:marcas_vehiculo,id',
-            'id_modelo'              => 'nullable|exists:modelos_vehiculo,id',
-            'color'                  => 'nullable|string|max:50',
-            'anio'                   => 'nullable|integer|min:1980|max:' . (date('Y') + 1),
-            'nombre_cliente'         => 'required|string|max:150',
-            'cedula_cliente'         => 'nullable|string|max:20',
-            'telefono_cliente'       => 'nullable|string|max:20',
-            'email_cliente'          => 'nullable|email|max:100',
-            'id_empresa_cliente'     => 'required|exists:empresas_cliente,id',
-            'area'                   => 'required|in:LYP,MECANICA',
-            'km_ingreso'             => 'required|integer|min:0',
-            'referencia_forc'        => 'nullable|string|max:50',
-            'llaves_entregadas'      => 'boolean',
-            'documentos_entregados'  => 'boolean',
-            'ingreso_grua'           => 'boolean',
-            'nivel_combustible'      => 'required|integer|min:0|max:10',
-            'fecha_ingreso'          => 'required|date',
-            'observaciones'          => 'nullable|string|max:1000',
+            'id_marca'                 => 'required|exists:marcas_vehiculo,id',
+            'id_modelo'                => 'nullable|exists:modelos_vehiculo,id',
+            'color'                    => 'nullable|string|max:50',
+            'anio'                     => 'nullable|integer|min:1980|max:' . (date('Y') + 1),
+            'nombre_cliente'           => 'required|string|max:150',
+            'cedula_cliente'           => 'nullable|string|max:20',
+            'telefono_cliente'         => 'nullable|string|max:20',
+            'email_cliente'            => 'nullable|email|max:100',
+            'direccion_cliente'        => 'nullable|string|max:200',
+            'fecha_cumpleanos_cliente' => 'nullable|date',
+            'id_empresa_cliente'       => 'required|exists:empresas_cliente,id',
+            'area'                     => 'required|in:LYP,MECANICA',
+            'km_ingreso'               => 'required|integer|min:0',
+            'referencia_forc'          => 'nullable|string|max:50',
+            'llaves_entregadas'        => 'boolean',
+            'documentos_entregados'    => 'boolean',
+            'ingreso_grua'             => 'boolean',
+            'nivel_combustible'        => 'required|integer|min:0|max:10',
+            'fecha_ingreso'            => 'required|date',
+            'observaciones'            => 'nullable|string|max:1000',
         ]);
 
         DB::transaction(function () use ($data, $request, $orden) {
@@ -208,10 +201,12 @@ class OrdenTrabajoController extends Controller
             // Actualizar cliente
             if ($orden->clientePersona) {
                 $orden->clientePersona->update([
-                    'nombre'   => $data['nombre_cliente'],
-                    'cedula'   => $data['cedula_cliente'],
-                    'telefono' => $data['telefono_cliente'],
-                    'email'    => $data['email_cliente'],
+                    'nombre'           => $data['nombre_cliente'],
+                    'cedula'           => $data['cedula_cliente'],
+                    'telefono'         => $data['telefono_cliente'],
+                    'email'            => $data['email_cliente'],
+                    'direccion'        => $data['direccion_cliente'],
+                    'fecha_cumpleanos' => $data['fecha_cumpleanos_cliente'] ?: null,
                 ]);
             }
 
@@ -274,6 +269,8 @@ class OrdenTrabajoController extends Controller
             'empresaCliente', 'inventario', 'fotos.subidaPor', 'historial.user',
             'tecnicoLat', 'tecnicoPrep', 'tecnicoPint', 'tecnicoMec', 'tecnicoElec',
             'trabajosTecnico.tecnico',
+            'trabajosTecnico.historialComentarios.tecnico',
+            'trabajosTecnico.fotos',
             'entregasParciales',
         ]);
 
@@ -303,10 +300,12 @@ class OrdenTrabajoController extends Controller
             'modelo_nombre'   => $vehiculo->modelo?->nombre,
             'color'           => $vehiculo->color,
             'anio'            => $vehiculo->anio,
-            'nombre_cliente'  => $vehiculo->clientePersona?->nombre,
-            'cedula_cliente'  => $vehiculo->clientePersona?->cedula,
-            'telefono_cliente'=> $vehiculo->clientePersona?->telefono,
-            'email_cliente'   => $vehiculo->clientePersona?->email,
+            'nombre_cliente'           => $vehiculo->clientePersona?->nombre,
+            'cedula_cliente'           => $vehiculo->clientePersona?->cedula,
+            'telefono_cliente'         => $vehiculo->clientePersona?->telefono,
+            'email_cliente'            => $vehiculo->clientePersona?->email,
+            'direccion_cliente'        => $vehiculo->clientePersona?->direccion,
+            'fecha_cumpleanos_cliente' => $vehiculo->clientePersona?->fecha_cumpleanos?->format('Y-m-d'),
         ]);
     }
 
