@@ -202,6 +202,9 @@
                             <a href="{{ route('admin.empresas.index') }}" class="dropdown-item {{ request()->routeIs('admin.empresas.*') ? 'active' : '' }}">
                                 Empresas / CIAs
                             </a>
+                            <a href="{{ route('admin.festivos.index') }}" class="dropdown-item {{ request()->routeIs('admin.festivos.*') ? 'active' : '' }}">
+                                Días Festivos
+                            </a>
                         </div>
                     </li>
                     @endif

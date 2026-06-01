@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\EmpresaClienteController;
 use App\Http\Controllers\Admin\MigracionController;
 use App\Http\Controllers\Admin\TecnicoAdminController;
+use App\Http\Controllers\Admin\FestivoController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\AsignarTecnicoController;
 use App\Http\Controllers\EntregaParcialController;
@@ -136,6 +137,13 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
         ->except(['show']);
     Route::post('admin/empresas/{empresa}/restaurar', [EmpresaClienteController::class, 'restaurar'])
         ->name('admin.empresas.restaurar');
+
+    // Días festivos
+    Route::get('/admin/festivos',              [FestivoController::class, 'index'])->name('admin.festivos.index');
+    Route::post('/admin/festivos',             [FestivoController::class, 'store'])->name('admin.festivos.store');
+    Route::delete('/admin/festivos/{festivo}', [FestivoController::class, 'destroy'])->name('admin.festivos.destroy');
+    Route::get('/admin/festivos/plantilla',    [FestivoController::class, 'plantilla'])->name('admin.festivos.plantilla');
+    Route::post('/admin/festivos/importar',    [FestivoController::class, 'importar'])->name('admin.festivos.importar');
 
     // Migración Excel histórico
     Route::get('/admin/migracion',        [MigracionController::class, 'index'])->name('admin.migracion.index');
