@@ -4,6 +4,12 @@
 @section('page_title', 'Mis Tareas')
 @section('breadcrumb', isset($tecnico) ? $tecnico->nombre : 'Técnico')
 
+@section('page_actions')
+<a href="{{ route('mis-tareas.historial') }}" class="btn btn-outline-secondary btn-sm">
+    Historial completo
+</a>
+@endsection
+
 @section('content')
 
 @if(!isset($tecnico) || !$tecnico)
@@ -12,7 +18,7 @@
 </div>
 @else
 
-{{-- Resumen del técnico --}}
+{{-- KPIs --}}
 <div class="row g-3 mb-3">
     <div class="col-6 col-md-3">
         <div class="card kpi-card text-center">
@@ -41,11 +47,11 @@
     <div class="col-6 col-md-3">
         <div class="card kpi-card text-center">
             <div class="card-body py-3">
-                <div class="kpi-value text-info">
-                    @php
-                    $nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'];
-                    $espLegibles = array_map(fn($e) => $nombresEsp[$e] ?? $e, $tecnico->especialidades ?: []);
-                    @endphp
+                @php
+                $nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'];
+                $espLegibles = array_map(fn($e) => $nombresEsp[$e] ?? $e, $tecnico->especialidades ?: []);
+                @endphp
+                <div class="kpi-value text-info" style="font-size:1rem">
                     {{ implode(', ', $espLegibles) ?: '—' }}
                 </div>
                 <div class="kpi-label mt-1">Especialidades</div>
@@ -83,19 +89,16 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                 <div class="text-muted small mt-1">
                     {{ $ot->vehiculo->marca->nombre }} {{ $ot->vehiculo->modelo?->nombre }}
                     · {{ $ot->empresaCliente->nombre }}
+                    · Asignado: {{ $trabajo->created_at->format('d/m/Y') }}
                 </div>
             </div>
             <div class="col-auto text-end">
                 <x-semaforo :estado="$ot->estado_semaforo" />
                 @if($ot->salida_estimada)
-                <div class="text-muted small mt-1">
-                    Entrega: {{ $ot->salida_estimada->format('d/m/Y') }}
-                </div>
+                <div class="text-muted small mt-1">Entrega: {{ $ot->salida_estimada->format('d/m/Y') }}</div>
                 @endif
                 @if($trabajo->inicio_en)
-                <div class="text-muted small">
-                    Inicio: {{ $trabajo->inicio_en->format('d/m H:i') }}
-                </div>
+                <div class="text-muted small">Inicio: {{ $trabajo->inicio_en->format('d/m H:i') }}</div>
                 @endif
             </div>
         </div>
@@ -107,39 +110,96 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
         </div>
         @endif
 
-        {{-- Comentario actual --}}
-        @if($trabajo->comentarios)
-        <div class="mb-3 p-2 bg-light rounded small">
-            <strong>Mi comentario:</strong> {{ $trabajo->comentarios }}
+        {{-- Historial de comentarios --}}
+        @if($trabajo->historialComentarios->count() > 0)
+        <div class="mb-3">
+            <div class="fw-semibold small text-muted mb-1">Comentarios</div>
+            <div class="border rounded p-2 bg-light" style="max-height:180px;overflow-y:auto">
+                @foreach($trabajo->historialComentarios as $com)
+                <div class="d-flex gap-2 mb-2 {{ !$loop->last ? 'border-bottom pb-2' : '' }}">
+                    <div class="flex-shrink-0">
+                        <span class="badge bg-secondary-lt">{{ $com->tecnico->nombre ?? '—' }}</span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="small">{{ $com->texto }}</div>
+                        <div class="text-muted" style="font-size:.7rem">{{ $com->created_at->format('d/m/Y H:i') }}</div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Fotos del técnico --}}
+        @if($trabajo->fotos->count() > 0)
+        <div class="mb-3">
+            <div class="fw-semibold small text-muted mb-1">Fotos subidas ({{ $trabajo->fotos->count() }})</div>
+            <div class="d-flex flex-wrap gap-2">
+                @foreach($trabajo->fotos as $foto)
+                <a href="{{ asset('storage/' . $foto->ruta) }}" target="_blank" class="d-block">
+                    <img src="{{ asset('storage/' . $foto->ruta) }}"
+                         alt="{{ $foto->descripcion ?? 'Foto' }}"
+                         class="rounded border"
+                         style="height:64px;width:64px;object-fit:cover">
+                </a>
+                @endforeach
+            </div>
         </div>
         @endif
 
         {{-- Acciones --}}
         <div class="row g-2">
 
-            {{-- Iniciar --}}
+            {{-- Iniciar (con fecha opcional) --}}
             @if($trabajo->estado === 'PENDIENTE')
-            <div class="col-12 col-md-auto">
-                <form method="POST" action="{{ route('mis-tareas.iniciar', $trabajo) }}">
+            <div class="col-12">
+                <form method="POST" action="{{ route('mis-tareas.iniciar', $trabajo) }}"
+                      class="row g-2 align-items-end">
                     @csrf
-                    <button type="submit" class="btn btn-warning w-100"
-                            data-confirm="¿Iniciar el trabajo en OT #{{ $ot->numero_ot }}?">
-                        ▶ Iniciar Trabajo
-                    </button>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label mb-1 small">
+                            Fecha de inicio
+                            <span class="text-muted fw-normal">(opcional, por defecto hoy)</span>
+                        </label>
+                        <input type="date" name="inicio_en" class="form-control form-control-sm"
+                               value="{{ now()->toDateString() }}"
+                               min="{{ $ot->fecha_autorizacion
+                                   ? max($trabajo->created_at->toDateString(), \Carbon\Carbon::parse($ot->fecha_autorizacion)->toDateString())
+                                   : $trabajo->created_at->toDateString() }}"
+                               max="{{ now()->toDateString() }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-warning"
+                                data-confirm="¿Iniciar el trabajo en OT #{{ $ot->numero_ot }}?">
+                            ▶ Iniciar Trabajo
+                        </button>
+                    </div>
                 </form>
             </div>
             @endif
 
             {{-- Comentar --}}
-            <div class="col-12 col-md-6">
+            <div class="col-12 col-md-7">
                 <form method="POST" action="{{ route('mis-tareas.comentar', $trabajo) }}"
                       class="d-flex gap-2">
                     @csrf
                     <input type="text" name="comentario" class="form-control form-control-sm"
-                           placeholder="Agregar comentario..."
-                           value="{{ $trabajo->comentarios }}" maxlength="500">
+                           placeholder="Agregar comentario..." maxlength="1000">
                     <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">
-                        Guardar
+                        Comentar
+                    </button>
+                </form>
+            </div>
+
+            {{-- Subir fotos --}}
+            <div class="col-12 col-md-5">
+                <form method="POST" action="{{ route('mis-tareas.fotos', $trabajo) }}"
+                      enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
+                    @csrf
+                    <input type="file" name="fotos[]" accept="image/*" multiple
+                           class="form-control form-control-sm" style="max-width:200px">
+                    <button type="submit" class="btn btn-sm btn-outline-info text-nowrap">
+                        Subir fotos
                     </button>
                 </form>
             </div>
@@ -172,7 +232,12 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
 
 {{-- Finalizados del mes --}}
 @if($finalizados->count() > 0)
-<h3 class="mt-4 mb-3">Finalizados este mes</h3>
+<h3 class="mt-4 mb-3">
+    Finalizados este mes
+    <a href="{{ route('mis-tareas.historial') }}" class="btn btn-outline-secondary btn-sm ms-2">
+        Ver historial completo
+    </a>
+</h3>
 <div class="card">
     <div class="table-responsive">
         <table class="table table-sm table-hover mb-0">
@@ -180,9 +245,10 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                 <tr>
                     <th># OT</th>
                     <th>Placa</th>
-                    <th>Especialidad</th>
+                    <th>Función</th>
                     <th>Inicio</th>
                     <th>Fin</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -190,9 +256,13 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                 <tr>
                     <td class="fw-bold text-primary">{{ $t->ot->numero_ot }}</td>
                     <td><span class="badge bg-blue-lt">{{ $t->ot->vehiculo->placa }}</span></td>
-                    <td><span class="badge bg-secondary-lt">{{ $t->especialidad }}</span></td>
+                    <td><span class="badge bg-secondary-lt">{{ $nombresEsp2[$t->especialidad] ?? $t->especialidad }}</span></td>
                     <td class="small text-muted">{{ $t->inicio_en?->format('d/m H:i') ?? '—' }}</td>
                     <td class="small text-muted">{{ $t->fin_en?->format('d/m H:i') ?? '—' }}</td>
+                    <td>
+                        <a href="{{ route('mis-tareas.detalle', $t) }}"
+                           class="btn btn-xs btn-outline-secondary">Ver</a>
+                    </td>
                 </tr>
                 @endforeach
             </tbody>

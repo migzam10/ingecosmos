@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class FotoOt extends Model
 {
     protected $table = 'fotos_ot';
-    protected $fillable = ['id_ot', 'subida_por', 'ruta', 'descripcion'];
+    protected $fillable = ['id_ot', 'id_trabajo', 'subida_por', 'ruta', 'descripcion'];
 
     public function ot()
     {
@@ -17,5 +17,10 @@ class FotoOt extends Model
     public function subidaPor()
     {
         return $this->belongsTo(\App\Models\User::class, 'subida_por');
+    }
+
+    public function trabajo()
+    {
+        return $this->belongsTo(TrabajoTecnico::class, 'id_trabajo');
     }
 }

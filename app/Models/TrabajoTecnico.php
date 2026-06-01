@@ -31,4 +31,14 @@ class TrabajoTecnico extends Model
     {
         return $this->belongsTo(Tecnico::class, 'id_tecnico');
     }
+
+    public function historialComentarios()
+    {
+        return $this->hasMany(ComentarioTrabajo::class, 'id_trabajo')->orderBy('created_at');
+    }
+
+    public function fotos()
+    {
+        return $this->hasMany(FotoOt::class, 'id_trabajo')->orderBy('created_at');
+    }
 }
