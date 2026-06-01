@@ -57,7 +57,7 @@ class CotizacionController extends Controller
 
         $cot = $this->service->crear($orden, $request->all());
 
-        return redirect()->route('cotizaciones.pdf', $cot)
+        return redirect()->route('cotizaciones.show', $cot)
             ->with('success', "Cotización #{$cot->numero_cot} guardada. OT pasó a PTE_AUTORIZACION.");
     }
 
@@ -103,7 +103,7 @@ class CotizacionController extends Controller
 
         $cot = $this->service->actualizar($cotizacion, $request->all());
 
-        return redirect()->route('cotizaciones.pdf', $cot)
+        return redirect()->route('cotizaciones.show', $cot)
             ->with('success', "Cotización #{$cot->numero_cot} actualizada.");
     }
 

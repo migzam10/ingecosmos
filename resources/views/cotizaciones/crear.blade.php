@@ -132,8 +132,9 @@
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">$</span>
                             <input type="number" name="subtotal_rto" id="inp-rto"
-                                   class="form-control text-end" value="0" min="0" step="1000"
-                                   oninput="recalcularTotal()">
+                                   class="form-control text-end"
+                                   value="{{ isset($cotizacion) ? $cotizacion->subtotal_rto : 0 }}"
+                                   min="0" step="1000" oninput="recalcularTotal()">
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
@@ -141,8 +142,9 @@
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">$</span>
                             <input type="number" name="subtotal_terceros" id="inp-terceros"
-                                   class="form-control text-end" value="0" min="0" step="1000"
-                                   oninput="recalcularTotal()">
+                                   class="form-control text-end"
+                                   value="{{ isset($cotizacion) ? $cotizacion->subtotal_terceros : 0 }}"
+                                   min="0" step="1000" oninput="recalcularTotal()">
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
@@ -150,8 +152,9 @@
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">$</span>
                             <input type="number" name="subtotal_op" id="inp-op"
-                                   class="form-control text-end" value="0" min="0" step="1000"
-                                   oninput="recalcularTotal()">
+                                   class="form-control text-end"
+                                   value="{{ isset($cotizacion) ? $cotizacion->subtotal_op : 0 }}"
+                                   min="0" step="1000" oninput="recalcularTotal()">
                         </div>
                     </div>
                 </div>
@@ -163,7 +166,7 @@
             <div class="card-body">
                 <label class="form-label">Observaciones de la cotización</label>
                 <textarea name="observaciones" class="form-control" rows="2"
-                          placeholder="Notas para la CIA o el cliente..."></textarea>
+                          placeholder="Notas para la CIA o el cliente...">{{ isset($cotizacion) ? $cotizacion->observaciones : '' }}</textarea>
             </div>
         </div>
 
@@ -262,8 +265,15 @@ const TIPO_CLIENTE  = '{{ $orden->empresaCliente->tipo }}';
 const ID_MARCA      = {{ $orden->vehiculo->id_marca }};
 const ID_MODELO     = {{ $orden->vehiculo->id_modelo ?? 'null' }};
 const CATALOGO_URL  = '{{ route("api.catalogo-mo") }}';
-const FESTIVOS_URL  = null; // Se calculará en backend al guardar
 const FECHA_INICIO  = '{{ $orden->fecha_inicio_proceso ?? "" }}';
+
+@if(isset($cotizacion))
+const ITEMS_MO_EDIT  = @json($cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo]));
+const ITEMS_SUM_EDIT = @json($cotizacion->itemsSuministro->map(fn($i) => ['descripcion' => $i->descripcion, 'costo' => (float)$i->costo, 'precio' => (float)$i->precio]));
+@else
+const ITEMS_MO_EDIT  = [];
+const ITEMS_SUM_EDIT = [];
+@endif
 
 let contadorMo  = 0;
 let contadorSum = 0;
@@ -381,9 +391,9 @@ function agregarFilaMO(descripcion = '', precio = 0, idCatalogo = null) {
 document.getElementById('btn-agregar-mo').onclick = () => agregarFilaMO();
 
 // ── FILAS SUMINISTROS ────────────────────────────────────────────────────────
-function agregarFilaSum(descripcion = '', costo = 0) {
+function agregarFilaSum(descripcion = '', costo = 0, precioFijo = null) {
     const i = contadorSum++;
-    const precio = Math.round(costo * 1.25);
+    const precio = precioFijo !== null ? precioFijo : Math.round(costo * 1.25);
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td>
@@ -430,6 +440,11 @@ document.getElementById('btn-agregar-sum').onclick = () => agregarFilaSum();
 // ── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
     cargarCatalogo();
+
+    // Pre-cargar ítems existentes en modo edición
+    ITEMS_MO_EDIT.forEach(item  => agregarFilaMO(item.descripcion, item.precio, item.id_catalogo_mo));
+    ITEMS_SUM_EDIT.forEach(item => agregarFilaSum(item.descripcion, item.costo, item.precio));
+
     recalcularTotal();
 });
 </script>
