@@ -470,7 +470,9 @@
                                 <th>Estado</th>
                                 <th>Inicio</th>
                                 <th>Fin</th>
+                                @if(in_array('ADMIN', Auth::user()->roles ?: []) || in_array('COORDINADOR', Auth::user()->roles ?: []))
                                 <th class="text-end">Valor liquidar</th>
+                                @endif
                                 <th></th>
                             </tr>
                         </thead>
@@ -493,8 +495,8 @@
                                 </td>
                                 <td class="small text-muted">{{ $trabajo->inicio_en?->format('d/m H:i') ?? '—' }}</td>
                                 <td class="small text-muted">{{ $trabajo->fin_en?->format('d/m H:i') ?? '—' }}</td>
+                                @if(in_array('ADMIN', Auth::user()->roles ?: []) || in_array('COORDINADOR', Auth::user()->roles ?: []))
                                 <td class="text-end small">
-                                    @if(in_array('ADMIN', Auth::user()->roles ?: []) || in_array('COORDINADOR', Auth::user()->roles ?: []))
                                     <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}" class="d-flex gap-1 justify-content-end">
                                         @csrf
                                         <div class="input-group input-group-sm" style="max-width:130px">
@@ -504,10 +506,8 @@
                                         </div>
                                         <button class="btn btn-sm btn-outline-secondary">✓</button>
                                     </form>
-                                    @else
-                                    $ {{ number_format($trabajo->valor_liquidar, 0, ',', '.') }}
-                                    @endif
                                 </td>
+                                @endif
                                 <td>
                                     @if($trabajo->estado === 'PENDIENTE')
                                     @php $r = Auth::user()->roles ?: []; @endphp

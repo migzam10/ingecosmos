@@ -6,8 +6,10 @@
 @section('breadcrumb', 'INGECOSMOS')
 
 @section('content')
+@php $roles = $roles ?? (Auth::user()->roles ?? []); @endphp
 <div class="row g-3 mb-4">
 
+    @if(!($esSoloCotizador ?? false))
     {{-- KPI: OTs Activas --}}
     <div class="col-6 col-md-4 col-lg-2">
         <div class="card kpi-card">
@@ -41,8 +43,9 @@
             </div>
         </div>
     </div>
+    @endif
 
-    {{-- KPI: Pte Cotización --}}
+    {{-- KPI: Pte Cotización (visible a todos) --}}
     <div class="col-6 col-md-4 col-lg-2">
         <div class="card kpi-card">
             <div class="card-body text-center">
@@ -52,7 +55,7 @@
         </div>
     </div>
 
-    {{-- KPI: Pte Autorización --}}
+    {{-- KPI: Pte Autorización (visible a todos) --}}
     <div class="col-6 col-md-4 col-lg-2">
         <div class="card kpi-card">
             <div class="card-body text-center">
@@ -62,6 +65,7 @@
         </div>
     </div>
 
+    @if(!($esSoloCotizador ?? false))
     {{-- KPI: En Proceso --}}
     <div class="col-6 col-md-4 col-lg-2">
         <div class="card kpi-card">
@@ -71,6 +75,7 @@
             </div>
         </div>
     </div>
+    @endif
 
 </div>
 
@@ -131,7 +136,7 @@
                 </a>
                 @endif
 
-                @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles))
+                @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles) || in_array('COTIZADOR', $roles))
                 <a href="{{ route('torre.index') }}" class="btn btn-outline-primary w-100 mb-2">
                     Torre de Control
                 </a>

@@ -13,6 +13,8 @@ class FotoOtController extends Controller
     // Subir una o varias fotos a una OT
     public function store(Request $request, OrdenTrabajo $orden)
     {
+        abort_unless(Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']), 403, 'No tienes permiso para subir fotos.');
+
         $request->validate([
             'fotos'   => 'required|array|min:1|max:10',
             'fotos.*' => 'image|max:5120',

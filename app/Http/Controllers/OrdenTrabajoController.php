@@ -144,6 +144,7 @@ class OrdenTrabajoController extends Controller
 
     public function edit(OrdenTrabajo $orden)
     {
+        abort_unless(Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']), 403, 'No tienes permiso para realizar esta acción.');
         abort_if(
             $orden->estado_proceso !== 'PTE_COTIZACION',
             403,
@@ -160,6 +161,7 @@ class OrdenTrabajoController extends Controller
 
     public function update(Request $request, OrdenTrabajo $orden)
     {
+        abort_unless(Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']), 403, 'No tienes permiso para realizar esta acción.');
         abort_if(
             $orden->estado_proceso !== 'PTE_COTIZACION',
             403,
@@ -232,6 +234,7 @@ class OrdenTrabajoController extends Controller
 
     public function destroy(OrdenTrabajo $orden)
     {
+        abort_unless(Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']), 403, 'No tienes permiso para realizar esta acción.');
         abort_if(
             $orden->estado_proceso !== 'PTE_COTIZACION',
             403,

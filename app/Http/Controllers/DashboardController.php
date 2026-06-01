@@ -37,7 +37,22 @@ class DashboardController extends Controller
         $alertas      = $this->alertaService->calcular();
         $totalAlertas = $this->alertaService->totalAlertas($alertas);
 
-        return view('dashboard.index', compact('kpis', 'alertas', 'totalAlertas'));
+        // COTIZADOR sin rol de coordinador: solo ve alertas de cotización
+        $esSoloCotizador = in_array('COTIZADOR', $roles)
+                        && !in_array('COORDINADOR', $roles)
+                        && !in_array('ADMIN', $roles);
+
+        if ($esSoloCotizador) {
+            foreach ($alertas as $nivel => $lista) {
+                $alertas[$nivel] = array_values(array_filter(
+                    $lista,
+                    fn($a) => in_array($a['tipo'], ['sin_cotizacion', 'sin_autorizacion'])
+                ));
+            }
+            $totalAlertas = $this->alertaService->totalAlertas($alertas);
+        }
+
+        return view('dashboard.index', compact('kpis', 'alertas', 'totalAlertas', 'roles', 'esSoloCotizador'));
     }
 
     private function dashboardTecnico()

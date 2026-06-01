@@ -54,6 +54,7 @@
 </div>
 
 {{-- FILTROS --}}
+@php $roles = Auth::user()->roles ?? []; $esGestorTorre = in_array('ADMIN',$roles)||in_array('COORDINADOR',$roles); @endphp
 <div class="card mb-3">
     <div class="card-body py-2">
         <form method="GET" action="{{ route('torre.index') }}" class="row g-2 align-items-end">
@@ -97,6 +98,7 @@
                 </select>
             </div>
 
+            @if($esGestorTorre)
             <div class="col-6 col-md-2">
                 <select name="tecnico" class="form-select form-select-sm">
                     <option value="">Todos los técnicos</option>
@@ -107,6 +109,7 @@
                     @endforeach
                 </select>
             </div>
+            @endif
 
             <div class="col-12 col-md-1 d-flex gap-1">
                 <button type="submit" class="btn btn-sm btn-secondary flex-grow-1">Filtrar</button>
@@ -131,7 +134,7 @@
                     <th style="width:90px">Semáforo</th>
                     <th style="width:85px">Días faltantes</th>
                     <th style="width:95px">Salida estimada</th>
-                    <th style="width:110px">Técnicos</th>
+                    @if($esGestorTorre)<th style="width:110px">Técnicos</th>@endif
                     <th style="width:80px">Días / Daño</th>
                     <th style="width:60px"></th>
                 </tr>
@@ -180,6 +183,7 @@
                     <td class="small text-muted">
                         {{ $ot->salida_estimada?->format('d/m/Y') ?? '—' }}
                     </td>
+                    @if($esGestorTorre)
                     <td class="small">
                         @foreach([
                             [$ot->tecnicoLat,  'Latonero'],
@@ -195,6 +199,7 @@
                         @endif
                         @endforeach
                     </td>
+                    @endif
                     <td class="small text-center">
                         @if($ot->dr)
                         <div><span class="text-muted">Días:</span> <strong>{{ $ot->dr }}</strong></div>
@@ -210,7 +215,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="12" class="text-center text-muted py-4">
+                    <td colspan="{{ $esGestorTorre ? 12 : 11 }}" class="text-center text-muted py-4">
                         No hay órdenes en esta vista.
                     </td>
                 </tr>

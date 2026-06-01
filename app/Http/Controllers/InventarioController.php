@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OrdenTrabajo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class InventarioController extends Controller
 {
@@ -23,6 +24,8 @@ class InventarioController extends Controller
 
     public function update(Request $request, OrdenTrabajo $orden)
     {
+        abort_unless(Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']), 403, 'No tienes permiso para modificar el inventario.');
+
         $rules = ['inv_observaciones' => 'nullable|string|max:500'];
 
         foreach (self::CAMPOS_SIMPLES as $c) {
