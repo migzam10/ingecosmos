@@ -137,7 +137,7 @@
                 <h3 class="card-title">Importar desde Excel</h3>
             </div>
             <div class="card-body">
-                <div class="alert alert-light py-2 mb-3 small">
+                <div class="alert alert-info py-2 mb-3 small">
                     <strong>Formato requerido (.xlsx / .xls):</strong>
                     <ul class="mb-0 mt-1 ps-3">
                         <li>Fila 1: encabezados <code>FECHA</code> y <code>NOMBRE</code> (exactos)</li>
