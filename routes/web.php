@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\EmpresaClienteController;
 use App\Http\Controllers\Admin\MigracionController;
 use App\Http\Controllers\Admin\TecnicoAdminController;
 use App\Http\Controllers\Admin\FestivoController;
+use App\Http\Controllers\Admin\MarcaModeloController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\AsignarTecnicoController;
 use App\Http\Controllers\EntregaParcialController;
@@ -137,6 +138,15 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
         ->except(['show']);
     Route::post('admin/empresas/{empresa}/restaurar', [EmpresaClienteController::class, 'restaurar'])
         ->name('admin.empresas.restaurar');
+
+    // Marcas y modelos de vehículos
+    Route::get('/admin/marcas',                              [MarcaModeloController::class, 'index'])->name('admin.marcas.index');
+    Route::post('/admin/marcas',                             [MarcaModeloController::class, 'storeMarca'])->name('admin.marcas.store');
+    Route::put('/admin/marcas/{marca}',                      [MarcaModeloController::class, 'updateMarca'])->name('admin.marcas.update');
+    Route::delete('/admin/marcas/{marca}',                   [MarcaModeloController::class, 'destroyMarca'])->name('admin.marcas.destroy');
+    Route::post('/admin/marcas/{marca}/modelos',             [MarcaModeloController::class, 'storeModelo'])->name('admin.modelos.store');
+    Route::put('/admin/modelos/{modelo}',                    [MarcaModeloController::class, 'updateModelo'])->name('admin.modelos.update');
+    Route::delete('/admin/modelos/{modelo}',                 [MarcaModeloController::class, 'destroyModelo'])->name('admin.modelos.destroy');
 
     // Días festivos
     Route::get('/admin/festivos',              [FestivoController::class, 'index'])->name('admin.festivos.index');

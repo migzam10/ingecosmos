@@ -13,4 +13,14 @@ class ModeloVehiculo extends Model
     {
         return $this->belongsTo(MarcaVehiculo::class, 'id_marca');
     }
+
+    public function vehiculos()
+    {
+        return $this->hasMany(Vehiculo::class, 'id_modelo');
+    }
+
+    public function catalogoMo()
+    {
+        return $this->hasMany(CatalogoMo::class, 'id_modelo');
+    }
 }
