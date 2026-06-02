@@ -116,7 +116,18 @@
                     </td>
                     <td>{{ $ot->empresaCliente->nombre }}</td>
                     <td><x-area-badge :area="$ot->area" /></td>
-                    <td><x-estado-badge :estado="$ot->estado_proceso" /></td>
+                    <td>
+                        <x-estado-badge :estado="$ot->estado_proceso" />
+                        @if($ot->estado_proceso === 'ENTREGADO' && $ot->fecha_entrega_cliente && $ot->salida_estimada &&
+                            $ot->fecha_entrega_cliente->gt($ot->salida_estimada))
+                        @php $diasTarde = $ot->salida_estimada->diffInDays($ot->fecha_entrega_cliente); @endphp
+                        <div class="mt-1">
+                            <span class="badge bg-danger-lt text-danger" style="font-size:.7rem">
+                                Tardío · {{ $diasTarde }}d
+                            </span>
+                        </div>
+                        @endif
+                    </td>
                     <td><x-semaforo :estado="$ot->estado_semaforo" /></td>
                     <td class="text-muted small">{{ $ot->fecha_ingreso->format('d/m/Y') }}</td>
                     <td>
@@ -162,7 +173,16 @@
                 · {{ $ot->fecha_ingreso->format('d/m/Y') }}
             </div>
             <div class="d-flex justify-content-between align-items-center">
-                <x-estado-badge :estado="$ot->estado_proceso" />
+                <div class="d-flex flex-wrap gap-1 align-items-center">
+                    <x-estado-badge :estado="$ot->estado_proceso" />
+                    @if($ot->estado_proceso === 'ENTREGADO' && $ot->fecha_entrega_cliente && $ot->salida_estimada &&
+                        $ot->fecha_entrega_cliente->gt($ot->salida_estimada))
+                    @php $diasTarde = $ot->salida_estimada->diffInDays($ot->fecha_entrega_cliente); @endphp
+                    <span class="badge bg-danger-lt text-danger" style="font-size:.7rem">
+                        Tardío · {{ $diasTarde }}d
+                    </span>
+                    @endif
+                </div>
                 <a href="{{ route('ordenes.show', $ot) }}" class="btn btn-sm btn-primary">Ver OT</a>
             </div>
         </div>
