@@ -65,7 +65,12 @@ $activo = !in_array($estado, $cerrados);
 @if($estado === 'PTE_ORDEN')
 <form method="POST" action="{{ route('ot.orden-repuestos', $orden) }}" class="row g-2 align-items-end">
     @csrf
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-3">
+        <label class="form-label small fw-bold">Fecha en que se envió la orden</label>
+        <input type="date" name="fecha_orden_rto" class="form-control form-control-sm"
+               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required>
+    </div>
+    <div class="col-12 col-md-5">
         <label class="form-label small">Comentario (opcional)</label>
         <input type="text" name="comentario" class="form-control form-control-sm"
                placeholder="Proveedor, referencia del pedido...">
@@ -225,7 +230,15 @@ $activo = !in_array($estado, $cerrados);
                     <option value="PTE_RETIRO">Pendiente de Retiro</option>
                 </select>
             </div>
-            <div class="col-12 col-md-5">
+            <div class="col-12 col-md-3">
+                <label class="form-label small fw-bold">Fecha real del evento</label>
+                <input type="date" name="fecha_evento" class="form-control form-control-sm"
+                       value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required>
+                <div class="text-muted mt-1" style="font-size:.72rem">
+                    Fecha en que ocurrió realmente (puede ser anterior a hoy)
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
                 <label class="form-label small">Motivo <span class="text-danger">*</span></label>
                 <input type="text" name="comentario" class="form-control form-control-sm"
                        placeholder="Explica el motivo..." required maxlength="500">

@@ -41,7 +41,7 @@ class EstadoOTController extends Controller
     public function ordenRepuestos(Request $request, OrdenTrabajo $orden)
     {
         $request->validate([
-            'fecha_orden_rto' => 'nullable|date|before_or_equal:today',
+            'fecha_orden_rto' => 'required|date|before_or_equal:today',
             'comentario'      => 'nullable|string|max:300',
         ]);
 
@@ -51,7 +51,7 @@ class EstadoOTController extends Controller
             $orden,
             'PTE_REPUESTOS',
             $request->comentario ?? 'Orden de repuestos enviada',
-            $request->fecha_orden_rto ?? now()->toDateString()
+            $request->fecha_orden_rto
         );
 
         return back()->with('success', 'OT pasa a PTE_REPUESTOS.');
@@ -183,6 +183,7 @@ class EstadoOTController extends Controller
         $request->validate([
             'nuevo_estado' => 'required|in:' . implode(',', $especiales),
             'comentario'   => 'required|string|max:500',
+            'fecha_evento' => 'required|date|before_or_equal:today',
         ]);
 
         DB::transaction(function () use ($orden, $request) {
@@ -195,7 +196,7 @@ class EstadoOTController extends Controller
                 $orden,
                 $request->nuevo_estado,
                 $request->comentario,
-                now()->toDateString()
+                $request->fecha_evento
             );
         });
 
