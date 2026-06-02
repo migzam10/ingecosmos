@@ -60,7 +60,7 @@
                             @endphp
                             @if($oportuno)
                             <span class="badge bg-success">
-                                ✓ Entrega oportuna@if($diasDiff > 0) · {{ $diasDiff }} días antes@endif
+                                ✓ Entrega oportuna{{ $diasDiff > 0 ? ' · ' . $diasDiff . ' días antes' : '' }}
                             </span>
                             @else
                             <span class="badge bg-danger">
