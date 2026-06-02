@@ -108,5 +108,36 @@
     </div>
     @endif
 
+    {{-- Fotos de recepción --}}
+    @if($ot->fotos->count() > 0)
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Fotos del vehículo</h3>
+                <span class="card-subtitle ms-2 text-muted">{{ $ot->fotos->count() }} foto(s) registrada(s) en recepción</span>
+            </div>
+            <div class="card-body">
+                <div class="row g-2">
+                    @foreach($ot->fotos as $foto)
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <a href="{{ asset('storage/' . $foto->ruta) }}" target="_blank">
+                            <img src="{{ asset('storage/' . $foto->ruta) }}"
+                                 alt="{{ $foto->descripcion ?? 'Foto vehículo' }}"
+                                 class="img-fluid rounded border"
+                                 style="width:100%;height:100px;object-fit:cover">
+                        </a>
+                        @if($foto->descripcion)
+                        <div class="text-muted text-truncate mt-1" style="font-size:.75rem">
+                            {{ $foto->descripcion }}
+                        </div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
 </div>
 @endsection

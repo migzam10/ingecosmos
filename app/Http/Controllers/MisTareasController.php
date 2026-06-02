@@ -200,6 +200,7 @@ class MisTareasController extends Controller
             'ot.vehiculo.modelo',
             'ot.empresaCliente',
             'ot.inventario',
+            'ot.fotos' => fn($q) => $q->whereNull('id_trabajo')->orderBy('created_at'),
         ]);
 
         return view('mis-tareas.vehiculo', compact('trabajo'));
