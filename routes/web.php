@@ -108,8 +108,8 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,COTIZADOR'])->group(function 
     Route::post('/ordenes/{orden}/cotizar',              [CotizacionController::class, 'store'])->name('cotizaciones.store');
 });
 
-// Torre de Control — COTIZADOR tiene acceso de solo lectura (filtros y semáforo, sin cambiar estados)
-Route::middleware(['auth', 'role:ADMIN,COORDINADOR,COTIZADOR'])->group(function () {
+// Torre de Control
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
 });
 

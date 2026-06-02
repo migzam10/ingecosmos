@@ -59,7 +59,7 @@
 
                     @php $roles = Auth::user()->roles ?? []; @endphp
 
-                    @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles) || in_array('RECEPCION', $roles))
+                    @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles) || in_array('RECEPCION', $roles) || in_array('COTIZADOR', $roles))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('ordenes.*') ? 'active' : '' }}"
                            href="{{ route('ordenes.index') }}">
@@ -78,7 +78,7 @@
                     </li>
                     @endif
 
-                    @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles) || in_array('COTIZADOR', $roles))
+                    @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('torre.*') ? 'active' : '' }}"
                            href="{{ route('torre.index') }}">

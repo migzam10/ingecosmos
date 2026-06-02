@@ -136,7 +136,7 @@
                 </a>
                 @endif
 
-                @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles) || in_array('COTIZADOR', $roles))
+                @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles))
                 <a href="{{ route('torre.index') }}" class="btn btn-outline-primary w-100 mb-2">
                     Torre de Control
                 </a>
