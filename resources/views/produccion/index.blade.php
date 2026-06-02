@@ -396,7 +396,7 @@ $nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'M
                     <th>Placa / Vehículo</th>
                     <th>Empresa</th>
                     <th>Daño</th>
-                    <th class="text-center">Días est.</th>
+                    <th class="text-center" title="DR — días hábiles estimados de reparación física, calculado desde la mano de obra de la cotización">Días reparación</th>
                     <th class="text-center">Tiempo total</th>
                     <th class="text-center">Oportuno</th>
                 </tr>

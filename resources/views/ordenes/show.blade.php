@@ -53,6 +53,21 @@
                             @if($orden->tg)
                             <x-tg-badge :tg="$orden->tg" />
                             @endif
+                            @if($orden->estado_proceso === 'ENTREGADO' && $orden->fecha_entrega_cliente && $orden->salida_estimada)
+                            @php
+                                $oportuno = $orden->fecha_entrega_cliente->lte($orden->salida_estimada);
+                                $diasDiff = $orden->salida_estimada->diffInDays($orden->fecha_entrega_cliente);
+                            @endphp
+                            @if($oportuno)
+                            <span class="badge bg-success">
+                                ✓ Entrega oportuna@if($diasDiff > 0) · {{ $diasDiff }} días antes@endif
+                            </span>
+                            @else
+                            <span class="badge bg-danger">
+                                ✗ Entrega tardía · {{ $diasDiff }} días de retraso
+                            </span>
+                            @endif
+                            @endif
                         </div>
                         <div class="text-muted small mt-1">
                             Ingreso: {{ $orden->fecha_ingreso->format('d/m/Y') }}
