@@ -43,6 +43,15 @@
                 </select>
             </div>
             <div class="col-auto">
+                <label class="form-label mb-1 small">Especialidad</label>
+                <select name="especialidad" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    @foreach(['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'] as $k => $v)
+                    <option value="{{ $k }}" {{ request('especialidad') === $k ? 'selected' : '' }}>{{ $v }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-auto">
                 <button type="submit" class="btn btn-sm btn-primary">Filtrar</button>
                 <a href="{{ route('mis-tareas.historial') }}" class="btn btn-sm btn-outline-secondary ms-1">Limpiar</a>
             </div>
@@ -63,6 +72,7 @@
                     <th>Función</th>
                     <th>Inicio</th>
                     <th>Fin</th>
+                    <th class="text-end">Valor</th>
                     <th></th>
                 </tr>
             </thead>
@@ -77,6 +87,13 @@
                     <td><span class="badge bg-secondary-lt">{{ $nombresEsp[$t->especialidad] ?? $t->especialidad }}</span></td>
                     <td class="small text-muted">{{ $t->inicio_en?->format('d/m/Y H:i') ?? '—' }}</td>
                     <td class="small text-muted">{{ $t->fin_en?->format('d/m/Y H:i') ?? '—' }}</td>
+                    <td class="text-end small">
+                        @if($t->valor_liquidar > 0)
+                            <span class="text-success">${{ number_format($t->valor_liquidar, 0, ',', '.') }}</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </td>
                     <td>
                         <a href="{{ route('mis-tareas.detalle', $t) }}"
                            class="btn btn-xs btn-outline-primary">Ver</a>

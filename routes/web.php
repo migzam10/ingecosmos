@@ -170,9 +170,9 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,TECNICO'])->group(function ()
     Route::get('/mis-tareas',                         [MisTareasController::class, 'index'])->name('mis-tareas.index');
     Route::get('/mis-tareas/historial',               [MisTareasController::class, 'historial'])->name('mis-tareas.historial');
     Route::get('/mis-tareas/{trabajo}/detalle',       [MisTareasController::class, 'detalle'])->name('mis-tareas.detalle');
+    Route::get('/mis-tareas/{trabajo}/vehiculo',      [MisTareasController::class, 'vehiculo'])->name('mis-tareas.vehiculo');
     Route::post('/mis-tareas/{trabajo}/iniciar',      [MisTareasController::class, 'iniciar'])->name('mis-tareas.iniciar');
-    Route::post('/mis-tareas/{trabajo}/comentar',     [MisTareasController::class, 'comentar'])->name('mis-tareas.comentar');
-    Route::post('/mis-tareas/{trabajo}/fotos',        [MisTareasController::class, 'subirFoto'])->name('mis-tareas.fotos');
+    Route::post('/mis-tareas/{trabajo}/guardar',      [MisTareasController::class, 'guardar'])->name('mis-tareas.guardar');
     Route::post('/mis-tareas/{trabajo}/finalizar',    [MisTareasController::class, 'finalizar'])->name('mis-tareas.finalizar');
 });
 

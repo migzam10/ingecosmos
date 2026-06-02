@@ -47,14 +47,14 @@
     <div class="col-6 col-md-3">
         <div class="card kpi-card text-center">
             <div class="card-body py-3">
-                @php
-                $nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'];
-                $espLegibles = array_map(fn($e) => $nombresEsp[$e] ?? $e, $tecnico->especialidades ?: []);
-                @endphp
-                <div class="kpi-value text-info" style="font-size:1rem">
-                    {{ implode(', ', $espLegibles) ?: '—' }}
+                <div class="kpi-value text-success" style="font-size:1.1rem">
+                    @if($ganadoMes > 0)
+                        ${{ number_format($ganadoMes/1000, 0) }}K
+                    @else
+                        <span class="text-muted" style="font-size:0.9rem">Sin asignar</span>
+                    @endif
                 </div>
-                <div class="kpi-label mt-1">Especialidades</div>
+                <div class="kpi-label mt-1">Ganado este mes</div>
             </div>
         </div>
     </div>
@@ -62,6 +62,8 @@
 
 {{-- Tareas activas --}}
 <h3 class="mb-3">Tareas Asignadas</h3>
+
+@php $nombresEsp2 = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico']; @endphp
 
 @forelse($trabajos as $trabajo)
 @php
@@ -80,11 +82,14 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                     <span class="fw-bold text-primary fs-5"># {{ $ot->numero_ot }}</span>
                     <span class="badge bg-blue-lt fw-bold">{{ $ot->vehiculo->placa }}</span>
                     <span class="badge bg-secondary-lt">{{ $ot->area }}</span>
-                    @php $nombresEsp2 = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico']; @endphp
                     <span class="badge {{ $enProceso ? 'bg-warning text-dark' : 'bg-secondary-lt' }}">
                         {{ $nombresEsp2[$trabajo->especialidad] ?? $trabajo->especialidad }}
                         — {{ $enProceso ? 'En proceso' : 'Pendiente' }}
                     </span>
+                    <a href="{{ route('mis-tareas.vehiculo', $trabajo) }}"
+                       class="btn btn-sm btn-outline-secondary">
+                        Ver vehículo
+                    </a>
                 </div>
                 <div class="text-muted small mt-1">
                     {{ $ot->vehiculo->marca->nombre }} {{ $ot->vehiculo->modelo?->nombre }}
@@ -100,12 +105,21 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                 @if($trabajo->inicio_en)
                 <div class="text-muted small">Inicio: {{ $trabajo->inicio_en->format('d/m H:i') }}</div>
                 @endif
+                <div class="text-muted small mt-1">
+                    @if($trabajo->valor_liquidar > 0)
+                        <span class="text-success fw-semibold">
+                            Valor: ${{ number_format($trabajo->valor_liquidar, 0, ',', '.') }}
+                        </span>
+                    @else
+                        <span class="text-muted">Valor: pendiente de asignar</span>
+                    @endif
+                </div>
             </div>
         </div>
 
         {{-- Observaciones de la OT --}}
         @if($ot->observaciones)
-        <div class="alert alert-light py-2 mb-3 small">
+        <div class="alert alert-info py-2 mb-3 small">
             <strong>Obs. OT:</strong> {{ $ot->observaciones }}
         </div>
         @endif
@@ -178,29 +192,41 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
             </div>
             @endif
 
-            {{-- Comentar --}}
-            <div class="col-12 col-md-7">
-                <form method="POST" action="{{ route('mis-tareas.comentar', $trabajo) }}"
-                      class="d-flex gap-2">
+            {{-- Formulario unificado: comentario + fotos --}}
+            <div class="col-12">
+                <form method="POST" action="{{ route('mis-tareas.guardar', $trabajo) }}"
+                      enctype="multipart/form-data" class="row g-2">
                     @csrf
-                    <input type="text" name="comentario" class="form-control form-control-sm"
-                           placeholder="Agregar comentario..." maxlength="1000">
-                    <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">
-                        Comentar
-                    </button>
-                </form>
-            </div>
 
-            {{-- Subir fotos --}}
-            <div class="col-12 col-md-5">
-                <form method="POST" action="{{ route('mis-tareas.fotos', $trabajo) }}"
-                      enctype="multipart/form-data" class="d-flex gap-2 align-items-center">
-                    @csrf
-                    <input type="file" name="fotos[]" accept="image/*" multiple
-                           class="form-control form-control-sm" style="max-width:200px">
-                    <button type="submit" class="btn btn-sm btn-outline-info text-nowrap">
-                        Subir fotos
-                    </button>
+                    @error('guardar')
+                    <div class="col-12">
+                        <div class="text-danger small">{{ $message }}</div>
+                    </div>
+                    @enderror
+
+                    <div class="col-12">
+                        <textarea name="comentario" class="form-control form-control-sm"
+                                  rows="2" maxlength="1000"
+                                  placeholder="Comentario de avance (opcional si subes fotos)..."></textarea>
+                    </div>
+
+                    <div class="col-12 col-md-7">
+                        <label class="form-label small text-muted mb-1">
+                            Fotos <span class="text-muted fw-normal">(opcional, máx. 5 de 5MB c/u)</span>
+                        </label>
+                        <input type="file" name="fotos[]" accept="image/*" multiple
+                               class="form-control form-control-sm">
+                    </div>
+
+                    <div class="col-12 col-md-5">
+                        <label class="form-label small text-muted mb-1">Descripción de las fotos</label>
+                        <input type="text" name="descripcion" class="form-control form-control-sm"
+                               placeholder="Ej: Daño lateral izquierdo" maxlength="150">
+                    </div>
+
+                    <div class="col-12 text-end">
+                        <button type="submit" class="btn btn-sm btn-primary">Guardar</button>
+                    </div>
                 </form>
             </div>
 
@@ -248,6 +274,7 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                     <th>Función</th>
                     <th>Inicio</th>
                     <th>Fin</th>
+                    <th class="text-end">Valor</th>
                     <th></th>
                 </tr>
             </thead>
@@ -259,6 +286,13 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                     <td><span class="badge bg-secondary-lt">{{ $nombresEsp2[$t->especialidad] ?? $t->especialidad }}</span></td>
                     <td class="small text-muted">{{ $t->inicio_en?->format('d/m H:i') ?? '—' }}</td>
                     <td class="small text-muted">{{ $t->fin_en?->format('d/m H:i') ?? '—' }}</td>
+                    <td class="text-end small">
+                        @if($t->valor_liquidar > 0)
+                            <span class="text-success">${{ number_format($t->valor_liquidar, 0, ',', '.') }}</span>
+                        @else
+                            <span class="text-muted">—</span>
+                        @endif
+                    </td>
                     <td>
                         <a href="{{ route('mis-tareas.detalle', $t) }}"
                            class="btn btn-xs btn-outline-secondary">Ver</a>

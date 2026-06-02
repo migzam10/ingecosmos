@@ -9,7 +9,6 @@ use App\Models\TrabajoTecnico;
 use App\Services\OTService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class MisTareasController extends Controller
 {
@@ -20,7 +19,7 @@ class MisTareasController extends Controller
         $tecnico = Auth::user()->tecnico;
 
         if (!$tecnico) {
-            return view('mis-tareas.index', ['trabajos' => collect(), 'finalizados' => collect(), 'tecnico' => null]);
+            return view('mis-tareas.index', ['trabajos' => collect(), 'finalizados' => collect(), 'tecnico' => null, 'ganadoMes' => 0]);
         }
 
         $trabajos = TrabajoTecnico::with([
@@ -41,7 +40,9 @@ class MisTareasController extends Controller
             ->orderByDesc('fin_en')
             ->get();
 
-        return view('mis-tareas.index', compact('trabajos', 'finalizados', 'tecnico'));
+        $ganadoMes = $finalizados->sum('valor_liquidar');
+
+        return view('mis-tareas.index', compact('trabajos', 'finalizados', 'tecnico', 'ganadoMes'));
     }
 
     public function iniciar(Request $request, TrabajoTecnico $trabajo)
@@ -60,11 +61,9 @@ class MisTareasController extends Controller
             ? \Carbon\Carbon::parse($request->inicio_en)
             : now();
 
-        // No puede ser anterior a cuando fue asignado
         $minFecha = $trabajo->created_at->startOfDay();
         $ot = $trabajo->ot;
 
-        // Tampoco anterior a fecha de autorización si existe
         if ($ot->fecha_autorizacion && \Carbon\Carbon::parse($ot->fecha_autorizacion)->startOfDay() > $minFecha) {
             $minFecha = \Carbon\Carbon::parse($ot->fecha_autorizacion)->startOfDay();
         }
@@ -85,51 +84,53 @@ class MisTareasController extends Controller
         return back()->with('success', 'Trabajo iniciado.');
     }
 
-    public function comentar(Request $request, TrabajoTecnico $trabajo)
+    public function guardar(Request $request, TrabajoTecnico $trabajo)
     {
         $this->autorizarTecnico($trabajo);
 
         $request->validate([
-            'comentario' => 'required|string|max:1000',
-        ]);
-
-        $tecnico = Auth::user()->tecnico;
-
-        ComentarioTrabajo::create([
-            'id_trabajo' => $trabajo->id,
-            'id_tecnico' => $tecnico->id,
-            'texto'      => $request->comentario,
-        ]);
-
-        return back()->with('success', 'Comentario guardado.');
-    }
-
-    public function subirFoto(Request $request, TrabajoTecnico $trabajo)
-    {
-        $this->autorizarTecnico($trabajo);
-
-        $request->validate([
-            'fotos'       => 'required|array|min:1|max:5',
+            'comentario'  => 'nullable|string|max:1000',
+            'fotos'       => 'nullable|array|max:5',
             'fotos.*'     => 'image|max:5120',
             'descripcion' => 'nullable|string|max:150',
         ]);
 
-        $carpeta = 'fotos/' . $trabajo->ot->numero_ot;
+        $tieneComentario = $request->filled('comentario');
+        $tieneFotos      = $request->hasFile('fotos');
 
-        foreach ($request->file('fotos') as $archivo) {
-            $ruta = $archivo->store($carpeta, 'public');
-
-            FotoOt::create([
-                'id_ot'       => $trabajo->id_ot,
-                'id_trabajo'  => $trabajo->id,
-                'subida_por'  => Auth::id(),
-                'ruta'        => $ruta,
-                'descripcion' => $request->descripcion,
+        if (!$tieneComentario && !$tieneFotos) {
+            return back()->withErrors([
+                'guardar' => 'Escribe un comentario o selecciona al menos una foto.',
             ]);
         }
 
-        $cantidad = count($request->file('fotos'));
-        $msg = $cantidad === 1 ? '1 foto subida.' : "{$cantidad} fotos subidas.";
+        if ($tieneComentario) {
+            ComentarioTrabajo::create([
+                'id_trabajo' => $trabajo->id,
+                'id_tecnico' => Auth::user()->tecnico->id,
+                'texto'      => $request->comentario,
+            ]);
+        }
+
+        if ($tieneFotos) {
+            $carpeta = 'fotos/' . $trabajo->ot->numero_ot;
+            foreach ($request->file('fotos') as $archivo) {
+                $ruta = $archivo->store($carpeta, 'public');
+                FotoOt::create([
+                    'id_ot'       => $trabajo->id_ot,
+                    'id_trabajo'  => $trabajo->id,
+                    'subida_por'  => Auth::id(),
+                    'ruta'        => $ruta,
+                    'descripcion' => $request->descripcion,
+                ]);
+            }
+        }
+
+        $msg = match(true) {
+            $tieneComentario && $tieneFotos => 'Comentario y fotos guardados.',
+            $tieneComentario               => 'Comentario guardado.',
+            default                        => count($request->file('fotos')) . ' foto(s) guardada(s).',
+        };
 
         return back()->with('success', $msg);
     }
@@ -165,9 +166,12 @@ class MisTareasController extends Controller
             ->where('estado', 'FINALIZADO')
             ->orderByDesc('fin_en');
 
-        // Filtros opcionales
         if ($request->filled('mes') && $request->filled('anio')) {
             $query->whereMonth('fin_en', $request->mes)->whereYear('fin_en', $request->anio);
+        }
+
+        if ($request->filled('especialidad')) {
+            $query->where('especialidad', $request->especialidad);
         }
 
         $trabajos = $query->paginate(20)->withQueryString();
@@ -187,11 +191,25 @@ class MisTareasController extends Controller
         return view('mis-tareas.detalle', compact('trabajo'));
     }
 
+    public function vehiculo(TrabajoTecnico $trabajo)
+    {
+        $this->autorizarTecnico($trabajo);
+
+        $trabajo->load([
+            'ot.vehiculo.marca',
+            'ot.vehiculo.modelo',
+            'ot.empresaCliente',
+            'ot.inventario',
+        ]);
+
+        return view('mis-tareas.vehiculo', compact('trabajo'));
+    }
+
     private function verificarFinOT(OrdenTrabajo $ot): void
     {
         $ot->load('trabajosTecnico');
 
-        $total      = $ot->trabajosTecnico->count();
+        $total       = $ot->trabajosTecnico->count();
         $finalizados = $ot->trabajosTecnico->where('estado', 'FINALIZADO')->count();
 
         if ($total > 0 && $total === $finalizados) {

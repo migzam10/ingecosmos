@@ -65,6 +65,17 @@ $nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'M
                         {{ $trabajo->inicio_en->diffForHumans($trabajo->fin_en, true) }}
                     </dd>
                     @endif
+
+                    <dt class="col-5 small">Valor asignado</dt>
+                    <dd class="col-7 small">
+                        @if($trabajo->valor_liquidar > 0)
+                            <span class="fw-bold text-success">
+                                ${{ number_format($trabajo->valor_liquidar, 0, ',', '.') }}
+                            </span>
+                        @else
+                            <span class="text-muted">Pendiente de asignar</span>
+                        @endif
+                    </dd>
                 </dl>
             </div>
         </div>
