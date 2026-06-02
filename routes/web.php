@@ -91,8 +91,9 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
 
 // Producción y KPIs
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
-    Route::get('/produccion',          [ProduccionController::class, 'index'])->name('produccion.index');
-    Route::get('/produccion/exportar', [ProduccionController::class, 'exportar'])->name('produccion.exportar');
+    Route::get('/produccion',                [ProduccionController::class, 'index'])->name('produccion.index');
+    Route::get('/produccion/exportar',       [ProduccionController::class, 'exportar'])->name('produccion.exportar');
+    Route::get('/produccion/excel-clientes', [ProduccionController::class, 'excelClientes'])->name('produccion.excel-clientes');
 });
 
 // Cotizaciones (COTIZADOR también puede gestionar cotizaciones)

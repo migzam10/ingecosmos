@@ -13,7 +13,7 @@
 
 @section('content')
 
-{{-- Filtros --}}
+{{-- 1. Filtros --}}
 <div class="card mb-3">
     <div class="card-body py-2">
         <form method="GET" class="row g-2 align-items-end">
@@ -51,7 +51,14 @@
     </div>
 </div>
 
-{{-- KPIs principales --}}
+{{-- 2. KPIs fila 1: Total · Entregadas · % Oportunas · Ticket promedio · TMP · TMR --}}
+@php
+function formatCOPView(float $v): string {
+    if ($v >= 1000000) return '$' . number_format($v/1000000, 1) . 'M';
+    if ($v >= 1000)    return '$' . number_format($v/1000, 0) . 'K';
+    return '$' . number_format($v, 0, ',', '.');
+}
+@endphp
 <div class="row g-3 mb-4">
     <div class="col-6 col-md-2">
         <div class="card kpi-card text-center">
@@ -72,18 +79,20 @@
     <div class="col-6 col-md-2">
         <div class="card kpi-card text-center">
             <div class="card-body py-3">
-                <div class="kpi-value text-info">{{ $activas }}</div>
-                <div class="kpi-label mt-1">En proceso</div>
+                <div class="kpi-value {{ $pctOportuno >= 80 ? 'text-success' : ($pctOportuno >= 60 ? 'text-warning' : 'text-danger') }}">
+                    {{ $pctOportuno }}%
+                </div>
+                <div class="kpi-label mt-1">Entregas oportunas</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-2">
         <div class="card kpi-card text-center">
             <div class="card-body py-3">
-                <div class="kpi-value {{ $pctOportuno >= 80 ? 'text-success' : ($pctOportuno >= 60 ? 'text-warning' : 'text-danger') }}">
-                    {{ $pctOportuno }}%
+                <div class="kpi-value text-info" style="font-size:1.1rem">
+                    {{ formatCOPView((float)$ticketPromedio) }}
                 </div>
-                <div class="kpi-label mt-1">Entregas oportunas</div>
+                <div class="kpi-label mt-1">Ticket promedio</div>
             </div>
         </div>
     </div>
@@ -109,7 +118,58 @@
     </div>
 </div>
 
-{{-- Tiempos de proceso --}}
+{{-- 3. KPIs fila 2: Tasa sin reparar + Distribución TG --}}
+<div class="row g-3 mb-4">
+    {{-- Tasa sin reparar --}}
+    <div class="col-12 col-md-3">
+        <div class="card h-100 text-center">
+            <div class="card-body py-3">
+                <div class="kpi-value {{ $pctSinReparar >= 20 ? 'text-danger' : ($pctSinReparar >= 10 ? 'text-warning' : 'text-success') }}"
+                     style="font-size:1.8rem;font-weight:700">
+                    {{ $pctSinReparar }}%
+                </div>
+                <div class="kpi-label mt-1">Cerradas sin reparar</div>
+                <div class="text-muted small mt-1">{{ $sinReparar }} OTs (No aut. / Anuladas / Pérd. total)</div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Distribución TG --}}
+    @php
+    $tgConfig = [
+        'Leve'   => ['color' => 'primary',  'meta' => 5,  'badge' => 'bg-blue-lt'],
+        'Medio'  => ['color' => 'warning',  'meta' => 10, 'badge' => 'bg-warning-lt'],
+        'Fuerte' => ['color' => 'danger',   'meta' => 13, 'badge' => 'bg-danger-lt'],
+    ];
+    @endphp
+    @foreach($tgConfig as $tgNombre => $cfg)
+    @php
+    $tgData  = $porTG->get($tgNombre);
+    $tgTotal = $tgData?->total ?? 0;
+    $tgBase  = $tgData?->base_tg ?? 0;
+    $tgOpt   = $tgData?->oportunas_tg ?? 0;
+    $tgPct   = $tgBase > 0 ? round($tgOpt / $tgBase * 100, 1) : 0;
+    @endphp
+    <div class="col-12 col-md-3">
+        <div class="card h-100 text-center">
+            <div class="card-body py-3">
+                <span class="badge {{ $cfg['badge'] }} mb-1">{{ $tgNombre }}</span>
+                <div class="kpi-value text-{{ $cfg['color'] }}" style="font-size:1.6rem;font-weight:700">
+                    {{ $tgTotal }}
+                </div>
+                <div class="kpi-label mt-1">OTs · meta {{ $cfg['meta'] }} días CIA</div>
+                @if($tgBase > 0)
+                <div class="text-muted small mt-1">{{ $tgPct }}% oportuno</div>
+                @else
+                <div class="text-muted small mt-1">Sin datos</div>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endforeach
+</div>
+
+{{-- 4. Tiempos de proceso --}}
 <div class="row g-3 mb-4">
     @foreach([
         ['label' => 'Promedio días hasta cotización',   'val' => $promedios->cot_prom, 'color' => 'blue'],
@@ -119,7 +179,7 @@
     <div class="col-12 col-md-4">
         <div class="card">
             <div class="card-body py-2 d-flex align-items-center gap-3">
-                <div class="text-{{ $kpi['color'] }}" style="font-size:1.8rem; font-weight:700; line-height:1;">
+                <div class="text-{{ $kpi['color'] }}" style="font-size:1.8rem;font-weight:700;line-height:1">
                     {{ $kpi['val'] ? round($kpi['val']) : '—' }}
                     @if($kpi['val'])<small style="font-size:0.9rem">días</small>@endif
                 </div>
@@ -130,10 +190,8 @@
     @endforeach
 </div>
 
-{{-- Gráficas fila 1 --}}
+{{-- 5. Gráfica OTs por mes (col-8) | Cumplimiento meta CIA por TG (col-4) --}}
 <div class="row g-3 mb-4">
-
-    {{-- Gráfica 1: OTs por mes --}}
     <div class="col-12 col-lg-8">
         <div class="card h-100">
             <div class="card-header"><h3 class="card-title">Órdenes por mes — {{ $anio }}</h3></div>
@@ -143,31 +201,38 @@
         </div>
     </div>
 
-    {{-- Gráfica 2: Oportuno vs tardío --}}
     <div class="col-12 col-lg-4">
         <div class="card h-100">
             <div class="card-header">
-                <h3 class="card-title">Cumplimiento de entrega</h3>
-                @if($baseOportuno > 0)
-                <span class="card-subtitle ms-2 text-muted small">sobre {{ $baseOportuno }} OTs con datos</span>
-                @endif
+                <h3 class="card-title">Cumplimiento meta CIA por tipo de daño</h3>
             </div>
-            <div class="card-body d-flex align-items-center justify-content-center">
-                @if($baseOportuno > 0)
-                <canvas id="chart-oportuno" style="max-height:220px"></canvas>
-                @else
-                <div class="text-center text-muted py-4">
-                    <div style="font-size:2rem">📊</div>
-                    <div class="small mt-2">Sin datos suficientes para calcular<br>oportuno (se requiere fecha entrega + salida estimada)</div>
+            <div class="card-body">
+                @foreach(['Leve' => [5, 'primary'], 'Medio' => [10, 'warning'], 'Fuerte' => [13, 'danger']] as $tg => [$meta, $color])
+                @php
+                $td   = $porTG->get($tg);
+                $base = $td?->base_tg ?? 0;
+                $opt  = $td?->oportunas_tg ?? 0;
+                $pct  = $base > 0 ? min(100, round($opt / $base * 100)) : 0;
+                @endphp
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between small mb-1">
+                        <span>{{ $tg }} <span class="text-muted">(meta {{ $meta }} días CIA)</span></span>
+                        <span class="fw-bold">{{ $pct }}%</span>
+                    </div>
+                    <div class="progress" style="height:12px">
+                        <div class="progress-bar bg-{{ $color }}" style="width:{{ $pct }}%"></div>
+                    </div>
+                    <div class="text-muted" style="font-size:.75rem">
+                        {{ $opt }}/{{ $base }} OTs dentro del plazo
+                    </div>
                 </div>
-                @endif
+                @endforeach
             </div>
         </div>
     </div>
-
 </div>
 
-{{-- Gráfica 3: Facturación mensual --}}
+{{-- 6. Gráfica facturación mensual --}}
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="card">
@@ -179,7 +244,7 @@
     </div>
 </div>
 
-{{-- Gráfica 4: Volumen por empresa --}}
+{{-- 7. Gráfica órdenes por empresa --}}
 <div class="row g-3 mb-4">
     <div class="col-12">
         <div class="card">
@@ -191,40 +256,86 @@
     </div>
 </div>
 
-{{-- Tablas top 7 por área --}}
-@foreach([['LYP','Latonería y Pintura',$tablaLYP], ['MECANICA','Mecánica',$tablaMEC]] as [$areaKey, $areaLabel, $tabla])
-@if(count($tabla) > 1)
+{{-- 8. Top 10 clientes por facturación --}}
+@php
+$mesesLabelsShort = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+$nombreMes = $mes !== 'todos' ? $mesesLabelsShort[(int)$mes - 1] : null;
+@endphp
+@if($tablaTop10->count() > 0)
 <div class="card mb-4">
-    <div class="card-header">
-        <h3 class="card-title">Top 7 clientes — {{ $areaLabel }} — {{ $anio }}</h3>
-        <span class="card-subtitle ms-2 text-muted small">Facturación por mes (COP)</span>
+    <div class="card-header d-flex align-items-center">
+        <h3 class="card-title mb-0">
+            Top 10 clientes por facturación — {{ $anio }}
+            @if($nombreMes) — {{ $nombreMes }} @endif
+        </h3>
+        <a href="{{ route('produccion.excel-clientes', request()->only('anio','mes','area')) }}"
+           class="btn btn-sm btn-outline-success ms-auto">
+            ↓ Detalle mensual Excel
+        </a>
     </div>
     <div class="table-responsive">
-        <table class="table table-sm table-hover mb-0" style="font-size:0.8rem">
+        <table class="table table-sm table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th style="min-width:130px">Empresa</th>
-                    <th class="text-center" style="width:40px">OTs</th>
-                    @foreach(['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] as $ml)
-                    <th class="text-end" style="min-width:75px">{{ $ml }}</th>
-                    @endforeach
-                    <th class="text-end" style="min-width:90px">Total</th>
+                    <th>Empresa</th>
+                    <th class="text-center">OTs</th>
+                    <th class="text-end">Facturado</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach($tabla as $i => $fila)
-                @php $esTotal = $fila['empresa'] === 'TOTAL'; @endphp
-                <tr class="{{ $esTotal ? 'fw-bold table-secondary' : '' }}">
-                    <td class="{{ $esTotal ? 'text-uppercase' : '' }}">{{ $fila['empresa'] }}</td>
-                    <td class="text-center text-muted">{{ $fila['ots'] }}</td>
-                    @foreach(range(1,12) as $m)
-                    @php $v = $fila['meses'][$m] ?? 0; @endphp
-                    <td class="text-end {{ $v > 0 ? '' : 'text-muted' }}">
-                        {{ $v > 0 ? '$' . number_format($v/1000000, 1) . 'M' : '—' }}
-                    </td>
-                    @endforeach
-                    <td class="text-end {{ $esTotal ? 'text-primary' : '' }}">
-                        ${{ number_format($fila['total']/1000000, 1) }}M
+                @foreach($tablaTop10 as $fila)
+                <tr>
+                    <td>{{ $fila->nombre }}</td>
+                    <td class="text-center text-muted">{{ $fila->total_ots }}</td>
+                    <td class="text-end fw-medium">{{ formatCOPView((float)$fila->facturado_total) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+            <tfoot class="table-secondary fw-bold">
+                <tr>
+                    <td>TOTAL</td>
+                    <td class="text-center">{{ $tablaTop10->sum('total_ots') }}</td>
+                    <td class="text-end text-primary">{{ formatCOPView((float)$tablaTop10->sum('facturado_total')) }}</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+@endif
+
+{{-- 9. Indicadores por empresa/aseguradora --}}
+@if($tiemposPorEmpresa->count() > 0)
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Indicadores por empresa / aseguradora — {{ $anio }}</h3>
+        <span class="card-subtitle ms-2 text-muted small">Solo empresas con 3+ OTs entregadas</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Empresa</th>
+                    <th class="text-center">OTs</th>
+                    <th class="text-center">Días aut. CIA</th>
+                    <th class="text-center">TMR prom</th>
+                    <th class="text-center">TMP prom</th>
+                    <th class="text-center">% Oportuno</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($tiemposPorEmpresa as $emp)
+                @php
+                $pctEmp = $emp->total > 0 ? round($emp->oportunas / $emp->total * 100) : 0;
+                $colorPct = $pctEmp >= 80 ? 'success' : ($pctEmp >= 60 ? 'warning' : 'danger');
+                @endphp
+                <tr>
+                    <td class="fw-medium">{{ $emp->nombre }}</td>
+                    <td class="text-center">{{ $emp->total }}</td>
+                    <td class="text-center small text-muted">{{ $emp->dias_aut !== null ? round($emp->dias_aut) . 'd' : '—' }}</td>
+                    <td class="text-center small text-muted">{{ $emp->tmr !== null ? round($emp->tmr) . 'd' : '—' }}</td>
+                    <td class="text-center small text-muted">{{ $emp->tmp !== null ? round($emp->tmp) . 'd' : '—' }}</td>
+                    <td class="text-center">
+                        <span class="badge bg-{{ $colorPct }}-lt text-{{ $colorPct }}">{{ $pctEmp }}%</span>
                     </td>
                 </tr>
                 @endforeach
@@ -233,9 +344,46 @@
     </div>
 </div>
 @endif
-@endforeach
 
-{{-- Tabla últimas entregadas --}}
+{{-- 10. Rendimiento por técnico --}}
+@if($rendimientoTecnicos->count() > 0)
+@php
+$nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acond.','SCANNER'=>'Diagnóstico'];
+@endphp
+<div class="card mb-4">
+    <div class="card-header">
+        <h3 class="card-title">Rendimiento por técnico — {{ $anio }}</h3>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Técnico</th>
+                    <th>Especialidad</th>
+                    <th class="text-center">Trabajos finalizados</th>
+                    <th class="text-end">Valor liquidado</th>
+                    <th class="text-center">Hrs prom/trabajo</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($rendimientoTecnicos as $tec)
+                <tr>
+                    <td class="fw-medium">{{ $tec->nombre }}</td>
+                    <td><span class="badge bg-secondary-lt">{{ $nombresEsp[$tec->especialidad] ?? $tec->especialidad }}</span></td>
+                    <td class="text-center">{{ $tec->trabajos }}</td>
+                    <td class="text-end">{{ formatCOPView((float)$tec->valor_total) }}</td>
+                    <td class="text-center text-muted">
+                        {{ $tec->horas_prom !== null ? round($tec->horas_prom, 1) . 'h' : '—' }}
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
+{{-- 11. Últimas 20 entregadas --}}
 <div class="card">
     <div class="card-header">
         <h3 class="card-title">Últimas órdenes entregadas</h3>
@@ -295,22 +443,16 @@
 
 @push('scripts')
 <script>
-const MESES       = @json($mesesLabels);
-const MES_TOT     = @json($dataMesTotal);
-const MES_ENT     = @json($dataMesEntregada);
-const OPORTUNO    = {{ $oportunas }};
-const TARDIAS     = {{ $tardias }};
-const BASE_OPT    = {{ $baseOportuno }};
-const EMPRESAS    = @json($porEmpresa->pluck('nombre'));
-const EMP_TOT     = @json($porEmpresa->pluck('total'));
-const FACT_MENS   = @json($dataFactMensual);
+const MESES     = @json($mesesLabels);
+const MES_TOT   = @json($dataMesTotal);
+const MES_ENT   = @json($dataMesEntregada);
+const EMPRESAS  = @json($porEmpresa->pluck('nombre'));
+const EMP_TOT   = @json($porEmpresa->pluck('total'));
+const FACT_MENS = @json($dataFactMensual);
 
-const COL_AZUL    = 'rgba(66, 153, 225, 0.85)';
-const COL_VERDE   = 'rgba(47, 179, 68, 0.85)';
-const COL_ROJO    = 'rgba(214, 57, 57, 0.85)';
-const COL_NARANJ  = 'rgba(247, 103, 7, 0.85)';
-const COL_GRIS    = 'rgba(134, 142, 150, 0.6)';
-const COL_MORADO  = 'rgba(132, 99, 221, 0.85)';
+const COL_AZUL   = 'rgba(66, 153, 225, 0.85)';
+const COL_VERDE  = 'rgba(47, 179, 68, 0.85)';
+const COL_MORADO = 'rgba(132, 99, 221, 0.85)';
 
 // ── GRÁFICA 1: OTs por mes ────────────────────────────────────────────────
 new Chart(document.getElementById('chart-mes'), {
@@ -329,36 +471,7 @@ new Chart(document.getElementById('chart-mes'), {
     }
 });
 
-// ── GRÁFICA 2: Oportuno vs tardío ─────────────────────────────────────────
-if (BASE_OPT > 0 && document.getElementById('chart-oportuno')) {
-    new Chart(document.getElementById('chart-oportuno'), {
-        type: 'doughnut',
-        data: {
-            labels: ['Entrega oportuna', 'Entrega tardía'],
-            datasets: [{
-                data: [OPORTUNO, TARDIAS],
-                backgroundColor: [COL_VERDE, COL_ROJO],
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'bottom' },
-                tooltip: {
-                    callbacks: {
-                        label: ctx => {
-                            const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
-                            const pct   = total > 0 ? Math.round(ctx.parsed / total * 100) : 0;
-                            return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
-                        }
-                    }
-                }
-            }
-        }
-    });
-}
-
-// ── GRÁFICA 3: Facturación mensual ────────────────────────────────────────
+// ── GRÁFICA 2: Facturación mensual ────────────────────────────────────────
 new Chart(document.getElementById('chart-fact-mensual'), {
     type: 'bar',
     data: {
@@ -393,7 +506,7 @@ new Chart(document.getElementById('chart-fact-mensual'), {
     }
 });
 
-// ── GRÁFICA 4: Volumen por empresa ────────────────────────────────────────
+// ── GRÁFICA 3: Volumen por empresa ────────────────────────────────────────
 const coloresEmp = EMPRESAS.map((_, i) => `hsl(${(i * 47) % 360}, 65%, 55%)`);
 new Chart(document.getElementById('chart-empresa'), {
     type: 'bar',
@@ -411,15 +524,9 @@ new Chart(document.getElementById('chart-empresa'), {
         responsive: true,
         plugins: {
             legend: { display: false },
-            tooltip: {
-                callbacks: {
-                    label: ctx => ` ${ctx.parsed.x} órdenes`
-                }
-            }
+            tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} órdenes` } }
         },
-        scales: {
-            x: { beginAtZero: true, ticks: { stepSize: 1 } }
-        }
+        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
     }
 });
 </script>
