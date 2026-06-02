@@ -130,6 +130,21 @@ class EstadoOTController extends Controller
             'comentario'            => 'nullable|string|max:300',
         ]);
 
+        $tecnicosSinValor = $orden->trabajosTecnico()
+            ->where('estado', 'FINALIZADO')
+            ->where(function ($q) {
+                $q->whereNull('valor_liquidar')->orWhere('valor_liquidar', 0);
+            })
+            ->with('tecnico')
+            ->get();
+
+        if ($tecnicosSinValor->isNotEmpty()) {
+            $nombres = $tecnicosSinValor->pluck('tecnico.nombre')->join(', ');
+            return back()->withErrors([
+                'valor_liquidar' => "No se puede entregar: asigna el valor a liquidar de: {$nombres}.",
+            ])->withInput();
+        }
+
         abort_if($orden->estado_proceso !== 'PROGRAMADO_ENTREGA', 422, 'Estado incorrecto.');
 
         $fechaTerm = $orden->fecha_terminacion ?? Carbon::parse($request->fecha_entrega_cliente);
