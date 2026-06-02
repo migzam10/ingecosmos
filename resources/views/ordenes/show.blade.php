@@ -73,6 +73,7 @@
                             Ingreso: {{ $orden->fecha_ingreso->format('d/m/Y') }}
                             @if($orden->salida_estimada)
                             · Entrega estimada: <strong>{{ $orden->salida_estimada->format('d/m/Y') }}</strong>
+                            @if($orden->estado_proceso !== 'ENTREGADO')
                             @php
                             $dfal = now()->diffInDays($orden->salida_estimada, false);
                             @endphp
@@ -82,6 +83,7 @@
                             <span class="text-warning">(hoy)</span>
                             @else
                             <span class="text-danger">({{ abs($dfal) }} días vencido)</span>
+                            @endif
                             @endif
                             @endif
                         </div>
