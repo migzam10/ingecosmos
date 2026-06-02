@@ -5,6 +5,7 @@
 @section('breadcrumb', $verHistoricas ? 'Historial completo' : 'Activas')
 
 @section('page_actions')
+@if(Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']))
 <a href="{{ route('ordenes.create') }}" class="btn btn-primary">
     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
          fill="none" stroke="currentColor" stroke-width="2" class="me-1">
@@ -13,6 +14,7 @@
     </svg>
     Nueva OT
 </a>
+@endif
 @endsection
 
 @section('content')

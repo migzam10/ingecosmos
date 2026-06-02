@@ -57,6 +57,12 @@ class OrdenTrabajoController extends Controller
 
     public function create()
     {
+        abort_if(
+            !Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']),
+            403,
+            'No tienes permiso para crear órdenes de trabajo.'
+        );
+
         $marcas   = MarcaVehiculo::orderBy('nombre')->get();
         $empresas = EmpresaCliente::where('activa', true)->orderBy('nombre')->get();
 
