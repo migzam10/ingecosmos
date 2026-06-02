@@ -15,8 +15,9 @@ class AsignarTecnicoController extends Controller
     public function store(Request $request, OrdenTrabajo $orden)
     {
         $request->validate([
-            'id_tecnico'   => 'required|exists:tecnicos,id',
-            'especialidad' => 'required|in:LAT,PREP,PINT,MEC,ELEC,SCANNER,AA',
+            'id_tecnico'       => 'required|exists:tecnicos,id',
+            'especialidad'     => 'required|in:LAT,PREP,PINT,MEC,ELEC,SCANNER,AA',
+            'fecha_asignacion' => 'required|date|before_or_equal:today',
         ]);
 
         // Evitar duplicado por OT + técnico + especialidad
@@ -26,7 +27,10 @@ class AsignarTecnicoController extends Controller
                 'id_tecnico'   => $request->id_tecnico,
                 'especialidad' => $request->especialidad,
             ],
-            ['estado' => 'PENDIENTE']
+            [
+                'estado'           => 'PENDIENTE',
+                'fecha_asignacion' => $request->fecha_asignacion,
+            ]
         );
 
         // Actualizar FK en ordenes_trabajo según especialidad

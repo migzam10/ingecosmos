@@ -61,7 +61,9 @@ class MisTareasController extends Controller
             ? \Carbon\Carbon::parse($request->inicio_en)
             : now();
 
-        $minFecha = $trabajo->created_at->startOfDay();
+        $minFecha = ($trabajo->fecha_asignacion
+            ? \Carbon\Carbon::parse($trabajo->fecha_asignacion)
+            : $trabajo->created_at)->startOfDay();
         $ot = $trabajo->ot;
 
         if ($ot->fecha_autorizacion && \Carbon\Carbon::parse($ot->fecha_autorizacion)->startOfDay() > $minFecha) {

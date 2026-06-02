@@ -631,6 +631,13 @@
                         </select>
                     </div>
                     <div class="col-6 col-md-2">
+                        <label class="form-label mb-1 small">Fecha asignación</label>
+                        <input type="date" name="fecha_asignacion"
+                               class="form-control form-control-sm"
+                               value="{{ now()->toDateString() }}"
+                               max="{{ now()->toDateString() }}" required>
+                    </div>
+                    <div class="col-6 col-md-2">
                         <button type="submit" class="btn btn-primary btn-sm w-100">
                             Asignar
                         </button>

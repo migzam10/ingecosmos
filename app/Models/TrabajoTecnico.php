@@ -9,16 +9,17 @@ class TrabajoTecnico extends Model
     protected $table = 'trabajo_tecnico';
 
     protected $fillable = [
-        'id_ot', 'id_tecnico', 'especialidad', 'estado',
+        'id_ot', 'id_tecnico', 'especialidad', 'fecha_asignacion', 'estado',
         'inicio_en', 'fin_en', 'valor_liquidar', 'liquidado', 'comentarios',
     ];
 
     protected function casts(): array
     {
         return [
-            'inicio_en'  => 'datetime',
-            'fin_en'     => 'datetime',
-            'liquidado'  => 'boolean',
+            'fecha_asignacion' => 'date',
+            'inicio_en'        => 'datetime',
+            'fin_en'           => 'datetime',
+            'liquidado'        => 'boolean',
         ];
     }
 

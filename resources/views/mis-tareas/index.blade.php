@@ -94,7 +94,7 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                 <div class="text-muted small mt-1">
                     {{ $ot->vehiculo->marca->nombre }} {{ $ot->vehiculo->modelo?->nombre }}
                     · {{ $ot->empresaCliente->nombre }}
-                    · Asignado: {{ $trabajo->created_at->format('d/m/Y') }}
+                    · Asignado: {{ ($trabajo->fecha_asignacion ?? $trabajo->created_at)->format('d/m/Y') }}
                 </div>
             </div>
             <div class="col-auto text-end">
@@ -175,11 +175,17 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                             Fecha de inicio
                             <span class="text-muted fw-normal">(opcional, por defecto hoy)</span>
                         </label>
+                        @php
+                            $minAsignacion = $trabajo->fecha_asignacion
+                                ? $trabajo->fecha_asignacion->toDateString()
+                                : $trabajo->created_at->toDateString();
+                            $minInicio = $ot->fecha_autorizacion
+                                ? max($minAsignacion, \Carbon\Carbon::parse($ot->fecha_autorizacion)->toDateString())
+                                : $minAsignacion;
+                        @endphp
                         <input type="date" name="inicio_en" class="form-control form-control-sm"
                                value="{{ now()->toDateString() }}"
-                               min="{{ $ot->fecha_autorizacion
-                                   ? max($trabajo->created_at->toDateString(), \Carbon\Carbon::parse($ot->fecha_autorizacion)->toDateString())
-                                   : $trabajo->created_at->toDateString() }}"
+                               min="{{ $minInicio }}"
                                max="{{ now()->toDateString() }}">
                     </div>
                     <div class="col-auto">
