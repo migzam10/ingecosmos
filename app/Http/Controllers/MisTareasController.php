@@ -145,9 +145,22 @@ class MisTareasController extends Controller
             return back()->with('error', 'Debes iniciar el trabajo antes de finalizarlo.');
         }
 
+        $request->validate([
+            'fin_en' => 'nullable|date|before_or_equal:today',
+        ]);
+
+        $finEn = $request->filled('fin_en')
+            ? \Carbon\Carbon::parse($request->fin_en)->endOfDay()
+            : now();
+
+        // No puede ser anterior al inicio del trabajo
+        if ($trabajo->inicio_en && $finEn->lt($trabajo->inicio_en->startOfDay())) {
+            return back()->with('error', 'La fecha de finalización no puede ser anterior al inicio del trabajo (' . $trabajo->inicio_en->format('d/m/Y') . ').');
+        }
+
         $trabajo->update([
             'estado' => 'FINALIZADO',
-            'fin_en' => now(),
+            'fin_en' => $finEn,
         ]);
 
         $this->verificarFinOT($trabajo->ot);

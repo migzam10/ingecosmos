@@ -238,13 +238,27 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
 
             {{-- Finalizar --}}
             @if($trabajo->estado === 'EN_PROCESO')
-            <div class="col-12 col-md-auto ms-md-auto">
-                <form method="POST" action="{{ route('mis-tareas.finalizar', $trabajo) }}">
+            <div class="col-12">
+                <form method="POST" action="{{ route('mis-tareas.finalizar', $trabajo) }}"
+                      class="row g-2 align-items-end">
                     @csrf
-                    <button type="submit" class="btn btn-success w-100"
-                            data-confirm="¿Marcar como FINALIZADO el trabajo en OT #{{ $ot->numero_ot }}? Esta acción no se puede deshacer.">
-                        ✓ Finalizar Trabajo
-                    </button>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label mb-1 small">
+                            Fecha de finalización
+                            <span class="text-muted fw-normal">(opcional, por defecto hoy)</span>
+                        </label>
+                        <input type="date" name="fin_en"
+                               class="form-control form-control-sm"
+                               value="{{ now()->toDateString() }}"
+                               min="{{ $trabajo->inicio_en?->toDateString() ?? now()->toDateString() }}"
+                               max="{{ now()->toDateString() }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-success"
+                                data-confirm="¿Marcar como FINALIZADO el trabajo en OT #{{ $ot->numero_ot }}? Esta acción no se puede deshacer.">
+                            ✓ Finalizar Trabajo
+                        </button>
+                    </div>
                 </form>
             </div>
             @endif
