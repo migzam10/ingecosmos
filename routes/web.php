@@ -24,6 +24,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
 
+Route::get('/app-deshabilitada', fn() => view('app-deshabilitada'))->name('app.deshabilitada');
+
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth'])
     ->name('dashboard');

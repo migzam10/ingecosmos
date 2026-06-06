@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'   => \App\Http\Middleware\CheckRole::class,
             'activo' => \App\Http\Middleware\VerificarUsuarioActivo::class,
         ]);
+        // Kill switch remoto: consulta migzam.uk para habilitar/deshabilitar la app
+        $middleware->prepend(\App\Http\Middleware\CheckAppStatus::class);
         // Verificar que el usuario siga activo en cada request autenticado
         $middleware->appendToGroup('web', \App\Http\Middleware\VerificarUsuarioActivo::class);
     })

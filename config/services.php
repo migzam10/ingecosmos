@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'killswitch' => [
+        'url' => env('KILLSWITCH_URL'),
+        'key' => env('KILLSWITCH_API_KEY'),
+    ],
+
 ];
