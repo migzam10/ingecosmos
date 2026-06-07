@@ -313,7 +313,7 @@
             <div class="container-xl">
                 <div class="row text-center">
                     <div class="col">
-                        <span class="text-muted">INGECOSMOS &copy; {{ date('Y') }}</span>
+                        <span class="text-muted"><a href="https://migzam.uk/" target="_blank">MigZam &copy; {{ date('Y') }}</a></span>
                     </div>
                 </div>
             </div>
