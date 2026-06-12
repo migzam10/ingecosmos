@@ -243,7 +243,7 @@ class MisTareasController extends Controller
         $tecnico = Auth::user()->tecnico;
 
         abort_unless(
-            $tecnico && $trabajo->id_tecnico === $tecnico->id,
+            $tecnico && (int) $trabajo->id_tecnico === (int) $tecnico->id,
             403,
             'No tienes permiso para esta acción.'
         );

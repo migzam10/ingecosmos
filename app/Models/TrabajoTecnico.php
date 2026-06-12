@@ -16,6 +16,8 @@ class TrabajoTecnico extends Model
     protected function casts(): array
     {
         return [
+            'id_ot'            => 'integer',
+            'id_tecnico'       => 'integer',
             'fecha_asignacion' => 'date',
             'inicio_en'        => 'datetime',
             'fin_en'           => 'datetime',

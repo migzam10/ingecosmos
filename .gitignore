@@ -21,3 +21,9 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+/.claude
+CLAUDE.md
+MANUAL_USUARIO.md
+*.sql
+**/.DS_Store
+.DS_Store
