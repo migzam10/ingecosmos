@@ -146,8 +146,8 @@ class CotizacionService
 
             $cot->itemsMo()->delete();
             $cot->itemsRepuesto()->delete();
-            $cot->itemsInsumo()->delete();
-            $this->guardarItems($cot, $data);
+            $this->guardarItems($cot, $data, skipInsumos: true);
+            $this->upsertItemsInsumo($cot, $data);
 
             $updateCot = [
                 'subtotal_mo'      => $subtotalMo,
@@ -204,7 +204,7 @@ class CotizacionService
         return $base > 0 ? round($ivaVal / $base * 100, 2) : 19;
     }
 
-    private function guardarItems(Cotizacion $cot, array $data): void
+    private function guardarItems(Cotizacion $cot, array $data, bool $skipInsumos = false): void
     {
         foreach ($data['items_mo'] ?? [] as $item) {
             if (empty($item['descripcion']) || ($item['precio'] ?? 0) <= 0) continue;
@@ -232,20 +232,68 @@ class CotizacionService
             ]);
         }
 
-        foreach ($data['items_insumo'] ?? [] as $item) {
-            if (empty($item['descripcion'])) continue;
-            $cantidad   = max(0.01, (float)($item['cantidad']    ?? 1));
-            $pventa     = max(0,    (float)($item['precio_venta']?? 0));
-            $pTotal     = (float)($item['precio_total'] ?? round($cantidad * $pventa));
-            if ($cantidad <= 0) continue;
-            ItemCotizacionInsumo::create([
-                'id_cotizacion'       => $cot->id,
-                'id_insumo'           => $item['id_insumo'] ?? null,
-                'descripcion'         => $item['descripcion'],
-                'cantidad_solicitada' => $cantidad,
-                'precio_venta'        => $pventa,
-                'precio_total'        => $pTotal,
-            ]);
+        if (!$skipInsumos) {
+            foreach ($data['items_insumo'] ?? [] as $item) {
+                if (empty($item['descripcion'])) continue;
+                $cantidad = max(0.01, (float)($item['cantidad']     ?? 1));
+                $pventa   = max(0,    (float)($item['precio_venta'] ?? 0));
+                $pTotal   = (float)($item['precio_total'] ?? round($cantidad * $pventa));
+                if ($cantidad <= 0) continue;
+                ItemCotizacionInsumo::create([
+                    'id_cotizacion'       => $cot->id,
+                    'id_insumo'           => $item['id_insumo'] ?? null,
+                    'descripcion'         => $item['descripcion'],
+                    'cantidad_solicitada' => $cantidad,
+                    'precio_venta'        => $pventa,
+                    'precio_total'        => $pTotal,
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Actualiza insumos de cotización sin borrar filas existentes,
+     * preservando los FK en items_salida_almacen ya registrados.
+     */
+    private function upsertItemsInsumo(Cotizacion $cot, array $data): void
+    {
+        $nuevos = collect($data['items_insumo'] ?? [])
+            ->filter(fn($it) => !empty($it['descripcion']) && (float)($it['cantidad'] ?? 0) > 0);
+
+        $idInsumosNuevos = $nuevos->pluck('id_insumo')->filter()->unique()->values()->toArray();
+
+        // Eliminar filas que ya no vienen (por id_insumo) o que son manuales (sin id_insumo)
+        $cot->itemsInsumo()->whereNotNull('id_insumo')
+            ->whereNotIn('id_insumo', $idInsumosNuevos)->delete();
+        $cot->itemsInsumo()->whereNull('id_insumo')->delete();
+
+        // Recargar existentes tras la limpieza
+        $existentes = $cot->itemsInsumo()->get()->keyBy('id_insumo');
+
+        foreach ($nuevos as $item) {
+            $idInsumo = isset($item['id_insumo']) ? (int) $item['id_insumo'] : null;
+            $cantidad  = max(0.01, (float)($item['cantidad']     ?? 1));
+            $pventa    = max(0,    (float)($item['precio_venta'] ?? 0));
+            $pTotal    = (float)($item['precio_total'] ?? round($cantidad * $pventa));
+
+            if ($idInsumo && $existentes->has($idInsumo)) {
+                // UPDATE en lugar de delete+insert — preserva el id y el FK en salidas
+                $existentes[$idInsumo]->update([
+                    'descripcion'         => $item['descripcion'],
+                    'cantidad_solicitada' => $cantidad,
+                    'precio_venta'        => $pventa,
+                    'precio_total'        => $pTotal,
+                ]);
+            } else {
+                ItemCotizacionInsumo::create([
+                    'id_cotizacion'       => $cot->id,
+                    'id_insumo'           => $idInsumo,
+                    'descripcion'         => $item['descripcion'],
+                    'cantidad_solicitada' => $cantidad,
+                    'precio_venta'        => $pventa,
+                    'precio_total'        => $pTotal,
+                ]);
+            }
         }
     }
 
