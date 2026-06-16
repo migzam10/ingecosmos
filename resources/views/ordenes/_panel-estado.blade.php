@@ -7,16 +7,18 @@ $activo = !in_array($estado, $cerrados);
 {{-- Línea de progreso --}}
 <div class="d-flex flex-wrap gap-1 mb-3 align-items-center">
     @php
-    $pasos = ['PTE_COTIZACION','PTE_AUTORIZACION','PTE_ORDEN','PTE_REPUESTOS','RTO_INSTALADO','EN_PROCESO','PROGRAMADO_ENTREGA','ENTREGADO'];
-    $idxActual = array_search($estado, $pasos);
+    $pasos = ['PTE_COTIZACION','PTE_AUTORIZACION','PTE_ORDEN','RTO_INSTALADO','EN_PROCESO','PROGRAMADO_ENTREGA','ENTREGADO'];
+    // Mapear PTE_REPUESTOS (legado) a la misma posición que PTE_ORDEN en la barra
+    $idxActual = $estado === 'PTE_REPUESTOS'
+        ? array_search('PTE_ORDEN', $pasos)
+        : array_search($estado, $pasos);
     @endphp
     @php
     $nombresPasos = [
         'PTE_COTIZACION'    => 'Cotización',
         'PTE_AUTORIZACION'  => 'Autorización',
-        'PTE_ORDEN'         => 'Orden repuestos',
-        'PTE_REPUESTOS'     => 'Esperando repuestos',
-        'RTO_INSTALADO'     => 'Repuestos instalados',
+        'PTE_ORDEN'         => 'Solicitud de Repuesto',
+        'RTO_INSTALADO'     => 'Llegada de Repuesto',
         'EN_PROCESO'        => 'En proceso',
         'PROGRAMADO_ENTREGA'=> 'Programado entrega',
         'ENTREGADO'         => 'Entregado',
@@ -61,12 +63,12 @@ $activo = !in_array($estado, $cerrados);
 </form>
 @endif
 
-{{-- ORDEN REPUESTOS --}}
+{{-- SOLICITUD DE REPUESTO --}}
 @if($estado === 'PTE_ORDEN')
 <form method="POST" action="{{ route('ot.orden-repuestos', $orden) }}" class="row g-2 align-items-end">
     @csrf
     <div class="col-12 col-md-3">
-        <label class="form-label small fw-bold">Fecha en que se envió la orden</label>
+        <label class="form-label small fw-bold">Fecha solicitud / llegada</label>
         <input type="date" name="fecha_orden_rto" class="form-control form-control-sm"
                value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required>
     </div>
@@ -77,23 +79,19 @@ $activo = !in_array($estado, $cerrados);
     </div>
     <div class="col-auto">
         <button class="btn btn-primary btn-sm"
-                data-confirm="¿Confirmar que la orden de repuestos fue enviada?">
-            Orden de Repuestos Enviada →
+                data-confirm="¿Confirmar llegada del repuesto?">
+            ✓ Repuesto Llegó →
         </button>
     </div>
 </form>
 @endif
 
-{{-- REPUESTOS LLEGARON --}}
+{{-- LEGADO: OTs antiguas en PTE_REPUESTOS --}}
 @if($estado === 'PTE_REPUESTOS')
+<div class="alert alert-info py-2 small mb-2">Esta OT quedó en "Esperando Repuestos" con el flujo anterior.</div>
 <form method="POST" action="{{ route('ot.repuestos-llegaron', $orden) }}" class="row g-2 align-items-end">
     @csrf
-    <div class="col-12 col-md-3">
-        <label class="form-label small fw-bold">Fecha llegada repuestos</label>
-        <input type="date" name="fecha_llegada_ultimo_rto" class="form-control form-control-sm"
-               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required>
-    </div>
-    <div class="col-12 col-md-5">
+    <div class="col-12 col-md-7">
         <label class="form-label small">Comentario</label>
         <input type="text" name="comentario" class="form-control form-control-sm"
                placeholder="Observación...">
@@ -101,7 +99,7 @@ $activo = !in_array($estado, $cerrados);
     <div class="col-auto">
         <button class="btn btn-success btn-sm"
                 data-confirm="¿Confirmar llegada de repuestos?">
-            ✓ Repuestos Llegaron
+            ✓ Repuesto Llegó
         </button>
     </div>
 </form>

@@ -108,14 +108,14 @@ class AlertaService
                 }
             }
 
-            // ── REPUESTOS SIN LLEGAR > 10 días desde autorización ─────────
-            if ($ot->estado_proceso === 'PTE_REPUESTOS' && $ot->fecha_autorizacion) {
+            // ── SOLICITUD DE REPUESTO SIN LLEGAR > 10 días desde autorización
+            if (in_array($ot->estado_proceso, ['PTE_ORDEN', 'PTE_REPUESTOS']) && $ot->fecha_autorizacion) {
                 $dias = Carbon::parse($ot->fecha_autorizacion)->diffInDays($hoy);
                 if ($dias > 10) {
                     $alertas['naranja'][] = [
                         'ot'      => $ot,
                         'tipo'    => 'repuestos_demorados',
-                        'mensaje' => "Repuestos no llegan hace {$dias} días",
+                        'mensaje' => "Repuesto no llega hace {$dias} días desde autorización",
                     ];
                 }
             }

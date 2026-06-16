@@ -4,9 +4,9 @@
 $config = match($estado) {
     'PTE_COTIZACION'      => ['color' => 'secondary', 'texto' => 'Pendiente Cotización'],
     'PTE_AUTORIZACION'    => ['color' => 'warning',   'texto' => 'Pendiente Autorización'],
-    'PTE_ORDEN'           => ['color' => 'warning',   'texto' => 'Pendiente Orden Repuestos'],
-    'PTE_REPUESTOS'       => ['color' => 'orange',    'texto' => 'Esperando Repuestos'],
-    'RTO_INSTALADO'       => ['color' => 'cyan',      'texto' => 'Repuestos Instalados'],
+    'PTE_ORDEN'           => ['color' => 'warning',   'texto' => 'Solicitud de Repuesto'],
+    'PTE_REPUESTOS'       => ['color' => 'orange',    'texto' => 'Esperando Repuesto'],
+    'RTO_INSTALADO'       => ['color' => 'cyan',      'texto' => 'Llegada de Repuesto'],
     'EN_PROCESO'          => ['color' => 'blue',      'texto' => 'En Proceso'],
     'PROGRAMADO_ENTREGA'  => ['color' => 'teal',      'texto' => 'Programado para Entrega'],
     'ENTREGADO'           => ['color' => 'success',   'texto' => 'Entregado'],

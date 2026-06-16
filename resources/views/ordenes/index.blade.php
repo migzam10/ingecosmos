@@ -51,9 +51,8 @@
                     @if(!$verHistoricas)
                     <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected' : '' }}>Pte. cotización</option>
                     <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected' : '' }}>Pte. autorización</option>
-                    <option value="PTE_ORDEN"          {{ request('estado')=='PTE_ORDEN'          ? 'selected' : '' }}>Pte. orden RTO</option>
-                    <option value="PTE_REPUESTOS"      {{ request('estado')=='PTE_REPUESTOS'      ? 'selected' : '' }}>Esperando repuestos</option>
-                    <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected' : '' }}>RTO instalado</option>
+                    <option value="PTE_ORDEN"          {{ request('estado')=='PTE_ORDEN'          ? 'selected' : '' }}>Solicitud de repuesto</option>
+                    <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected' : '' }}>Llegada de repuesto</option>
                     <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected' : '' }}>En proceso</option>
                     <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected' : '' }}>Programado entrega</option>
                     <option value="GARANTIA"           {{ request('estado')=='GARANTIA'           ? 'selected' : '' }}>Garantía</option>

@@ -79,9 +79,8 @@
                     <option value="">Todos los estados</option>
                     <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected':'' }}>Pendiente cotización</option>
                     <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected':'' }}>Pendiente autorización</option>
-                    <option value="PTE_ORDEN"          {{ request('estado')=='PTE_ORDEN'          ? 'selected':'' }}>Pendiente orden repuestos</option>
-                    <option value="PTE_REPUESTOS"      {{ request('estado')=='PTE_REPUESTOS'      ? 'selected':'' }}>Esperando repuestos</option>
-                    <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected':'' }}>Repuestos instalados</option>
+                    <option value="PTE_ORDEN"          {{ request('estado')=='PTE_ORDEN'          ? 'selected':'' }}>Solicitud de repuesto</option>
+                    <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected':'' }}>Llegada de repuesto</option>
                     <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected':'' }}>En proceso</option>
                     <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected':'' }}>Programado para entrega</option>
                 </select>

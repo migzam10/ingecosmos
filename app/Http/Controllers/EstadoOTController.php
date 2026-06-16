@@ -49,33 +49,29 @@ class EstadoOTController extends Controller
 
         $this->otService->cambiarEstado(
             $orden,
-            'PTE_REPUESTOS',
-            $request->comentario ?? 'Orden de repuestos enviada',
+            'RTO_INSTALADO',
+            $request->comentario ?? 'Solicitud de repuesto registrada — repuesto llegó',
             $request->fecha_orden_rto
         );
 
-        return back()->with('success', 'OT pasa a PTE_REPUESTOS.');
+        return back()->with('success', 'Repuesto registrado. OT pasa a Llegada de Repuesto.');
     }
 
+    // Mantiene compatibilidad con OTs antiguas que quedaron en PTE_REPUESTOS
     public function repuestosLlegaron(Request $request, OrdenTrabajo $orden)
     {
-        $request->validate([
-            'fecha_llegada_ultimo_rto' => 'required|date|before_or_equal:today',
-            'comentario'               => 'nullable|string|max:300',
-        ]);
+        $request->validate(['comentario' => 'nullable|string|max:300']);
 
         abort_if($orden->estado_proceso !== 'PTE_REPUESTOS', 422, 'Estado incorrecto.');
-
-        $orden->update(['fecha_llegada_ultimo_rto' => $request->fecha_llegada_ultimo_rto]);
 
         $this->otService->cambiarEstado(
             $orden,
             'RTO_INSTALADO',
-            $request->comentario ?? 'Repuestos llegaron e instalados',
-            $request->fecha_llegada_ultimo_rto
+            $request->comentario ?? 'Repuesto llegó',
+            now()->toDateString()
         );
 
-        return back()->with('success', 'Repuestos registrados. OT pasa a RTO_INSTALADO.');
+        return back()->with('success', 'OT pasa a Llegada de Repuesto.');
     }
 
     public function iniciarProceso(Request $request, OrdenTrabajo $orden)
