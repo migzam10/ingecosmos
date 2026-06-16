@@ -4,6 +4,12 @@
 @section('page_title', 'Cotizaciones')
 @section('breadcrumb', 'Administración')
 
+@section('page_actions')
+<a href="{{ route('cotizaciones.previa.create') }}" class="btn btn-warning btn-sm">
+    + Cotización Previa <span class="text-dark-50 ms-1 small">(sin OT)</span>
+</a>
+@endsection
+
 @section('content')
 <div class="card">
     {{-- Búsqueda --}}
