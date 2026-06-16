@@ -113,6 +113,56 @@
     </div>
     @endif
 
+    {{-- Factura — visible para todos si está registrada; editable por COORDINADOR/ADMIN cuando ENTREGADA --}}
+    @if($orden->estado_proceso === 'ENTREGADO' || $orden->numero_factura)
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title mb-0">Facturación</h3>
+                @if($orden->numero_factura)
+                <span class="badge bg-green-lt text-green">
+                    Factura # {{ $orden->numero_factura }}
+                    @if($orden->fecha_factura)
+                     · {{ $orden->fecha_factura->format('d/m/Y') }}
+                    @endif
+                </span>
+                @endif
+            </div>
+            @if($esCoor)
+            <div class="card-body">
+                @if($orden->estado_proceso !== 'ENTREGADO')
+                <p class="text-muted small mb-0">Solo se puede registrar la factura cuando la OT esté entregada.</p>
+                @else
+                <form method="POST" action="{{ route('ot.factura', $orden) }}" class="row g-2 align-items-end">
+                    @csrf
+                    <div class="col-12 col-sm-4">
+                        <label class="form-label mb-1 small">Número de factura</label>
+                        <input type="text" name="numero_factura" class="form-control form-control-sm"
+                               value="{{ old('numero_factura', $orden->numero_factura) }}"
+                               placeholder="Ej: 1234" required maxlength="50">
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <label class="form-label mb-1 small">Fecha de factura</label>
+                        <input type="date" name="fecha_factura" class="form-control form-control-sm"
+                               value="{{ old('fecha_factura', $orden->fecha_factura?->format('Y-m-d')) }}" required>
+                    </div>
+                    <div class="col-12 col-sm-4">
+                        <button type="submit" class="btn btn-sm btn-primary w-100">
+                            {{ $orden->numero_factura ? 'Actualizar Factura' : 'Registrar Factura' }}
+                        </button>
+                    </div>
+                </form>
+                @endif
+            </div>
+            @elseif(!$orden->numero_factura)
+            <div class="card-body">
+                <p class="text-muted small mb-0">Aún no se ha registrado número de factura.</p>
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     {{-- Vehículo y propietario --}}
     <div class="col-12 col-md-6">
         <div class="card h-100">

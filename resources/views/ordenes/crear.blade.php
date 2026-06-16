@@ -117,6 +117,18 @@
             <div class="card-header"><h3 class="card-title">Datos de Ingreso</h3></div>
             <div class="card-body">
                 <div class="row g-2">
+                    <div class="col-6 col-md-2">
+                        <label class="form-label">
+                            # OT
+                            <small class="text-muted">(sugerido)</small>
+                        </label>
+                        <input type="number" name="numero_ot"
+                               class="form-control @error('numero_ot') is-invalid @enderror"
+                               value="{{ old('numero_ot', $siguienteOT) }}" min="1">
+                        @error('numero_ot')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
+                    </div>
                     <div class="col-12 col-md-5">
                         <label class="form-label">Empresa / CIA <span class="text-danger">*</span></label>
                         <select name="id_empresa_cliente"

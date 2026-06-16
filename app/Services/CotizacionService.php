@@ -15,12 +15,25 @@ class CotizacionService
 {
     public function __construct(private OTService $otService) {}
 
-    public function siguiente(): int
+    public function sugerirNumeroCot(): int
     {
-        return DB::transaction(function () {
+        $maxCot = Cotizacion::max('numero_cot') ?? 0;
+        $secCot = Secuencia::where('tipo', 'COTIZACION')->value('ultimo_numero') ?? 0;
+        return max($maxCot, $secCot) + 1;
+    }
+
+    public function siguiente(?int $numeroManual = null): int
+    {
+        return DB::transaction(function () use ($numeroManual) {
             $sec = Secuencia::lockForUpdate()->where('tipo', 'COTIZACION')->first();
-            $sec->increment('ultimo_numero');
-            return $sec->ultimo_numero;
+
+            $numero = $numeroManual ?? (max(Cotizacion::max('numero_cot') ?? 0, $sec->ultimo_numero) + 1);
+
+            if ($numero > $sec->ultimo_numero) {
+                $sec->update(['ultimo_numero' => $numero]);
+            }
+
+            return $numero;
         });
     }
 
@@ -28,7 +41,7 @@ class CotizacionService
     {
         return DB::transaction(function () use ($ot, $data) {
 
-            $numeroCot = $this->siguiente();
+            $numeroCot = $this->siguiente($data['numero_cot'] ? (int) $data['numero_cot'] : null);
 
             // Totales
             $subtotalMo  = collect($data['items_mo'] ?? [])->sum('precio');

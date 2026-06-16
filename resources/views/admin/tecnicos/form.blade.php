@@ -31,6 +31,7 @@
                     'ELEC'    => 'Electricista del vehículo',
                     'AA'      => 'Aire Acondicionado',
                     'SCANNER' => 'Diagnóstico electrónico',
+                    'TAP'     => 'Tapicero',
                 ];
                 $seleccionadas = old('especialidades', $tecnico->especialidades ?? []);
                 @endphp

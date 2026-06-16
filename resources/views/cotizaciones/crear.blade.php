@@ -209,15 +209,26 @@
                     </tr>
                 </table>
 
-                {{-- Fecha real de la cotización --}}
-                <div class="mb-3">
-                    <label class="form-label small fw-bold">
-                        Fecha de cotización <span class="text-danger">*</span>
-                        <span class="text-muted fw-normal">(fecha real, puede ser anterior a hoy)</span>
-                    </label>
-                    <input type="date" name="fecha_cotizacion" class="form-control form-control-sm"
-                           value="{{ isset($cotizacion) ? $cotizacion->ot->fecha_cotizacion?->format('Y-m-d') : now()->toDateString() }}"
-                           max="{{ now()->toDateString() }}" required>
+                {{-- Número de cotización y fecha --}}
+                <div class="row g-2 mb-3">
+                    @isset($cotizacion){{-- edición: no se cambia el número --}}@else
+                    <div class="col-6 col-sm-4">
+                        <label class="form-label small fw-bold">
+                            # COT <small class="text-muted fw-normal">(sugerido)</small>
+                        </label>
+                        <input type="number" name="numero_cot" class="form-control form-control-sm @error('numero_cot') is-invalid @enderror"
+                               value="{{ old('numero_cot', $siguienteCOT ?? '') }}" min="1">
+                        @error('numero_cot')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    @endisset
+                    <div class="col-6 col-sm-4">
+                        <label class="form-label small fw-bold">
+                            Fecha de cotización <span class="text-danger">*</span>
+                        </label>
+                        <input type="date" name="fecha_cotizacion" class="form-control form-control-sm"
+                               value="{{ isset($cotizacion) ? $cotizacion->ot->fecha_cotizacion?->format('Y-m-d') : now()->toDateString() }}"
+                               max="{{ now()->toDateString() }}" required>
+                    </div>
                 </div>
 
                 <hr>

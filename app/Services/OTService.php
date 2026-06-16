@@ -90,12 +90,25 @@ class OTService
         return $total;
     }
 
-    public function siguienteNumeroOT(): int
+    public function sugerirNumeroOT(): int
     {
-        return DB::transaction(function () {
+        $maxOT  = OrdenTrabajo::max('numero_ot') ?? 0;
+        $secOT  = Secuencia::where('tipo', 'OT')->value('ultimo_numero') ?? 0;
+        return max($maxOT, $secOT) + 1;
+    }
+
+    public function siguienteNumeroOT(?int $numeroManual = null): int
+    {
+        return DB::transaction(function () use ($numeroManual) {
             $secuencia = Secuencia::lockForUpdate()->where('tipo', 'OT')->first();
-            $secuencia->increment('ultimo_numero');
-            return $secuencia->ultimo_numero;
+
+            $numero = $numeroManual ?? (max(OrdenTrabajo::max('numero_ot') ?? 0, $secuencia->ultimo_numero) + 1);
+
+            if ($numero > $secuencia->ultimo_numero) {
+                $secuencia->update(['ultimo_numero' => $numero]);
+            }
+
+            return $numero;
         });
     }
 

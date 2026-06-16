@@ -69,6 +69,11 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->prefix('ordenes/{orden}/e
     Route::post('/especial',           [EstadoOTController::class, 'estadoEspecial'])->name('ot.especial');
 });
 
+// Facturación de OT — solo cuando está ENTREGADA
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
+    Route::post('/ordenes/{orden}/factura', [OrdenTrabajoController::class, 'guardarFactura'])->name('ot.factura');
+});
+
 // Entregas parciales
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::post('/ordenes/{orden}/entrega-parcial',          [EntregaParcialController::class, 'store'])->name('entregas-parciales.store');
@@ -115,11 +120,14 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
 });
 
-Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
+Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::resource('catalogo', CatalogoMoController::class)
         ->parameters(['catalogo' => 'catalogo'])
         ->except(['show']);
     Route::post('/catalogo/{catalogo}/restaurar', [CatalogoMoController::class, 'restaurar'])->name('catalogo.restaurar');
+});
+
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     // Admin index
     Route::get('/admin', fn() => redirect()->route('admin.usuarios.index'))->name('admin.index');
 

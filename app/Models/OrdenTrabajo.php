@@ -17,7 +17,8 @@ class OrdenTrabajo extends Model
         'fecha_llegada_ultimo_rto', 'fecha_inicio_proceso', 'fecha_terminacion',
         'fecha_entrega_cliente', 'salida_estimada',
         'valor_mo', 'valor_rto', 'valor_insumos_pint', 'valor_terceros', 'valor_op', 'total',
-        'pasado_a_facturar', 'costo_mo', 'costo_rto', 'costo_insumos', 'costo_total',
+        'pasado_a_facturar', 'numero_factura', 'fecha_factura',
+        'costo_mo', 'costo_rto', 'costo_insumos', 'costo_total',
         'tecnico_lat', 'tecnico_prep', 'tecnico_pint', 'tecnico_mec', 'tecnico_elec',
         'tiene_scanner', 'observaciones', 'creado_por', 'actualizado_por',
     ];
@@ -37,6 +38,7 @@ class OrdenTrabajo extends Model
             'documentos_entregados'   => 'boolean',
             'ingreso_grua'            => 'boolean',
             'pasado_a_facturar'       => 'boolean',
+            'fecha_factura'           => 'date',
             'tiene_scanner'           => 'boolean',
         ];
     }

@@ -25,6 +25,7 @@ class CrearOTRequest extends FormRequest
         ];
 
         $rules = [
+            'numero_ot'              => 'nullable|integer|min:1|unique:ordenes_trabajo,numero_ot',
             'placa'                  => 'required|string|max:10',
             'id_marca'               => 'required|exists:marcas_vehiculo,id',
             'id_modelo'              => 'nullable|exists:modelos_vehiculo,id',

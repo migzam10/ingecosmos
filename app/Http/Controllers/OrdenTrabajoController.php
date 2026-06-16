@@ -63,10 +63,11 @@ class OrdenTrabajoController extends Controller
             'No tienes permiso para crear órdenes de trabajo.'
         );
 
-        $marcas   = MarcaVehiculo::orderBy('nombre')->get();
-        $empresas = EmpresaCliente::where('activa', true)->orderBy('nombre')->get();
+        $marcas        = MarcaVehiculo::orderBy('nombre')->get();
+        $empresas      = EmpresaCliente::where('activa', true)->orderBy('nombre')->get();
+        $siguienteOT   = $this->otService->sugerirNumeroOT();
 
-        return view('ordenes.crear', compact('marcas', 'empresas'));
+        return view('ordenes.crear', compact('marcas', 'empresas', 'siguienteOT'));
     }
 
     public function store(CrearOTRequest $request)
@@ -102,8 +103,9 @@ class OrdenTrabajoController extends Controller
                 ]
             );
 
-            // 3. Obtener siguiente número OT
-            $numeroOT = $this->otService->siguienteNumeroOT();
+            // 3. Obtener número OT (manual si se proporcionó, sino auto)
+            $numeroManual = $request->filled('numero_ot') ? (int) $request->numero_ot : null;
+            $numeroOT     = $this->otService->siguienteNumeroOT($numeroManual);
 
             // 4. Crear la OT
             $ot = OrdenTrabajo::create([
@@ -327,5 +329,22 @@ class OrdenTrabajoController extends Controller
             ->get(['id', 'nombre']);
 
         return response()->json($modelos);
+    }
+
+    public function guardarFactura(Request $request, OrdenTrabajo $orden)
+    {
+        abort_unless($orden->estado_proceso === 'ENTREGADO', 422, 'La OT debe estar entregada para registrar la factura.');
+
+        $request->validate([
+            'numero_factura' => 'required|string|max:50',
+            'fecha_factura'  => 'required|date',
+        ]);
+
+        $orden->update([
+            'numero_factura' => trim($request->numero_factura),
+            'fecha_factura'  => $request->fecha_factura,
+        ]);
+
+        return back()->with('success', 'Factura registrada correctamente.');
     }
 }

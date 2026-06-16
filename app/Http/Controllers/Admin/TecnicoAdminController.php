@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 
 class TecnicoAdminController extends Controller
 {
-    const ESPECIALIDADES = ['LAT', 'PREP', 'PINT', 'MEC', 'ELEC', 'AA', 'SCANNER'];
+    const ESPECIALIDADES = ['LAT', 'PREP', 'PINT', 'MEC', 'ELEC', 'AA', 'SCANNER', 'TAP'];
 
     public function index()
     {

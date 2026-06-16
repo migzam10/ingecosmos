@@ -40,13 +40,15 @@ class CotizacionController extends Controller
         }
 
         $orden->load(['vehiculo.marca', 'vehiculo.modelo', 'empresaCliente', 'cotizaciones.itemsMo', 'cotizaciones.itemsSuministro']);
+        $siguienteCOT = $this->service->sugerirNumeroCot();
 
-        return view('cotizaciones.crear', compact('orden'));
+        return view('cotizaciones.crear', compact('orden', 'siguienteCOT'));
     }
 
     public function store(Request $request, OrdenTrabajo $orden)
     {
         $request->validate([
+            'numero_cot'            => 'nullable|integer|min:1|unique:cotizaciones,numero_cot',
             'fecha_cotizacion'      => 'required|date|before_or_equal:today',
             'items_mo'              => 'nullable|array',
             'items_mo.*.descripcion'=> 'required_with:items_mo.*.precio|string|max:200',

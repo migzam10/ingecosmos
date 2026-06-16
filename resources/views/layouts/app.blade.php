@@ -129,7 +129,7 @@
                     </li>
                     @endif
 
-                    @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles))
+                    @if(in_array('ADMIN', $roles))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('catalogo.*') ? 'active' : '' }}"
                            href="{{ route('catalogo.index') }}">
