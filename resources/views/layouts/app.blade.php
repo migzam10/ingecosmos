@@ -141,7 +141,7 @@
                                     <line x1="9" y1="14" x2="15" y2="14"/>
                                 </svg>
                             </span>
-                            <span class="nav-link-title text-warning">+ Cot. Previa</span>
+                            <span class="nav-link-title text-warning">Cot. Previa</span>
                         </a>
                     </li>
                     @endif
