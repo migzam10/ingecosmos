@@ -214,10 +214,10 @@
                     @isset($cotizacion){{-- edición: no se cambia el número --}}@else
                     <div class="col-6 col-sm-4">
                         <label class="form-label small fw-bold">
-                            # COT <small class="text-muted fw-normal">(sugerido)</small>
+                            # COT <small class="text-muted fw-normal">(editable)</small>
                         </label>
-                        <input type="number" name="numero_cot" class="form-control form-control-sm @error('numero_cot') is-invalid @enderror"
-                               value="{{ old('numero_cot', $siguienteCOT ?? '') }}" min="1">
+                        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_cot" class="form-control form-control-sm @error('numero_cot') is-invalid @enderror"
+                               value="{{ old('numero_cot', $siguienteCOT ?? '') }}">
                         @error('numero_cot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     @endisset

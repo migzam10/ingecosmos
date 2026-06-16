@@ -120,11 +120,11 @@
                     <div class="col-6 col-md-2">
                         <label class="form-label">
                             # OT
-                            <small class="text-muted">(sugerido)</small>
+                            <small class="text-muted">(editable)</small>
                         </label>
-                        <input type="number" name="numero_ot"
+                        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_ot"
                                class="form-control @error('numero_ot') is-invalid @enderror"
-                               value="{{ old('numero_ot', $siguienteOT) }}" min="1">
+                               value="{{ old('numero_ot', $siguienteOT) }}">
                         @error('numero_ot')
                         <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

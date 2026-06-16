@@ -120,7 +120,7 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
 });
 
-Route::middleware(['auth', 'role:ADMIN'])->group(function () {
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::resource('catalogo', CatalogoMoController::class)
         ->parameters(['catalogo' => 'catalogo'])
         ->except(['show']);
