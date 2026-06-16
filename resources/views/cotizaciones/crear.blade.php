@@ -211,7 +211,7 @@
 
                 {{-- Número de cotización y fecha --}}
                 <div class="row g-2 mb-3">
-                    @isset($cotizacion){{-- edición: no se cambia el número --}}@else
+                    @if(!isset($cotizacion))
                     <div class="col-6 col-sm-4">
                         <label class="form-label small fw-bold">
                             # COT <small class="text-muted fw-normal">(editable)</small>
@@ -220,7 +220,16 @@
                                value="{{ old('numero_cot', $siguienteCOT ?? '') }}">
                         @error('numero_cot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    @endisset
+                    @elseif($cotizacion->estado === 'BORRADOR')
+                    <div class="col-6 col-sm-4">
+                        <label class="form-label small fw-bold">
+                            # COT <small class="text-muted fw-normal">(editable)</small>
+                        </label>
+                        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_cot" class="form-control form-control-sm @error('numero_cot') is-invalid @enderror"
+                               value="{{ old('numero_cot', $cotizacion->numero_cot) }}">
+                        @error('numero_cot')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    @endif
                     <div class="col-6 col-sm-4">
                         <label class="form-label small fw-bold">
                             Fecha de cotización <span class="text-danger">*</span>

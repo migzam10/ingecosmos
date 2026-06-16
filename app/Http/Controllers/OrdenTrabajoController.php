@@ -347,4 +347,21 @@ class OrdenTrabajoController extends Controller
 
         return back()->with('success', 'Factura registrada correctamente.');
     }
+
+    public function cambiarNumero(Request $request, OrdenTrabajo $orden)
+    {
+        abort_if(
+            $orden->cotizaciones()->exists(),
+            422,
+            'No se puede cambiar el número de una OT que ya tiene cotizaciones.'
+        );
+
+        $request->validate([
+            'numero_ot' => "required|integer|min:1|unique:ordenes_trabajo,numero_ot,{$orden->id}",
+        ]);
+
+        $orden->update(['numero_ot' => (int) $request->numero_ot]);
+
+        return back()->with('success', "Número de OT actualizado a #{$request->numero_ot}.");
+    }
 }

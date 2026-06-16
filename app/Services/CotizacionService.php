@@ -186,14 +186,25 @@ class CotizacionService
                 ]);
             }
 
-            $cot->update([
+            $updateCot = [
                 'subtotal_mo'          => $subtotalMo,
                 'subtotal_suministros' => $subtotalSum,
                 'subtotal_rto'         => $data['subtotal_rto']     ?? 0,
                 'subtotal_terceros'    => $data['subtotal_terceros'] ?? 0,
                 'subtotal_op'          => $data['subtotal_op']       ?? 0,
                 'total'                => $total,
-            ]);
+            ];
+
+            if (!empty($data['numero_cot'])) {
+                $nuevoCot = (int) $data['numero_cot'];
+                $updateCot['numero_cot'] = $nuevoCot;
+                $sec = Secuencia::where('tipo', 'COTIZACION')->first();
+                if ($sec && $nuevoCot > $sec->ultimo_numero) {
+                    $sec->update(['ultimo_numero' => $nuevoCot]);
+                }
+            }
+
+            $cot->update($updateCot);
 
             // Recalcular OT
             $ot      = $cot->ot;

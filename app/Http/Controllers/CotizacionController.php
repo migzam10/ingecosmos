@@ -95,6 +95,7 @@ class CotizacionController extends Controller
         );
 
         $request->validate([
+            'numero_cot'             => "nullable|integer|min:1|unique:cotizaciones,numero_cot,{$cotizacion->id}",
             'fecha_cotizacion'       => 'required|date|before_or_equal:today',
             'items_mo'               => 'nullable|array',
             'items_mo.*.descripcion' => 'required_with:items_mo.*.precio|string|max:200',

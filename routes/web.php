@@ -74,6 +74,11 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::post('/ordenes/{orden}/factura', [OrdenTrabajoController::class, 'guardarFactura'])->name('ot.factura');
 });
 
+// Cambiar número de OT — solo si no tiene cotizaciones
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION'])->group(function () {
+    Route::patch('/ordenes/{orden}/numero', [OrdenTrabajoController::class, 'cambiarNumero'])->name('ot.cambiar-numero');
+});
+
 // Entregas parciales
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::post('/ordenes/{orden}/entrega-parcial',          [EntregaParcialController::class, 'store'])->name('entregas-parciales.store');
