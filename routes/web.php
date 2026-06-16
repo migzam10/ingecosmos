@@ -14,6 +14,7 @@ use App\Http\Controllers\EntregaParcialController;
 use App\Http\Controllers\EstadoOTController;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\CatalogoMoController;
+use App\Http\Controllers\CatalogoRepuestosController;
 use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\MisTareasController;
@@ -53,9 +54,10 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION,COTIZADOR'])->group
 
 // AJAX endpoints
 Route::middleware(['auth'])->group(function () {
-    Route::get('/api/placa',       [OrdenTrabajoController::class, 'buscarPlaca'])->name('api.placa');
-    Route::get('/api/modelos',     [OrdenTrabajoController::class, 'modelosPorMarca'])->name('api.modelos');
-    Route::get('/api/catalogo-mo', [CatalogoMoController::class,  'porVehiculo'])->name('api.catalogo-mo');
+    Route::get('/api/placa',               [OrdenTrabajoController::class,      'buscarPlaca'])->name('api.placa');
+    Route::get('/api/modelos',             [OrdenTrabajoController::class,      'modelosPorMarca'])->name('api.modelos');
+    Route::get('/api/catalogo-mo',         [CatalogoMoController::class,        'porVehiculo'])->name('api.catalogo-mo');
+    Route::get('/api/catalogo-repuestos',  [CatalogoRepuestosController::class, 'buscar'])->name('api.catalogo-repuestos');
 });
 
 // Transiciones de estado OT (Coordinador/Admin)
@@ -110,14 +112,27 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
 
 // Cotizaciones (COTIZADOR también puede gestionar cotizaciones)
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR,COTIZADOR'])->group(function () {
-    Route::get('/cotizaciones',                          [CotizacionController::class, 'index'])->name('cotizaciones.index');
-    Route::get('/cotizaciones/{cotizacion}',             [CotizacionController::class, 'show'])->name('cotizaciones.show');
-    Route::get('/cotizaciones/{cotizacion}/pdf',         [CotizacionController::class, 'pdf'])->name('cotizaciones.pdf');
-    Route::get('/cotizaciones/{cotizacion}/editar',      [CotizacionController::class, 'edit'])->name('cotizaciones.edit');
-    Route::put('/cotizaciones/{cotizacion}',             [CotizacionController::class, 'update'])->name('cotizaciones.update');
-    Route::delete('/cotizaciones/{cotizacion}',          [CotizacionController::class, 'destroy'])->name('cotizaciones.destroy');
-    Route::get('/ordenes/{orden}/cotizar',               [CotizacionController::class, 'create'])->name('cotizaciones.create');
-    Route::post('/ordenes/{orden}/cotizar',              [CotizacionController::class, 'store'])->name('cotizaciones.store');
+    Route::get('/cotizaciones',                                [CotizacionController::class, 'index'])->name('cotizaciones.index');
+    Route::get('/cotizaciones/{cotizacion}',                   [CotizacionController::class, 'show'])->name('cotizaciones.show');
+    Route::get('/cotizaciones/{cotizacion}/pdf',               [CotizacionController::class, 'pdf'])->name('cotizaciones.pdf');
+    Route::get('/cotizaciones/{cotizacion}/editar',            [CotizacionController::class, 'edit'])->name('cotizaciones.edit');
+    Route::put('/cotizaciones/{cotizacion}',                   [CotizacionController::class, 'update'])->name('cotizaciones.update');
+    Route::delete('/cotizaciones/{cotizacion}',                [CotizacionController::class, 'destroy'])->name('cotizaciones.destroy');
+    Route::get('/ordenes/{orden}/cotizar',                     [CotizacionController::class, 'create'])->name('cotizaciones.create');
+    Route::post('/ordenes/{orden}/cotizar',                    [CotizacionController::class, 'store'])->name('cotizaciones.store');
+    // Cotización previa (sin OT)
+    Route::get('/cotizaciones/previa/crear',                   [CotizacionController::class, 'createPrevia'])->name('cotizaciones.previa.create');
+    Route::post('/cotizaciones/previa',                        [CotizacionController::class, 'storePrevia'])->name('cotizaciones.previa.store');
+    Route::post('/cotizaciones/{cotizacion}/vincular-ot',      [CotizacionController::class, 'vincularOT'])->name('cotizaciones.vincular-ot');
+});
+
+// Catálogo de Repuestos (solo ADMIN)
+Route::middleware(['auth', 'role:ADMIN'])->group(function () {
+    Route::get('/catalogo-repuestos',                          [CatalogoRepuestosController::class, 'index'])->name('catalogo-repuestos.index');
+    Route::post('/catalogo-repuestos',                         [CatalogoRepuestosController::class, 'store'])->name('catalogo-repuestos.store');
+    Route::put('/catalogo-repuestos/{catalogoRepuesto}',       [CatalogoRepuestosController::class, 'update'])->name('catalogo-repuestos.update');
+    Route::delete('/catalogo-repuestos/{catalogoRepuesto}',    [CatalogoRepuestosController::class, 'destroy'])->name('catalogo-repuestos.destroy');
+    Route::post('/catalogo-repuestos/{catalogoRepuesto}/restaurar', [CatalogoRepuestosController::class, 'restaurar'])->name('catalogo-repuestos.restaurar');
 });
 
 // Torre de Control

@@ -98,20 +98,20 @@ class CatalogoMoController extends Controller
         $idMarca  = $request->id_marca;
         $idModelo = $request->id_modelo;
 
+        $buscar = $request->buscar ?? '';
+
         $items = CatalogoMo::where('activo', true)
             ->where(function ($q) use ($idMarca, $idModelo) {
-                // Nivel 1: genéricos
                 $q->where('nivel', 1)
-                  // Nivel 2: de esta marca
                   ->orWhere(fn($q2) => $q2->where('nivel', 2)->where('id_marca', $idMarca))
-                  // Nivel 3: de esta marca + modelo
                   ->orWhere(fn($q3) => $q3->where('nivel', 3)
                       ->where('id_marca', $idMarca)
                       ->where('id_modelo', $idModelo));
             })
-            // Más específico primero: nivel 3, luego 2, luego 1
+            ->when($buscar, fn($q) => $q->where('descripcion', 'like', "%$buscar%"))
             ->orderByDesc('nivel')
             ->orderBy('descripcion')
+            ->limit(30)
             ->get(['id', 'nivel', 'descripcion', 'precio_referencia']);
 
         return response()->json($items);

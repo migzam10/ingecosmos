@@ -11,8 +11,21 @@ class Cotizacion extends Model
     protected $fillable = [
         'numero_cot', 'id_ot', 'creada_por', 'estado',
         'subtotal_mo', 'subtotal_suministros', 'subtotal_rto',
-        'subtotal_terceros', 'subtotal_op', 'total', 'observaciones',
+        'subtotal_terceros', 'subtotal_op',
+        'iva_porcentaje', 'iva_valor', 'total', 'observaciones',
+        // Previa (sin OT)
+        'es_previa', 'placa_previa', 'id_cliente_previa',
+        'descripcion_previa', 'id_marca_previa', 'id_modelo_previa',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'es_previa'      => 'boolean',
+            'iva_porcentaje' => 'decimal:2',
+            'iva_valor'      => 'decimal:2',
+        ];
+    }
 
     public function ot()
     {
@@ -32,5 +45,25 @@ class Cotizacion extends Model
     public function itemsSuministro()
     {
         return $this->hasMany(ItemCotizacionSuministro::class, 'id_cotizacion');
+    }
+
+    public function itemsRepuesto()
+    {
+        return $this->hasMany(ItemCotizacionRepuesto::class, 'id_cotizacion');
+    }
+
+    public function clientePrevia()
+    {
+        return $this->belongsTo(ClientePersona::class, 'id_cliente_previa');
+    }
+
+    public function marcaPrevia()
+    {
+        return $this->belongsTo(MarcaVehiculo::class, 'id_marca_previa');
+    }
+
+    public function modeloPrevia()
+    {
+        return $this->belongsTo(ModeloVehiculo::class, 'id_modelo_previa');
     }
 }

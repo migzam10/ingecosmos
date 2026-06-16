@@ -24,6 +24,8 @@
     .resumen { margin-top: 14px; }
     .resumen table { width: 260px; float: right; }
     .resumen td { padding: 3px 6px; }
+    .resumen .iva-row td { color: #555; }
+    .resumen .subtotal-neto td { background: #f8f9fa; font-weight: bold; }
     .resumen .total-row td { font-size: 13px; font-weight: bold;
                               border-top: 2px solid #1a56db; padding-top: 5px; }
     .kpis { clear: both; margin-top: 10px; display: table; width: 100%; }
@@ -36,6 +38,7 @@
     .badge-leve   { background:#d1fae5; color:#065f46; padding:2px 6px; border-radius:10px; }
     .badge-medio  { background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:10px; }
     .badge-fuerte { background:#fee2e2; color:#991b1b; padding:2px 6px; border-radius:10px; }
+    .badge-previa { background:#fef3c7; color:#92400e; padding:2px 6px; border-radius:10px; font-size:10px; }
 </style>
 </head>
 <body>
@@ -49,6 +52,7 @@
         <div style="display:table-cell; text-align:right; vertical-align:middle;">
             <div style="font-size:18px; font-weight:bold; color:#1a56db;">
                 COT # {{ $cotizacion->numero_cot }}
+                @if($cotizacion->es_previa)<span class="badge-previa" style="font-size:11px; margin-left:6px;">PREVIA</span>@endif
             </div>
             <div class="sub">{{ $cotizacion->created_at->format('d/m/Y') }}</div>
         </div>
@@ -56,6 +60,38 @@
 </div>
 
 <div class="info-grid">
+    @if($cotizacion->es_previa)
+    <div class="info-col">
+        <div class="info-row"><span class="label">Placa</span><br><span class="value">{{ $cotizacion->placa_previa ?? '—' }}</span></div>
+        @if($cotizacion->marcaPrevia)
+        <div class="info-row"><span class="label">Vehículo</span><br>
+            <span class="value">{{ $cotizacion->marcaPrevia->nombre }}{{ $cotizacion->modeloPrevia ? ' ' . $cotizacion->modeloPrevia->nombre : '' }}</span>
+        </div>
+        @endif
+    </div>
+    <div class="info-col">
+        @if($cotizacion->clientePrevia)
+        <div class="info-row"><span class="label">Cliente</span><br>
+            <span class="value">{{ $cotizacion->clientePrevia->nombre }}</span>
+        </div>
+        @if($cotizacion->clientePrevia->cedula)
+        <div class="info-row"><span class="label">Cédula / NIT</span><br>
+            <span class="value">{{ $cotizacion->clientePrevia->cedula }}</span>
+        </div>
+        @endif
+        @if($cotizacion->clientePrevia->telefono)
+        <div class="info-row"><span class="label">Teléfono</span><br>
+            <span class="value">{{ $cotizacion->clientePrevia->telefono }}</span>
+        </div>
+        @endif
+        @endif
+        @if($cotizacion->descripcion_previa)
+        <div class="info-row"><span class="label">Descripción</span><br>
+            <span class="value">{{ $cotizacion->descripcion_previa }}</span>
+        </div>
+        @endif
+    </div>
+    @else
     <div class="info-col">
         <div class="info-row"><span class="label">OT #</span><br><span class="value">{{ $cotizacion->ot->numero_ot }}</span></div>
         <div class="info-row"><span class="label">Placa</span><br><span class="value">{{ $cotizacion->ot->vehiculo->placa }}</span></div>
@@ -78,6 +114,7 @@
         </div>
         @endif
     </div>
+    @endif
 </div>
 
 {{-- MANO DE OBRA --}}
@@ -104,7 +141,38 @@
 </table>
 @endif
 
-{{-- INSUMOS --}}
+{{-- REPUESTOS --}}
+@if($cotizacion->itemsRepuesto->count())
+<h2>Repuestos</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Descripción</th>
+            <th class="text-right" style="width:60px">Und</th>
+            <th class="text-right" style="width:110px">P. Unitario</th>
+            <th class="text-right" style="width:130px">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($cotizacion->itemsRepuesto as $item)
+        <tr>
+            <td>{{ $item->descripcion }}</td>
+            <td class="text-right">{{ number_format($item->unidades, 2) }}</td>
+            <td class="text-right">$ {{ number_format($item->precio_unitario, 0, ',', '.') }}</td>
+            <td class="text-right">$ {{ number_format($item->precio_total, 0, ',', '.') }}</td>
+        </tr>
+        @endforeach
+    </tbody>
+    <tfoot>
+        <tr class="subtotal-row">
+            <td colspan="3" class="text-right">Subtotal Repuestos</td>
+            <td class="text-right">$ {{ number_format($cotizacion->subtotal_rto, 0, ',', '.') }}</td>
+        </tr>
+    </tfoot>
+</table>
+@endif
+
+{{-- INSUMOS (legado) --}}
 @if($cotizacion->itemsSuministro->count())
 <h2>Insumos de Pintura</h2>
 <table>
@@ -134,18 +202,34 @@
 @endif
 
 {{-- RESUMEN --}}
+@php
+    $subtotalNeto = $cotizacion->subtotal_mo + $cotizacion->subtotal_rto + $cotizacion->subtotal_suministros
+                  + $cotizacion->subtotal_terceros + $cotizacion->subtotal_op;
+    $ivaVal = $cotizacion->iva_valor ?? 0;
+@endphp
 <div class="resumen">
     <table>
+        @if($cotizacion->subtotal_mo > 0)
         <tr><td>Mano de Obra</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_mo, 0, ',', '.') }}</td></tr>
-        <tr><td>Insumos Pintura</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_suministros, 0, ',', '.') }}</td></tr>
+        @endif
         @if($cotizacion->subtotal_rto > 0)
         <tr><td>Repuestos</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_rto, 0, ',', '.') }}</td></tr>
         @endif
+        @if($cotizacion->subtotal_suministros > 0)
+        <tr><td>Insumos Pintura</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_suministros, 0, ',', '.') }}</td></tr>
+        @endif
         @if($cotizacion->subtotal_terceros > 0)
-        <tr><td>Terceros</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_terceros, 0, ',', '.') }}</td></tr>
+        <tr><td>Subcontratados</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_terceros, 0, ',', '.') }}</td></tr>
         @endif
         @if($cotizacion->subtotal_op > 0)
         <tr><td>Otros</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_op, 0, ',', '.') }}</td></tr>
+        @endif
+        <tr class="subtotal-neto"><td>Subtotal neto</td><td class="text-right">$ {{ number_format($subtotalNeto, 0, ',', '.') }}</td></tr>
+        @if($ivaVal > 0)
+        <tr class="iva-row">
+            <td>IVA{{ $cotizacion->iva_porcentaje > 0 ? ' ' . number_format($cotizacion->iva_porcentaje, 0) . '%' : '' }}</td>
+            <td class="text-right">$ {{ number_format($ivaVal, 0, ',', '.') }}</td>
+        </tr>
         @endif
         <tr class="total-row">
             <td><strong>TOTAL</strong></td>
@@ -154,9 +238,9 @@
     </table>
 </div>
 
-{{-- KPIs --}}
-@if($cotizacion->ot->ha)
-<div class="kpis" style="margin-top:20px;">
+{{-- KPIs (solo cotizaciones con OT) --}}
+@if(!$cotizacion->es_previa && $cotizacion->ot && $cotizacion->ot->ha)
+<div class="kpis" style="margin-top:20px; clear:both;">
     <table style="width:auto; float:left; border-collapse:separate; border-spacing:4px;">
         <tr>
             <td style="border:1px solid #ddd; padding:6px 12px; text-align:center; border-radius:3px;">

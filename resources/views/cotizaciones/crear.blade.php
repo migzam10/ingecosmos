@@ -42,36 +42,26 @@
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title mb-0">Mano de Obra</h3>
-                <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-mo">
-                    + Agregar ítem manual
-                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-mo">+ Ítem manual</button>
             </div>
-
-            {{-- Catálogo sugerido --}}
             <div class="card-body border-bottom pb-2">
-                <p class="text-muted small mb-2">
-                    Ítems del catálogo para <strong>{{ $orden->vehiculo->marca->nombre }}
-                    {{ $orden->vehiculo->modelo?->nombre ?? '' }}</strong>
-                    — haz clic para agregar:
-                </p>
-                <div id="lista-catalogo" class="d-flex flex-wrap gap-1">
-                    <span class="text-muted small">Cargando catálogo...</span>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">🔍</span>
+                    <input type="text" id="buscar-mo" class="form-control"
+                           placeholder="Buscar en catálogo MO (filtra por marca/modelo del vehículo)...">
                 </div>
+                <div id="resultados-mo" class="list-group mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
             </div>
-
-            {{-- Tabla de ítems MO --}}
             <div class="card-body p-0">
                 <table class="table table-sm mb-0" id="tabla-mo">
                     <thead class="table-light">
                         <tr>
                             <th>Descripción</th>
-                            <th style="width:150px" class="text-end">Precio</th>
+                            <th style="width:160px" class="text-end">Precio</th>
                             <th style="width:40px"></th>
                         </tr>
                     </thead>
-                    <tbody id="body-mo">
-                        {{-- filas dinámicas --}}
-                    </tbody>
+                    <tbody id="body-mo"></tbody>
                     <tfoot>
                         <tr class="table-light">
                             <td class="text-end fw-bold">Subtotal MO</td>
@@ -83,33 +73,41 @@
             </div>
         </div>
 
-        {{-- SUMINISTROS DE PINTURA --}}
+        {{-- REPUESTOS --}}
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title mb-0">
-                    Insumos de Pintura <small class="text-muted fw-normal">(precio al cliente: costo + 25%)</small>
+                    Repuestos
+                    @if(isset($orden) && $orden->empresaCliente->tipo === 'B')
+                    <span class="badge bg-warning-lt ms-1 fw-normal">Cliente pone sus repuestos (Tipo B)</span>
+                    @endif
                 </h3>
-                <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-sum">
-                    + Agregar insumo
-                </button>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-rto">+ Ítem manual</button>
+            </div>
+            <div class="card-body border-bottom pb-2">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">🔍</span>
+                    <input type="text" id="buscar-rto" class="form-control"
+                           placeholder="Buscar en catálogo de repuestos...">
+                </div>
+                <div id="resultados-rto" class="list-group mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
             </div>
             <div class="card-body p-0">
                 <table class="table table-sm mb-0">
                     <thead class="table-light">
                         <tr>
                             <th>Descripción</th>
-                            <th style="width:130px" class="text-end">Costo</th>
-                            <th style="width:130px" class="text-end">Precio (×1.25)</th>
+                            <th style="width:80px" class="text-end">Unidades</th>
+                            <th style="width:130px" class="text-end">P. Unitario</th>
+                            <th style="width:130px" class="text-end">Total</th>
                             <th style="width:40px"></th>
                         </tr>
                     </thead>
-                    <tbody id="body-sum">
-                        {{-- filas dinámicas --}}
-                    </tbody>
+                    <tbody id="body-rto"></tbody>
                     <tfoot>
                         <tr class="table-light">
-                            <td colspan="2" class="text-end fw-bold">Subtotal Insumos</td>
-                            <td class="text-end fw-bold" id="subtotal-sum-display">$ 0</td>
+                            <td colspan="3" class="text-end fw-bold">Subtotal Repuestos</td>
+                            <td class="text-end fw-bold" id="subtotal-rto-display">$ 0</td>
                             <td></td>
                         </tr>
                     </tfoot>
@@ -117,54 +115,10 @@
             </div>
         </div>
 
-        {{-- OTROS VALORES --}}
-        <div class="card mb-3">
-            <div class="card-header"><h3 class="card-title">Otros Valores</h3></div>
-            <div class="card-body">
-                <div class="row g-2">
-                    <div class="col-12 col-md-4">
-                        <label class="form-label small">
-                            Repuestos
-                            @if($orden->empresaCliente->tipo === 'B')
-                            <span class="badge bg-warning-lt ms-1">Cliente pone sus repuestos</span>
-                            @endif
-                        </label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text">$</span>
-                            <input type="number" name="subtotal_rto" id="inp-rto"
-                                   class="form-control text-end"
-                                   value="{{ isset($cotizacion) ? $cotizacion->subtotal_rto : 0 }}"
-                                   min="0" step="1" oninput="recalcularTotal()">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label small">Trabajos subcontratados</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text">$</span>
-                            <input type="number" name="subtotal_terceros" id="inp-terceros"
-                                   class="form-control text-end"
-                                   value="{{ isset($cotizacion) ? $cotizacion->subtotal_terceros : 0 }}"
-                                   min="0" step="1" oninput="recalcularTotal()">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <label class="form-label small">Otros gastos</label>
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text">$</span>
-                            <input type="number" name="subtotal_op" id="inp-op"
-                                   class="form-control text-end"
-                                   value="{{ isset($cotizacion) ? $cotizacion->subtotal_op : 0 }}"
-                                   min="0" step="1" oninput="recalcularTotal()">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         {{-- Observaciones --}}
         <div class="card mb-3">
             <div class="card-body">
-                <label class="form-label">Observaciones de la cotización</label>
+                <label class="form-label">Observaciones</label>
                 <textarea name="observaciones" class="form-control" rows="2"
                           placeholder="Notas para la CIA o el cliente...">{{ isset($cotizacion) ? $cotizacion->observaciones : '' }}</textarea>
             </div>
@@ -174,34 +128,37 @@
 
     {{-- ========== COLUMNA LATERAL ========== --}}
     <div class="col-12 col-xl-4">
-
-        {{-- Panel de cálculo en tiempo real --}}
         <div class="card mb-3 sticky-top" style="top: 1rem;">
             <div class="card-header bg-primary text-white">
                 <h3 class="card-title text-white">Resumen</h3>
             </div>
             <div class="card-body">
 
-                <table class="table table-sm mb-3">
+                <table class="table table-sm mb-0">
                     <tr>
-                        <td class="text-muted">MO</td>
+                        <td class="text-muted small">Mano de Obra</td>
                         <td class="text-end fw-bold" id="res-mo">$ 0</td>
                     </tr>
                     <tr>
-                        <td class="text-muted">Insumos Pintura</td>
-                        <td class="text-end fw-bold" id="res-sum">$ 0</td>
-                    </tr>
-                    <tr>
-                        <td class="text-muted">Repuestos</td>
+                        <td class="text-muted small">Repuestos</td>
                         <td class="text-end" id="res-rto">$ 0</td>
                     </tr>
-                    <tr>
-                        <td class="text-muted">Terceros</td>
-                        <td class="text-end" id="res-ter">$ 0</td>
+                    <tr class="table-light">
+                        <td class="fw-bold small">Subtotal neto</td>
+                        <td class="text-end fw-bold" id="res-subtotal">$ 0</td>
                     </tr>
                     <tr>
-                        <td class="text-muted">Otros</td>
-                        <td class="text-end" id="res-op">$ 0</td>
+                        <td class="small">
+                            IVA
+                            <input type="number" id="inp-iva-pct" step="0.01" min="0" max="100"
+                                   class="form-control form-control-sm d-inline-block text-end"
+                                   style="width:60px" value="19">
+                            %
+                        </td>
+                        <td class="text-end">
+                            <input type="number" name="iva_valor" id="inp-iva-val" step="1" min="0"
+                                   class="form-control form-control-sm text-end" value="0" style="width:110px; margin-left:auto">
+                        </td>
                     </tr>
                     <tr class="table-active">
                         <td class="fw-bold">TOTAL</td>
@@ -209,31 +166,29 @@
                     </tr>
                 </table>
 
-                {{-- Número de cotización y fecha --}}
+                <hr>
+
+                {{-- # COT y Fecha --}}
                 <div class="row g-2 mb-3">
                     @if(!isset($cotizacion))
-                    <div class="col-6 col-sm-4">
-                        <label class="form-label small fw-bold">
-                            # COT <small class="text-muted fw-normal">(editable)</small>
-                        </label>
-                        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_cot" class="form-control form-control-sm @error('numero_cot') is-invalid @enderror"
+                    <div class="col-6">
+                        <label class="form-label small fw-bold"># COT <small class="text-muted">(editable)</small></label>
+                        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_cot"
+                               class="form-control form-control-sm @error('numero_cot') is-invalid @enderror"
                                value="{{ old('numero_cot', $siguienteCOT ?? '') }}">
                         @error('numero_cot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     @elseif($cotizacion->estado === 'BORRADOR')
-                    <div class="col-6 col-sm-4">
-                        <label class="form-label small fw-bold">
-                            # COT <small class="text-muted fw-normal">(editable)</small>
-                        </label>
-                        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_cot" class="form-control form-control-sm @error('numero_cot') is-invalid @enderror"
+                    <div class="col-6">
+                        <label class="form-label small fw-bold"># COT <small class="text-muted">(editable)</small></label>
+                        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_cot"
+                               class="form-control form-control-sm @error('numero_cot') is-invalid @enderror"
                                value="{{ old('numero_cot', $cotizacion->numero_cot) }}">
                         @error('numero_cot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     @endif
-                    <div class="col-6 col-sm-4">
-                        <label class="form-label small fw-bold">
-                            Fecha de cotización <span class="text-danger">*</span>
-                        </label>
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Fecha <span class="text-danger">*</span></label>
                         <input type="date" name="fecha_cotizacion" class="form-control form-control-sm"
                                value="{{ isset($cotizacion) ? $cotizacion->ot->fecha_cotizacion?->format('Y-m-d') : now()->toDateString() }}"
                                max="{{ now()->toDateString() }}" required>
@@ -242,63 +197,71 @@
 
                 <hr>
 
-                {{-- HA / DR / TG calculados --}}
-                <div class="row g-2 text-center mb-3">
+                {{-- HA / DR / TG --}}
+                <div class="row g-2 text-center mb-2">
                     <div class="col-4">
-                        <div class="text-muted small">Horas artesano</div>
+                        <div class="text-muted small">HA</div>
                         <div class="fw-bold fs-5" id="res-ha">—</div>
                     </div>
                     <div class="col-4">
-                        <div class="text-muted small">Días estimados</div>
+                        <div class="text-muted small">DR (días)</div>
                         <div class="fw-bold fs-5" id="res-dr">—</div>
                     </div>
                     <div class="col-4">
-                        <div class="text-muted small">Tamaño del daño</div>
+                        <div class="text-muted small">TG</div>
                         <div id="res-tg">—</div>
                     </div>
                 </div>
-
-                <div class="text-center mb-3">
-                    <div class="text-muted small">Salida estimada</div>
-                    <div class="fw-bold" id="res-salida">— (sin fecha inicio proceso)</div>
-                </div>
+                <div class="text-center text-muted small mb-2" id="res-salida"></div>
 
             </div>
             <div class="card-footer">
                 <button type="submit" class="btn btn-success w-100 btn-lg"
-                        data-confirm="¿Guardar cotización y cambiar estado OT a PTE_AUTORIZACION?">
-                    Guardar y Generar PDF
+                        data-confirm="¿Guardar cotización?">
+                    Guardar Cotización
                 </button>
             </div>
         </div>
-
     </div>
-</div>
 
+</div>
 </form>
 @endsection
 
 @push('scripts')
 <script>
-const TARIFA_HORA   = {{ $orden->empresaCliente->tarifa_hora }};
-const TIPO_CLIENTE  = '{{ $orden->empresaCliente->tipo }}';
-const ID_MARCA      = {{ $orden->vehiculo->id_marca }};
-const ID_MODELO     = {{ $orden->vehiculo->id_modelo ?? 'null' }};
-const CATALOGO_URL  = '{{ route("api.catalogo-mo") }}';
-const FECHA_INICIO  = '{{ $orden->fecha_inicio_proceso ?? "" }}';
+const TARIFA_HORA  = {{ $orden->empresaCliente->tarifa_hora }};
+const TIPO_CLIENTE = '{{ $orden->empresaCliente->tipo }}';
+const ID_MARCA     = {{ $orden->vehiculo->id_marca }};
+const ID_MODELO    = {{ $orden->vehiculo->id_modelo ?? 'null' }};
+const URL_MO       = '{{ route("api.catalogo-mo") }}';
+const URL_RTO      = '{{ route("api.catalogo-repuestos") }}';
+const FECHA_INICIO = '{{ $orden->fecha_inicio_proceso ?? "" }}';
 
 @if(isset($cotizacion))
-const ITEMS_MO_EDIT  = @json($cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo]));
-const ITEMS_SUM_EDIT = @json($cotizacion->itemsSuministro->map(fn($i) => ['descripcion' => $i->descripcion, 'costo' => (float)$i->costo, 'precio' => (float)$i->precio]));
+const ITEMS_MO_EDIT  = @json($cotizacion->itemsMo->map(fn($i) => [
+    'descripcion'    => $i->descripcion,
+    'precio'         => (float)$i->precio,
+    'id_catalogo_mo' => $i->id_catalogo_mo,
+]));
+const ITEMS_RTO_EDIT = @json($cotizacion->itemsRepuesto->map(fn($i) => [
+    'descripcion'          => $i->descripcion,
+    'unidades'             => (float)$i->unidades,
+    'precio_unitario'      => (float)$i->precio_unitario,
+    'precio_total'         => (float)$i->precio_total,
+    'id_catalogo_repuesto' => $i->id_catalogo_repuesto,
+]));
+const IVA_EDIT = {{ (float)($cotizacion->iva_valor ?? 0) }};
 @else
 const ITEMS_MO_EDIT  = [];
-const ITEMS_SUM_EDIT = [];
+const ITEMS_RTO_EDIT = [];
+const IVA_EDIT = null;
 @endif
 
-let contadorMo  = 0;
-let contadorSum = 0;
+let cMo = 0, cRto = 0;
+let searchMoTimeout = null, searchRtoTimeout = null;
 
-// ── UTILIDADES ──────────────────────────────────────────────────────────────
+// ── UTILIDADES ────────────────────────────────────────────────────────────────
 function cop(n) {
     return new Intl.NumberFormat('es-CO', {
         style: 'currency', currency: 'COP',
@@ -306,166 +269,233 @@ function cop(n) {
     }).format(n || 0);
 }
 
-function sumTabla(bodyId, selector) {
-    let total = 0;
-    document.querySelectorAll(`#${bodyId} ${selector}`).forEach(inp => {
-        total += parseFloat(inp.value) || 0;
-    });
-    return total;
+function sumCol(bodyId, cls) {
+    let t = 0;
+    document.querySelectorAll(`#${bodyId} .${cls}`).forEach(i => t += parseFloat(i.value) || 0);
+    return t;
 }
 
-// ── CÁLCULO EN TIEMPO REAL ───────────────────────────────────────────────────
-function recalcularTotal() {
-    const mo  = sumTabla('body-mo',  'input.inp-precio-mo');
-    const sum = sumTabla('body-sum', 'input.inp-precio-sum');
-    const rto = parseFloat(document.getElementById('inp-rto').value)      || 0;
-    const ter = parseFloat(document.getElementById('inp-terceros').value)  || 0;
-    const op  = parseFloat(document.getElementById('inp-op').value)        || 0;
+// ── RECALCULAR ────────────────────────────────────────────────────────────────
+function recalcular() {
+    const mo  = sumCol('body-mo',  'inp-precio-mo');
+    const rto = sumCol('body-rto', 'inp-total-rto');
 
-    // Subtotales en tabla
-    document.getElementById('subtotal-mo-display').textContent  = cop(mo);
-    document.getElementById('subtotal-sum-display').textContent = cop(sum);
-
-    // Resumen lateral
+    document.getElementById('subtotal-mo-display').textContent = cop(mo);
+    document.getElementById('subtotal-rto-display').textContent = cop(rto);
     document.getElementById('res-mo').textContent  = cop(mo);
-    document.getElementById('res-sum').textContent = cop(sum);
     document.getElementById('res-rto').textContent = cop(rto);
-    document.getElementById('res-ter').textContent = cop(ter);
-    document.getElementById('res-op').textContent  = cop(op);
 
-    const total = mo + sum + ter + op + (TIPO_CLIENTE === 'A' ? rto : 0);
+    const subtotal = mo + rto;
+    document.getElementById('res-subtotal').textContent = cop(subtotal);
+
+    const ivaPct = parseFloat(document.getElementById('inp-iva-pct').value) || 0;
+    const ivaVal = Math.round(subtotal * ivaPct / 100);
+    document.getElementById('inp-iva-val').value = ivaVal;
+
+    const total = subtotal + ivaVal;
     document.getElementById('res-total').textContent = cop(total);
 
-    // HA / DR / TG
-    const ha = TARIFA_HORA > 0 ? mo / TARIFA_HORA : 0;
+    // HA / DR / TG (solo basado en MO)
+    const totalParaHA = mo + (TIPO_CLIENTE === 'A' ? rto : 0);
+    const ha = TARIFA_HORA > 0 ? totalParaHA / TARIFA_HORA : 0;
     const dr = ha > 0 ? Math.ceil(ha / 8 * 1.5) : 0;
     const tg = dr <= 5 ? 'Leve' : dr <= 10 ? 'Medio' : 'Fuerte';
-    const tgColor = {'Leve':'success','Medio':'warning','Fuerte':'danger'}[tg];
 
     document.getElementById('res-ha').textContent = ha > 0 ? ha.toFixed(1) : '—';
     document.getElementById('res-dr').textContent = dr > 0 ? dr : '—';
     document.getElementById('res-tg').innerHTML   = dr > 0
         ? `<span class="badge tg-${tg.toLowerCase()}">${tg}</span>` : '—';
-
-    if (FECHA_INICIO && dr > 0) {
-        document.getElementById('res-salida').textContent = 'Se calculará al guardar';
-    } else if (dr > 0) {
-        document.getElementById('res-salida').textContent = 'Sin fecha inicio proceso';
-    } else {
-        document.getElementById('res-salida').textContent = '—';
-    }
+    document.getElementById('res-salida').textContent = FECHA_INICIO && dr > 0
+        ? 'Salida se recalcula al guardar' : '';
 }
 
-// ── CATÁLOGO SUGERIDO ────────────────────────────────────────────────────────
-function cargarCatalogo() {
-    const url = `${CATALOGO_URL}?id_marca=${ID_MARCA}&id_modelo=${ID_MODELO || ''}`;
-    fetch(url)
-        .then(r => r.json())
-        .then(items => {
-            const cont = document.getElementById('lista-catalogo');
-            if (!items.length) {
-                cont.innerHTML = '<span class="text-muted small">Sin ítems en el catálogo para esta marca/modelo.</span>';
-                return;
-            }
-            cont.innerHTML = '';
-            items.forEach(item => {
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'btn btn-sm btn-outline-secondary';
-                btn.textContent = item.descripcion;
-                btn.title = `Precio ref: ${cop(item.precio_referencia)}`;
-                btn.onclick = () => agregarFilaMO(item.descripcion, item.precio_referencia, item.id);
-                cont.appendChild(btn);
+// ── IVA INTERACTIVO ───────────────────────────────────────────────────────────
+document.getElementById('inp-iva-pct').addEventListener('input', function () {
+    const mo      = sumCol('body-mo',  'inp-precio-mo');
+    const rto     = sumCol('body-rto', 'inp-total-rto');
+    const subtotal = mo + rto;
+    const ivaPct   = parseFloat(this.value) || 0;
+    const ivaVal   = Math.round(subtotal * ivaPct / 100);
+    document.getElementById('inp-iva-val').value = ivaVal;
+    document.getElementById('res-total').textContent = cop(subtotal + ivaVal);
+});
+
+document.getElementById('inp-iva-val').addEventListener('input', function () {
+    const mo      = sumCol('body-mo',  'inp-precio-mo');
+    const rto     = sumCol('body-rto', 'inp-total-rto');
+    const subtotal = mo + rto;
+    const ivaVal   = Math.max(0, parseFloat(this.value) || 0);
+    const total    = Math.max(subtotal, subtotal + ivaVal);
+    document.getElementById('res-total').textContent = cop(total);
+});
+
+// ── BÚSQUEDA MO ───────────────────────────────────────────────────────────────
+document.getElementById('buscar-mo').addEventListener('input', function () {
+    clearTimeout(searchMoTimeout);
+    const q = this.value.trim();
+    const res = document.getElementById('resultados-mo');
+    if (q.length < 2) { res.style.display = 'none'; return; }
+
+    searchMoTimeout = setTimeout(() => {
+        fetch(`${URL_MO}?id_marca=${ID_MARCA}&id_modelo=${ID_MODELO || ''}&buscar=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(items => {
+                res.innerHTML = '';
+                if (!items.length) {
+                    res.innerHTML = '<div class="list-group-item text-muted small">Sin resultados</div>';
+                } else {
+                    items.forEach(it => {
+                        const a = document.createElement('button');
+                        a.type = 'button';
+                        a.className = 'list-group-item list-group-item-action py-1 px-2 small';
+                        a.innerHTML = `${it.descripcion} <span class="text-muted float-end">${cop(it.precio_referencia)}</span>`;
+                        a.onclick = () => {
+                            agregarMO(it.descripcion, it.precio_referencia, it.id);
+                            res.style.display = 'none';
+                            document.getElementById('buscar-mo').value = '';
+                        };
+                        res.appendChild(a);
+                    });
+                }
+                res.style.display = 'block';
             });
-        });
-}
+    }, 250);
+});
 
-// ── FILAS MANO DE OBRA ───────────────────────────────────────────────────────
-function agregarFilaMO(descripcion = '', precio = 0, idCatalogo = null) {
-    const i = contadorMo++;
+document.addEventListener('click', e => {
+    if (!e.target.closest('#buscar-mo') && !e.target.closest('#resultados-mo')) {
+        document.getElementById('resultados-mo').style.display = 'none';
+    }
+});
+
+// ── FILAS MO ──────────────────────────────────────────────────────────────────
+function agregarMO(desc = '', precio = 0, idCat = null) {
+    const i = cMo++;
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td>
-            <input type="hidden" name="items_mo[${i}][id_catalogo_mo]" value="${idCatalogo || ''}">
+            <input type="hidden" name="items_mo[${i}][id_catalogo_mo]" value="${idCat || ''}">
             <input type="text" name="items_mo[${i}][descripcion]"
-                   class="form-control form-control-sm"
-                   value="${descripcion}" placeholder="Descripción..." required>
+                   class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required>
         </td>
         <td>
             <div class="input-group input-group-sm">
                 <span class="input-group-text">$</span>
                 <input type="number" name="items_mo[${i}][precio]"
                        class="form-control text-end inp-precio-mo"
-                       value="${precio}" min="0" step="1"
-                       oninput="recalcularTotal()" required>
+                       value="${precio}" min="0" step="1" oninput="recalcular()" required>
             </div>
         </td>
         <td>
             <button type="button" class="btn btn-sm btn-ghost-danger"
-                    onclick="this.closest('tr').remove(); recalcularTotal()">✕</button>
+                    onclick="this.closest('tr').remove(); recalcular()">✕</button>
         </td>`;
     document.getElementById('body-mo').appendChild(tr);
-    recalcularTotal();
+    recalcular();
 }
 
-document.getElementById('btn-agregar-mo').onclick = () => agregarFilaMO();
+document.getElementById('btn-agregar-mo').onclick = () => agregarMO();
 
-// ── FILAS SUMINISTROS ────────────────────────────────────────────────────────
-function agregarFilaSum(descripcion = '', costo = 0, precioFijo = null) {
-    const i = contadorSum++;
-    const precio = precioFijo !== null ? precioFijo : Math.round(costo * 1.25);
+// ── BÚSQUEDA REPUESTOS ────────────────────────────────────────────────────────
+document.getElementById('buscar-rto').addEventListener('input', function () {
+    clearTimeout(searchRtoTimeout);
+    const q = this.value.trim();
+    const res = document.getElementById('resultados-rto');
+    if (q.length < 2) { res.style.display = 'none'; return; }
+
+    searchRtoTimeout = setTimeout(() => {
+        fetch(`${URL_RTO}?buscar=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(items => {
+                res.innerHTML = '';
+                if (!items.length) {
+                    res.innerHTML = '<div class="list-group-item text-muted small">Sin resultados</div>';
+                } else {
+                    items.forEach(it => {
+                        const a = document.createElement('button');
+                        a.type = 'button';
+                        a.className = 'list-group-item list-group-item-action py-1 px-2 small';
+                        a.innerHTML = `${it.descripcion} <span class="text-muted float-end">${cop(it.precio_referencia)}</span>`;
+                        a.onclick = () => {
+                            agregarRTO(it.descripcion, 1, it.precio_referencia, it.id);
+                            res.style.display = 'none';
+                            document.getElementById('buscar-rto').value = '';
+                        };
+                        res.appendChild(a);
+                    });
+                }
+                res.style.display = 'block';
+            });
+    }, 250);
+});
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('#buscar-rto') && !e.target.closest('#resultados-rto')) {
+        document.getElementById('resultados-rto').style.display = 'none';
+    }
+});
+
+// ── FILAS REPUESTOS ───────────────────────────────────────────────────────────
+function agregarRTO(desc = '', unidades = 1, unitario = 0, idCat = null) {
+    const i = cRto++;
+    const total = Math.round(unidades * unitario);
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td>
-            <input type="text" name="items_suministro[${i}][descripcion]"
-                   class="form-control form-control-sm"
-                   value="${descripcion}" placeholder="Ej: Lija 120..." required>
+            <input type="hidden" name="items_repuesto[${i}][id_catalogo_repuesto]" value="${idCat || ''}">
+            <input type="text" name="items_repuesto[${i}][descripcion]"
+                   class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required>
+        </td>
+        <td>
+            <input type="number" name="items_repuesto[${i}][unidades]"
+                   class="form-control form-control-sm text-end inp-und-rto"
+                   value="${unidades}" min="0.01" step="0.01" oninput="actualizarTotalRto(this)">
         </td>
         <td>
             <div class="input-group input-group-sm">
                 <span class="input-group-text">$</span>
-                <input type="number" name="items_suministro[${i}][costo]"
-                       class="form-control text-end inp-costo-sum"
-                       value="${costo}" min="0" step="1"
-                       oninput="actualizarPrecioSum(this)">
+                <input type="number" name="items_repuesto[${i}][precio_unitario]"
+                       class="form-control text-end inp-unit-rto"
+                       value="${unitario}" min="0" step="1" oninput="actualizarTotalRto(this)">
             </div>
         </td>
         <td>
             <div class="input-group input-group-sm">
                 <span class="input-group-text">$</span>
-                <input type="number" name="items_suministro[${i}][precio]"
-                       class="form-control text-end inp-precio-sum"
-                       value="${precio}" min="0" step="1"
-                       oninput="recalcularTotal()">
+                <input type="number" name="items_repuesto[${i}][precio_total]"
+                       class="form-control text-end inp-total-rto"
+                       value="${total}" min="0" step="1" oninput="recalcular()">
             </div>
         </td>
         <td>
             <button type="button" class="btn btn-sm btn-ghost-danger"
-                    onclick="this.closest('tr').remove(); recalcularTotal()">✕</button>
+                    onclick="this.closest('tr').remove(); recalcular()">✕</button>
         </td>`;
-    document.getElementById('body-sum').appendChild(tr);
-    recalcularTotal();
+    document.getElementById('body-rto').appendChild(tr);
+    recalcular();
 }
 
-function actualizarPrecioSum(inputCosto) {
-    const costo  = parseFloat(inputCosto.value) || 0;
-    const precio = Math.round(costo * 1.25);
-    const fila   = inputCosto.closest('tr');
-    fila.querySelector('.inp-precio-sum').value = precio;
-    recalcularTotal();
+function actualizarTotalRto(input) {
+    const fila = input.closest('tr');
+    const und  = parseFloat(fila.querySelector('.inp-und-rto').value)  || 0;
+    const unit = parseFloat(fila.querySelector('.inp-unit-rto').value) || 0;
+    fila.querySelector('.inp-total-rto').value = Math.round(und * unit);
+    recalcular();
 }
 
-document.getElementById('btn-agregar-sum').onclick = () => agregarFilaSum();
+document.getElementById('btn-agregar-rto').onclick = () => agregarRTO();
 
-// ── INIT ─────────────────────────────────────────────────────────────────────
+// ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
-    cargarCatalogo();
+    ITEMS_MO_EDIT.forEach(it  => agregarMO(it.descripcion, it.precio, it.id_catalogo_mo));
+    ITEMS_RTO_EDIT.forEach(it => agregarRTO(it.descripcion, it.unidades, it.precio_unitario, it.id_catalogo_repuesto));
 
-    // Pre-cargar ítems existentes en modo edición
-    ITEMS_MO_EDIT.forEach(item  => agregarFilaMO(item.descripcion, item.precio, item.id_catalogo_mo));
-    ITEMS_SUM_EDIT.forEach(item => agregarFilaSum(item.descripcion, item.costo, item.precio));
+    if (IVA_EDIT !== null) {
+        document.getElementById('inp-iva-val').value = IVA_EDIT;
+        document.getElementById('inp-iva-pct').value = 0;
+    }
 
-    recalcularTotal();
+    recalcular();
 });
 </script>
 @endpush
