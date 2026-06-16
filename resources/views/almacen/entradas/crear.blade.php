@@ -3,7 +3,7 @@
 @section('page_title', 'Registrar Entrada de Inventario')
 @section('breadcrumb', 'Almacén / Entradas')
 @section('page_actions')
-<a href="{{ route('almacen.entradas.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+<a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm">← Almacén</a>
 @endsection
 
 @section('content')

@@ -3,7 +3,10 @@
 @section('page_title', 'Salidas de Inventario')
 @section('breadcrumb', 'Almacén / Salidas')
 @section('page_actions')
-<a href="{{ route('almacen.salidas.create') }}" class="btn btn-warning btn-sm">↓ Registrar Salida</a>
+<div class="d-flex gap-2">
+    <a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm">← Almacén</a>
+    <a href="{{ route('almacen.salidas.create') }}" class="btn btn-warning btn-sm">↓ Registrar Salida</a>
+</div>
 @endsection
 
 @section('content')

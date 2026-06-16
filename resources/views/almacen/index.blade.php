@@ -4,8 +4,8 @@
 @section('breadcrumb', 'Almacén')
 @section('page_actions')
 <div class="d-flex gap-2 flex-wrap">
-    <a href="{{ route('almacen.entradas.create') }}" class="btn btn-success btn-sm">+ Registrar Entrada</a>
-    <a href="{{ route('almacen.salidas.create') }}" class="btn btn-warning btn-sm">↓ Registrar Salida</a>
+    <a href="{{ route('almacen.entradas.index') }}" class="btn btn-success btn-sm">Entradas</a>
+    <a href="{{ route('almacen.salidas.index') }}" class="btn btn-warning btn-sm">Salidas</a>
 </div>
 @endsection
 
@@ -21,19 +21,28 @@
         </div>
     </div>
     <div class="col-6 col-md-3">
+        <div class="card text-center {{ $pendientesCount ? 'border-info' : '' }}">
+            <div class="card-body py-3">
+                <div class="h1 {{ $pendientesCount ? 'text-info' : 'text-success' }}">{{ $pendientesCount }}</div>
+                <div class="text-muted small">OTs con entregas pendientes</div>
+            </div>
+            <a href="{{ route('almacen.pendientes') }}" class="card-footer text-muted small">Ver pendientes →</a>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
         <div class="card text-center {{ $stockBajo->count() ? 'border-warning' : '' }}">
             <div class="card-body py-3">
                 <div class="h1 {{ $stockBajo->count() ? 'text-warning' : 'text-success' }}">{{ $stockBajo->count() }}</div>
                 <div class="text-muted small">Stock bajo / agotado</div>
             </div>
-            <a href="{{ route('almacen.pendientes') }}" class="card-footer text-muted small">Ver pendientes →</a>
+            <span class="card-footer text-muted small">{{ $stockBajo->count() ? 'Ver detalle abajo ↓' : 'Todo en orden' }}</span>
         </div>
     </div>
     <div class="col-6 col-md-3">
         <div class="card text-center {{ $alertasDemanda->count() ? 'border-danger' : '' }}">
             <div class="card-body py-3">
                 <div class="h1 {{ $alertasDemanda->count() ? 'text-danger' : 'text-success' }}">{{ $alertasDemanda->count() }}</div>
-                <div class="text-muted small">Alertas demanda</div>
+                <div class="text-muted small">Alertas de demanda</div>
             </div>
             <a href="{{ route('almacen.pendientes') }}" class="card-footer text-muted small">Ver alertas →</a>
         </div>

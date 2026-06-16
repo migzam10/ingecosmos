@@ -3,7 +3,10 @@
 @section('page_title', 'Entradas de Inventario')
 @section('breadcrumb', 'Almacén / Entradas')
 @section('page_actions')
-<a href="{{ route('almacen.entradas.create') }}" class="btn btn-success btn-sm">+ Registrar Entrada</a>
+<div class="d-flex gap-2">
+    <a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm">← Almacén</a>
+    <a href="{{ route('almacen.entradas.create') }}" class="btn btn-success btn-sm">+ Registrar Entrada</a>
+</div>
 @endsection
 
 @section('content')

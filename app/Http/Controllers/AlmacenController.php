@@ -20,10 +20,11 @@ class AlmacenController extends Controller
         $ultimasEntradas = EntradaAlmacen::with('creadoPor')->latest()->take(5)->get();
         $ultimasSalidas  = SalidaAlmacen::with('creadoPor', 'ot')->latest()->take(5)->get();
         $totalInsumos    = CatalogoInsumo::where('activo', true)->count();
+        $pendientesCount = $this->service->getPendientesPorOT()->count();
 
         return view('almacen.index', compact(
             'stockBajo', 'alertasDemanda',
-            'ultimasEntradas', 'ultimasSalidas', 'totalInsumos'
+            'ultimasEntradas', 'ultimasSalidas', 'totalInsumos', 'pendientesCount'
         ));
     }
 
