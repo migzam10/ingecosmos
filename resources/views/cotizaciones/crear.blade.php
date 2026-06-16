@@ -115,6 +115,44 @@
             </div>
         </div>
 
+        {{-- INSUMOS DE PINTURA --}}
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">Insumos de Pintura</h3>
+                <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-ins">+ Ítem manual</button>
+            </div>
+            <div class="card-body border-bottom pb-2">
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text">🔍</span>
+                    <input type="text" id="buscar-ins" class="form-control"
+                           placeholder="Buscar en catálogo de insumos...">
+                </div>
+                <div id="resultados-ins" class="list-group mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Descripción</th>
+                            <th style="width:80px" class="text-end">Cantidad</th>
+                            <th style="width:80px" class="text-center">Unidad</th>
+                            <th style="width:130px" class="text-end">P. Venta</th>
+                            <th style="width:130px" class="text-end">Total</th>
+                            <th style="width:40px"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="body-ins"></tbody>
+                    <tfoot>
+                        <tr class="table-light">
+                            <td colspan="4" class="text-end fw-bold">Subtotal Insumos</td>
+                            <td class="text-end fw-bold" id="subtotal-ins-display">$ 0</td>
+                            <td></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
         {{-- Observaciones --}}
         <div class="card mb-3">
             <div class="card-body">
@@ -142,6 +180,10 @@
                     <tr>
                         <td class="text-muted small">Repuestos</td>
                         <td class="text-end" id="res-rto">$ 0</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Insumos</td>
+                        <td class="text-end" id="res-ins">$ 0</td>
                     </tr>
                     <tr class="table-light">
                         <td class="fw-bold small">Subtotal neto</td>
@@ -236,24 +278,28 @@ const ID_MARCA     = {{ $orden->vehiculo->id_marca }};
 const ID_MODELO    = {{ $orden->vehiculo->id_modelo ?? 'null' }};
 const URL_MO       = '{{ route("api.catalogo-mo") }}';
 const URL_RTO      = '{{ route("api.catalogo-repuestos") }}';
+const URL_INSUMOS  = '{{ route("api.catalogo-insumos") }}';
 const FECHA_INICIO = '{{ $orden->fecha_inicio_proceso ?? "" }}';
 
 @if(isset($cotizacion))
 @php
 $_moEdit  = $cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo])->values()->toArray();
 $_rtoEdit = $cotizacion->itemsRepuesto->map(fn($i) => ['descripcion' => $i->descripcion, 'unidades' => (float)$i->unidades, 'precio_unitario' => (float)$i->precio_unitario, 'precio_total' => (float)$i->precio_total, 'id_catalogo_repuesto' => $i->id_catalogo_repuesto])->values()->toArray();
+$_insEdit = $cotizacion->itemsInsumo->map(fn($i) => ['descripcion' => $i->descripcion, 'cantidad' => (float)$i->cantidad_solicitada, 'precio_venta' => (float)$i->precio_venta, 'precio_total' => (float)$i->precio_total, 'id_insumo' => $i->id_insumo, 'unidad_medida' => $i->insumo?->unidad_medida ?? ''])->values()->toArray();
 @endphp
 const ITEMS_MO_EDIT  = @json($_moEdit);
 const ITEMS_RTO_EDIT = @json($_rtoEdit);
+const ITEMS_INS_EDIT = @json($_insEdit);
 const IVA_EDIT = {{ (float)($cotizacion->iva_valor ?? 0) }};
 @else
 const ITEMS_MO_EDIT  = [];
 const ITEMS_RTO_EDIT = [];
+const ITEMS_INS_EDIT = [];
 const IVA_EDIT = null;
 @endif
 
-let cMo = 0, cRto = 0;
-let searchMoTimeout = null, searchRtoTimeout = null;
+let cMo = 0, cRto = 0, cIns = 0;
+let searchMoTimeout = null, searchRtoTimeout = null, searchInsTimeout = null;
 
 // ── UTILIDADES ────────────────────────────────────────────────────────────────
 function cop(n) {
@@ -273,13 +319,16 @@ function sumCol(bodyId, cls) {
 function recalcular() {
     const mo  = sumCol('body-mo',  'inp-precio-mo');
     const rto = sumCol('body-rto', 'inp-total-rto');
+    const ins = sumCol('body-ins', 'inp-total-ins');
 
-    document.getElementById('subtotal-mo-display').textContent = cop(mo);
+    document.getElementById('subtotal-mo-display').textContent  = cop(mo);
     document.getElementById('subtotal-rto-display').textContent = cop(rto);
+    document.getElementById('subtotal-ins-display').textContent = cop(ins);
     document.getElementById('res-mo').textContent  = cop(mo);
     document.getElementById('res-rto').textContent = cop(rto);
+    document.getElementById('res-ins').textContent = cop(ins);
 
-    const subtotal = mo + rto;
+    const subtotal = mo + rto + ins;
     document.getElementById('res-subtotal').textContent = cop(subtotal);
 
     const ivaPct = parseFloat(document.getElementById('inp-iva-pct').value) || 0;
@@ -289,8 +338,8 @@ function recalcular() {
     const total = subtotal + ivaVal;
     document.getElementById('res-total').textContent = cop(total);
 
-    // HA / DR / TG (solo basado en MO)
-    const totalParaHA = mo + (TIPO_CLIENTE === 'A' ? rto : 0);
+    // HA / DR / TG
+    const totalParaHA = mo + (TIPO_CLIENTE === 'A' ? rto : 0) + ins;
     const ha = TARIFA_HORA > 0 ? totalParaHA / TARIFA_HORA : 0;
     const dr = ha > 0 ? Math.ceil(ha / 8 * 1.5) : 0;
     const tg = dr <= 5 ? 'Leve' : dr <= 10 ? 'Medio' : 'Fuerte';
@@ -305,9 +354,10 @@ function recalcular() {
 
 // ── IVA INTERACTIVO ───────────────────────────────────────────────────────────
 document.getElementById('inp-iva-pct').addEventListener('input', function () {
-    const mo      = sumCol('body-mo',  'inp-precio-mo');
-    const rto     = sumCol('body-rto', 'inp-total-rto');
-    const subtotal = mo + rto;
+    const mo       = sumCol('body-mo',  'inp-precio-mo');
+    const rto      = sumCol('body-rto', 'inp-total-rto');
+    const ins      = sumCol('body-ins', 'inp-total-ins');
+    const subtotal = mo + rto + ins;
     const ivaPct   = parseFloat(this.value) || 0;
     const ivaVal   = Math.round(subtotal * ivaPct / 100);
     document.getElementById('inp-iva-val').value = ivaVal;
@@ -315,9 +365,10 @@ document.getElementById('inp-iva-pct').addEventListener('input', function () {
 });
 
 document.getElementById('inp-iva-val').addEventListener('input', function () {
-    const mo      = sumCol('body-mo',  'inp-precio-mo');
-    const rto     = sumCol('body-rto', 'inp-total-rto');
-    const subtotal = mo + rto;
+    const mo       = sumCol('body-mo',  'inp-precio-mo');
+    const rto      = sumCol('body-rto', 'inp-total-rto');
+    const ins      = sumCol('body-ins', 'inp-total-ins');
+    const subtotal = mo + rto + ins;
     const ivaVal   = Math.max(0, parseFloat(this.value) || 0);
     const total    = Math.max(subtotal, subtotal + ivaVal);
     document.getElementById('res-total').textContent = cop(total);
@@ -479,10 +530,104 @@ function actualizarTotalRto(input) {
 
 document.getElementById('btn-agregar-rto').onclick = () => agregarRTO();
 
+// ── BÚSQUEDA INSUMOS ─────────────────────────────────────────────────────────
+document.getElementById('buscar-ins').addEventListener('input', function () {
+    clearTimeout(searchInsTimeout);
+    const q = this.value.trim();
+    const res = document.getElementById('resultados-ins');
+    if (q.length < 2) { res.style.display = 'none'; return; }
+
+    searchInsTimeout = setTimeout(() => {
+        fetch(`${URL_INSUMOS}?buscar=${encodeURIComponent(q)}`)
+            .then(r => r.json())
+            .then(items => {
+                res.innerHTML = '';
+                if (!items.length) {
+                    res.innerHTML = '<div class="list-group-item text-muted small">Sin resultados</div>';
+                } else {
+                    items.forEach(it => {
+                        const a = document.createElement('button');
+                        a.type = 'button';
+                        a.className = 'list-group-item list-group-item-action py-1 px-2 small';
+                        a.innerHTML = `${it.nombre} <span class="text-muted float-end">${it.unidad_medida} · ${cop(it.precio_venta)}</span>`;
+                        a.onclick = () => {
+                            agregarInsumo(it.id, it.nombre, 1, it.precio_venta, it.unidad_medida);
+                            res.style.display = 'none';
+                            document.getElementById('buscar-ins').value = '';
+                        };
+                        res.appendChild(a);
+                    });
+                }
+                res.style.display = 'block';
+            });
+    }, 250);
+});
+
+document.addEventListener('click', e => {
+    if (!e.target.closest('#buscar-ins') && !e.target.closest('#resultados-ins')) {
+        document.getElementById('resultados-ins').style.display = 'none';
+    }
+});
+
+// ── FILAS INSUMOS ─────────────────────────────────────────────────────────────
+function agregarInsumo(idInsumo = null, desc = '', cantidad = 1, precioVenta = 0, unidad = '') {
+    const i = cIns++;
+    const total = Math.round(cantidad * precioVenta);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <td>
+            <input type="hidden" name="items_insumo[${i}][id_insumo]" value="${idInsumo || ''}">
+            <input type="text" name="items_insumo[${i}][descripcion]"
+                   class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required>
+        </td>
+        <td>
+            <input type="number" name="items_insumo[${i}][cantidad]"
+                   class="form-control form-control-sm text-end inp-cant-ins"
+                   value="${cantidad}" min="0.01" step="0.01" oninput="actualizarTotalIns(this)">
+        </td>
+        <td class="text-center text-muted small">
+            <input type="hidden" name="items_insumo[${i}][unidad_medida]" value="${unidad}">
+            ${unidad}
+        </td>
+        <td>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">$</span>
+                <input type="number" name="items_insumo[${i}][precio_venta]"
+                       class="form-control text-end inp-pv-ins"
+                       value="${precioVenta}" min="0" step="1" oninput="actualizarTotalIns(this)">
+            </div>
+        </td>
+        <td>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text">$</span>
+                <input type="number" name="items_insumo[${i}][precio_total]"
+                       class="form-control text-end inp-total-ins"
+                       value="${total}" min="0" step="1" oninput="recalcular()">
+            </div>
+        </td>
+        <td>
+            <button type="button" class="btn btn-sm btn-ghost-danger"
+                    onclick="this.closest('tr').remove(); recalcular()">✕</button>
+        </td>`;
+    document.getElementById('body-ins').appendChild(tr);
+    recalcular();
+}
+
+function actualizarTotalIns(input) {
+    const fila = input.closest('tr');
+    const cant = parseFloat(fila.querySelector('.inp-cant-ins').value) || 0;
+    const pv   = parseFloat(fila.querySelector('.inp-pv-ins').value)   || 0;
+    fila.querySelector('.inp-total-ins').value = Math.round(cant * pv);
+    recalcular();
+}
+
+document.getElementById('btn-agregar-ins').onclick = () => agregarInsumo();
+
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
     ITEMS_MO_EDIT.forEach(it  => agregarMO(it.descripcion, it.precio, it.id_catalogo_mo));
     ITEMS_RTO_EDIT.forEach(it => agregarRTO(it.descripcion, it.unidades, it.precio_unitario, it.id_catalogo_repuesto));
+    ITEMS_INS_EDIT.forEach(it => agregarInsumo(it.id_insumo, it.descripcion, it.cantidad, it.precio_venta, it.unidad_medida));
 
     if (IVA_EDIT !== null) {
         document.getElementById('inp-iva-val').value = IVA_EDIT;

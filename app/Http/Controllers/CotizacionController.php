@@ -67,6 +67,10 @@ class CotizacionController extends Controller
             'items_repuesto.*.descripcion'         => 'required_with:items_repuesto.*.precio_total|string|max:200',
             'items_repuesto.*.unidades'            => 'nullable|numeric|min:0.01',
             'items_repuesto.*.precio_unitario'     => 'nullable|numeric|min:0',
+            'items_insumo'                         => 'nullable|array',
+            'items_insumo.*.descripcion'           => 'required_with:items_insumo.*.cantidad|string|max:200',
+            'items_insumo.*.cantidad'              => 'nullable|numeric|min:0.01',
+            'items_insumo.*.precio_venta'          => 'nullable|numeric|min:0',
             'iva_valor'                            => 'nullable|numeric|min:0',
         ]);
 
@@ -80,7 +84,7 @@ class CotizacionController extends Controller
     {
         $cotizacion->load([
             'ot.vehiculo.marca', 'ot.vehiculo.modelo', 'ot.clientePersona', 'ot.empresaCliente',
-            'itemsMo', 'itemsRepuesto', 'creadaPor',
+            'itemsMo', 'itemsRepuesto', 'itemsInsumo.insumo', 'creadaPor',
             'clientePrevia', 'marcaPrevia', 'modeloPrevia',
         ]);
 
@@ -93,7 +97,7 @@ class CotizacionController extends Controller
 
         $cotizacion->load([
             'ot.vehiculo.marca', 'ot.vehiculo.modelo', 'ot.empresaCliente',
-            'itemsMo', 'itemsRepuesto',
+            'itemsMo', 'itemsRepuesto', 'itemsInsumo.insumo',
             'clientePrevia', 'marcaPrevia', 'modeloPrevia',
         ]);
 
@@ -119,6 +123,10 @@ class CotizacionController extends Controller
             'items_repuesto.*.descripcion'     => 'required_with:items_repuesto.*.precio_total|string|max:200',
             'items_repuesto.*.unidades'        => 'nullable|numeric|min:0.01',
             'items_repuesto.*.precio_unitario' => 'nullable|numeric|min:0',
+            'items_insumo'                     => 'nullable|array',
+            'items_insumo.*.descripcion'       => 'required_with:items_insumo.*.cantidad|string|max:200',
+            'items_insumo.*.cantidad'          => 'nullable|numeric|min:0.01',
+            'items_insumo.*.precio_venta'      => 'nullable|numeric|min:0',
             'iva_valor'                        => 'nullable|numeric|min:0',
         ]);
 
@@ -138,6 +146,7 @@ class CotizacionController extends Controller
         \Illuminate\Support\Facades\DB::transaction(function () use ($cotizacion, $ot, $numeroCot) {
             $cotizacion->itemsMo()->delete();
             $cotizacion->itemsRepuesto()->delete();
+            $cotizacion->itemsInsumo()->delete();
             $cotizacion->itemsSuministro()->delete();
             $cotizacion->delete();
 

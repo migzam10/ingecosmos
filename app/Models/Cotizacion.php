@@ -10,7 +10,7 @@ class Cotizacion extends Model
 
     protected $fillable = [
         'numero_cot', 'id_ot', 'creada_por', 'estado',
-        'subtotal_mo', 'subtotal_suministros', 'subtotal_rto',
+        'subtotal_mo', 'subtotal_suministros', 'subtotal_rto', 'subtotal_insumos',
         'subtotal_terceros', 'subtotal_op',
         'iva_porcentaje', 'iva_valor', 'total', 'observaciones',
         // Previa (sin OT)
@@ -50,6 +50,11 @@ class Cotizacion extends Model
     public function itemsRepuesto()
     {
         return $this->hasMany(ItemCotizacionRepuesto::class, 'id_cotizacion');
+    }
+
+    public function itemsInsumo()
+    {
+        return $this->hasMany(ItemCotizacionInsumo::class, 'id_cotizacion');
     }
 
     public function clientePrevia()

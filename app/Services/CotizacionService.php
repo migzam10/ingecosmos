@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Cotizacion;
+use App\Models\ItemCotizacionInsumo;
 use App\Models\ItemCotizacionMo;
 use App\Models\ItemCotizacionRepuesto;
 use App\Models\OrdenTrabajo;
@@ -25,52 +26,45 @@ class CotizacionService
     public function siguiente(?int $numeroManual = null): int
     {
         return DB::transaction(function () use ($numeroManual) {
-            $sec = Secuencia::lockForUpdate()->where('tipo', 'COTIZACION')->first();
-
+            $sec    = Secuencia::lockForUpdate()->where('tipo', 'COTIZACION')->first();
             $numero = $numeroManual ?? (max(Cotizacion::max('numero_cot') ?? 0, $sec->ultimo_numero) + 1);
-
             if ($numero > $sec->ultimo_numero) {
                 $sec->update(['ultimo_numero' => $numero]);
             }
-
             return $numero;
         });
     }
 
-    // ── CREAR cotización anclada a una OT ──────────────────────────────────────
+    // ── CREAR cotización anclada a una OT ─────────────────────────────────────
     public function crear(OrdenTrabajo $ot, array $data): Cotizacion
     {
         return DB::transaction(function () use ($ot, $data) {
             $numeroCot = $this->siguiente($data['numero_cot'] ? (int) $data['numero_cot'] : null);
 
-            [$subtotalMo, $subtotalRto, $ivaVal, $total] = $this->calcularTotales($data);
-
-            $ivaPct = ($subtotalMo + $subtotalRto) > 0
-                ? round($ivaVal / ($subtotalMo + $subtotalRto) * 100, 2)
-                : 19;
+            [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] = $this->calcularTotales($data);
+            $ivaPct = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal);
 
             $cot = Cotizacion::create([
-                'numero_cot'     => $numeroCot,
-                'id_ot'          => $ot->id,
-                'creada_por'     => Auth::id(),
-                'estado'         => 'BORRADOR',
-                'subtotal_mo'    => $subtotalMo,
-                'subtotal_rto'   => $subtotalRto,
-                'iva_porcentaje' => $ivaPct,
-                'iva_valor'      => $ivaVal,
-                'total'          => $total,
-                'observaciones'  => $data['observaciones'] ?? null,
-                // Campos legacy — se mantienen en 0 para historial
-                'subtotal_suministros' => 0,
-                'subtotal_terceros'    => 0,
-                'subtotal_op'          => 0,
+                'numero_cot'          => $numeroCot,
+                'id_ot'               => $ot->id,
+                'creada_por'          => Auth::id(),
+                'estado'              => 'BORRADOR',
+                'subtotal_mo'         => $subtotalMo,
+                'subtotal_rto'        => $subtotalRto,
+                'subtotal_insumos'    => $subtotalInsumos,
+                'iva_porcentaje'      => $ivaPct,
+                'iva_valor'           => $ivaVal,
+                'total'               => $total,
+                'observaciones'       => $data['observaciones'] ?? null,
+                'subtotal_suministros'=> 0,
+                'subtotal_terceros'   => 0,
+                'subtotal_op'         => 0,
             ]);
 
             $this->guardarItems($cot, $data);
-            $this->actualizarOT($ot, $subtotalMo, $subtotalRto, $data);
+            $this->actualizarOT($ot, $subtotalMo, $subtotalRto, $subtotalInsumos, $data);
 
             $fechaCot = $data['fecha_cotizacion'] ?? now()->toDateString();
-
             $this->otService->cambiarEstado(
                 $ot,
                 'PTE_AUTORIZACION',
@@ -88,13 +82,8 @@ class CotizacionService
         return DB::transaction(function () use ($data) {
             $numeroCot = $this->siguiente($data['numero_cot'] ? (int) $data['numero_cot'] : null);
 
-            [$subtotalMo, $subtotalRto, $ivaVal, $total] = $this->calcularTotales($data);
-
-            $ivaPct = ($subtotalMo + $subtotalRto) > 0
-                ? round($ivaVal / ($subtotalMo + $subtotalRto) * 100, 2)
-                : 19;
-
-            // Buscar o crear cliente
+            [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] = $this->calcularTotales($data);
+            $ivaPct    = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal);
             $idCliente = $this->buscarOCrearCliente($data);
 
             $cot = Cotizacion::create([
@@ -106,10 +95,11 @@ class CotizacionService
                 'placa_previa'        => strtoupper(trim($data['placa_previa'])),
                 'id_cliente_previa'   => $idCliente,
                 'descripcion_previa'  => $data['descripcion_previa'] ?? null,
-                'id_marca_previa'     => $data['id_marca_previa'] ?? null,
-                'id_modelo_previa'    => $data['id_modelo_previa'] ?? null,
+                'id_marca_previa'     => $data['id_marca_previa']    ?? null,
+                'id_modelo_previa'    => $data['id_modelo_previa']   ?? null,
                 'subtotal_mo'         => $subtotalMo,
                 'subtotal_rto'        => $subtotalRto,
+                'subtotal_insumos'    => $subtotalInsumos,
                 'iva_porcentaje'      => $ivaPct,
                 'iva_valor'           => $ivaVal,
                 'total'               => $total,
@@ -125,7 +115,7 @@ class CotizacionService
         });
     }
 
-    // ── VINCULAR previa a una OT ───────────────────────────────────────────────
+    // ── VINCULAR previa a OT ──────────────────────────────────────────────────
     public function vincularOT(Cotizacion $cot, OrdenTrabajo $ot): void
     {
         DB::transaction(function () use ($cot, $ot) {
@@ -135,6 +125,7 @@ class CotizacionService
                 $ot,
                 (float) $cot->subtotal_mo,
                 (float) $cot->subtotal_rto,
+                (float) $cot->subtotal_insumos,
                 ['fecha_cotizacion' => now()->toDateString()]
             );
 
@@ -150,23 +141,22 @@ class CotizacionService
     public function actualizar(Cotizacion $cot, array $data): Cotizacion
     {
         return DB::transaction(function () use ($cot, $data) {
-            [$subtotalMo, $subtotalRto, $ivaVal, $total] = $this->calcularTotales($data);
-
-            $ivaPct = ($subtotalMo + $subtotalRto) > 0
-                ? round($ivaVal / ($subtotalMo + $subtotalRto) * 100, 2)
-                : 19;
+            [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] = $this->calcularTotales($data);
+            $ivaPct = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal);
 
             $cot->itemsMo()->delete();
             $cot->itemsRepuesto()->delete();
-
+            $cot->itemsInsumo()->delete();
             $this->guardarItems($cot, $data);
 
             $updateCot = [
-                'subtotal_mo'    => $subtotalMo,
-                'subtotal_rto'   => $subtotalRto,
-                'iva_porcentaje' => $ivaPct,
-                'iva_valor'      => $ivaVal,
-                'total'          => $total,
+                'subtotal_mo'      => $subtotalMo,
+                'subtotal_rto'     => $subtotalRto,
+                'subtotal_insumos' => $subtotalInsumos,
+                'iva_porcentaje'   => $ivaPct,
+                'iva_valor'        => $ivaVal,
+                'total'            => $total,
+                'observaciones'    => $data['observaciones'] ?? $cot->observaciones,
             ];
 
             if (!empty($data['numero_cot'])) {
@@ -181,7 +171,7 @@ class CotizacionService
             $cot->update($updateCot);
 
             if ($cot->id_ot) {
-                $this->actualizarOT($cot->ot, $subtotalMo, $subtotalRto, $data);
+                $this->actualizarOT($cot->ot, $subtotalMo, $subtotalRto, $subtotalInsumos, $data);
             }
 
             return $cot;
@@ -190,22 +180,28 @@ class CotizacionService
 
     // ── HELPERS PRIVADOS ──────────────────────────────────────────────────────
 
+    /** Returns [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] */
     private function calcularTotales(array $data): array
     {
-        $subtotalMo  = collect($data['items_mo']       ?? [])->sum('precio');
-        $subtotalRto = collect($data['items_repuesto']  ?? [])->sum('precio_total');
+        $subtotalMo      = collect($data['items_mo']       ?? [])->sum('precio');
+        $subtotalRto     = collect($data['items_repuesto'] ?? [])->sum('precio_total');
+        $subtotalInsumos = collect($data['items_insumo']   ?? [])->sum('precio_total');
 
-        $subtotalNeto = $subtotalMo + $subtotalRto;
+        $subtotalNeto = $subtotalMo + $subtotalRto + $subtotalInsumos;
 
-        // IVA: si se pasa manual lo respetamos, si no calculamos 19%
         $ivaVal = isset($data['iva_valor']) && $data['iva_valor'] !== ''
             ? max(0, (float) $data['iva_valor'])
             : round($subtotalNeto * 0.19);
 
-        // Total nunca puede ser menor al subtotal neto
         $total = max($subtotalNeto, $subtotalNeto + $ivaVal);
 
-        return [$subtotalMo, $subtotalRto, $ivaVal, $total];
+        return [(float)$subtotalMo, (float)$subtotalRto, (float)$subtotalInsumos, (float)$ivaVal, (float)$total];
+    }
+
+    private function calcularIvaPct(float $mo, float $rto, float $ins, float $ivaVal): float
+    {
+        $base = $mo + $rto + $ins;
+        return $base > 0 ? round($ivaVal / $base * 100, 2) : 19;
     }
 
     private function guardarItems(Cotizacion $cot, array $data): void
@@ -216,15 +212,15 @@ class CotizacionService
                 'id_cotizacion'  => $cot->id,
                 'id_catalogo_mo' => $item['id_catalogo_mo'] ?? null,
                 'descripcion'    => $item['descripcion'],
-                'precio'         => $item['precio'],
+                'precio'         => (float) $item['precio'],
             ]);
         }
 
         foreach ($data['items_repuesto'] ?? [] as $item) {
             if (empty($item['descripcion'])) continue;
-            $unidades  = max(0.01, (float) ($item['unidades']        ?? 1));
-            $unitario  = max(0,    (float) ($item['precio_unitario'] ?? 0));
-            $pTotal    = round($unidades * $unitario);
+            $unidades = max(0.01, (float)($item['unidades']        ?? 1));
+            $unitario = max(0,    (float)($item['precio_unitario'] ?? 0));
+            $pTotal   = (float)($item['precio_total'] ?? round($unidades * $unitario));
             if ($pTotal <= 0) continue;
             ItemCotizacionRepuesto::create([
                 'id_cotizacion'        => $cot->id,
@@ -235,17 +231,31 @@ class CotizacionService
                 'precio_total'         => $pTotal,
             ]);
         }
+
+        foreach ($data['items_insumo'] ?? [] as $item) {
+            if (empty($item['descripcion'])) continue;
+            $cantidad   = max(0.01, (float)($item['cantidad']    ?? 1));
+            $pventa     = max(0,    (float)($item['precio_venta']?? 0));
+            $pTotal     = (float)($item['precio_total'] ?? round($cantidad * $pventa));
+            if ($cantidad <= 0) continue;
+            ItemCotizacionInsumo::create([
+                'id_cotizacion'       => $cot->id,
+                'id_insumo'           => $item['id_insumo'] ?? null,
+                'descripcion'         => $item['descripcion'],
+                'cantidad_solicitada' => $cantidad,
+                'precio_venta'        => $pventa,
+                'precio_total'        => $pTotal,
+            ]);
+        }
     }
 
-    private function actualizarOT(OrdenTrabajo $ot, float $subtotalMo, float $subtotalRto, array $data): void
+    private function actualizarOT(OrdenTrabajo $ot, float $subtotalMo, float $subtotalRto, float $subtotalInsumos, array $data): void
     {
         $empresa = $ot->empresaCliente;
 
-        $totalParaHA = $subtotalMo + ($empresa->tipo === 'A' ? $subtotalRto : 0);
+        $baseHA = $subtotalMo + ($empresa->tipo === 'A' ? $subtotalRto : 0) + $subtotalInsumos;
 
-        $ha = $empresa->tarifa_hora > 0
-            ? round($totalParaHA / $empresa->tarifa_hora, 2)
-            : 0;
+        $ha = $empresa->tarifa_hora > 0 ? round($baseHA / $empresa->tarifa_hora, 2) : 0;
         $dr = $ha > 0 ? (int) ceil($ha / 8 * 1.5) : null;
         $tg = $dr ? $this->otService->calcularTG($dr) : null;
 
@@ -254,12 +264,12 @@ class CotizacionService
             $salida = $this->otService->workday(Carbon::parse($ot->fecha_inicio_proceso), $dr);
         }
 
-        $totalOT = $subtotalMo + ($empresa->tipo === 'A' ? $subtotalRto : 0);
+        $totalOT = $subtotalMo + ($empresa->tipo === 'A' ? $subtotalRto : 0) + $subtotalInsumos;
 
         $update = [
             'valor_mo'           => $subtotalMo,
             'valor_rto'          => $subtotalRto,
-            'valor_insumos_pint' => 0,
+            'valor_insumos_pint' => $subtotalInsumos,
             'valor_terceros'     => 0,
             'valor_op'           => 0,
             'total'              => $totalOT,
@@ -280,19 +290,16 @@ class CotizacionService
     {
         if (empty($data['nombre_cliente'])) return null;
 
-        // Buscar por cédula si la tienen
         if (!empty($data['cedula_cliente'])) {
             $cliente = \App\Models\ClientePersona::where('cedula', $data['cedula_cliente'])->first();
             if ($cliente) return $cliente->id;
         }
 
-        $cliente = \App\Models\ClientePersona::create([
+        return \App\Models\ClientePersona::create([
             'nombre'   => trim($data['nombre_cliente']),
-            'cedula'   => $data['cedula_cliente']   ?? null,
-            'telefono' => $data['telefono_cliente']  ?? null,
-            'email'    => $data['email_cliente']     ?? null,
-        ]);
-
-        return $cliente->id;
+            'cedula'   => $data['cedula_cliente']  ?? null,
+            'telefono' => $data['telefono_cliente'] ?? null,
+            'email'    => $data['email_cliente']    ?? null,
+        ])->id;
     }
 }

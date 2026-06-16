@@ -172,6 +172,39 @@
 </table>
 @endif
 
+{{-- INSUMOS DE PINTURA (Fase 3) --}}
+@if($cotizacion->itemsInsumo->count())
+<h2>Insumos de Pintura</h2>
+<table>
+    <thead>
+        <tr>
+            <th>Descripción</th>
+            <th class="text-right" style="width:60px">Cant.</th>
+            <th style="width:60px">Unidad</th>
+            <th class="text-right" style="width:110px">P. Venta</th>
+            <th class="text-right" style="width:130px">Total</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($cotizacion->itemsInsumo as $item)
+        <tr>
+            <td>{{ $item->descripcion }}</td>
+            <td class="text-right">{{ number_format($item->cantidad_solicitada, 2) }}</td>
+            <td>{{ $item->insumo?->unidad_medida }}</td>
+            <td class="text-right">$ {{ number_format($item->precio_venta, 0, ',', '.') }}</td>
+            <td class="text-right">$ {{ number_format($item->precio_total, 0, ',', '.') }}</td>
+        </tr>
+        @endforeach
+    </tbody>
+    <tfoot>
+        <tr class="subtotal-row">
+            <td colspan="4" class="text-right">Subtotal Insumos</td>
+            <td class="text-right">$ {{ number_format($cotizacion->subtotal_insumos, 0, ',', '.') }}</td>
+        </tr>
+    </tfoot>
+</table>
+@endif
+
 {{-- INSUMOS (legado) --}}
 @if($cotizacion->itemsSuministro->count())
 <h2>Insumos de Pintura</h2>
@@ -203,7 +236,8 @@
 
 {{-- RESUMEN --}}
 @php
-    $subtotalNeto = $cotizacion->subtotal_mo + $cotizacion->subtotal_rto + $cotizacion->subtotal_suministros
+    $subtotalNeto = $cotizacion->subtotal_mo + $cotizacion->subtotal_rto
+                  + $cotizacion->subtotal_insumos + $cotizacion->subtotal_suministros
                   + $cotizacion->subtotal_terceros + $cotizacion->subtotal_op;
     $ivaVal = $cotizacion->iva_valor ?? 0;
 @endphp
@@ -215,8 +249,11 @@
         @if($cotizacion->subtotal_rto > 0)
         <tr><td>Repuestos</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_rto, 0, ',', '.') }}</td></tr>
         @endif
+        @if($cotizacion->subtotal_insumos > 0)
+        <tr><td>Insumos Pintura</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_insumos, 0, ',', '.') }}</td></tr>
+        @endif
         @if($cotizacion->subtotal_suministros > 0)
-        <tr><td>Insumos Pintura</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_suministros, 0, ',', '.') }}</td></tr>
+        <tr><td>Insumos (legado)</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_suministros, 0, ',', '.') }}</td></tr>
         @endif
         @if($cotizacion->subtotal_terceros > 0)
         <tr><td>Subcontratados</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_terceros, 0, ',', '.') }}</td></tr>

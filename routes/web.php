@@ -15,6 +15,10 @@ use App\Http\Controllers\EstadoOTController;
 use App\Http\Controllers\CotizacionController;
 use App\Http\Controllers\CatalogoMoController;
 use App\Http\Controllers\CatalogoRepuestosController;
+use App\Http\Controllers\CatalogoInsumosController;
+use App\Http\Controllers\AlmacenController;
+use App\Http\Controllers\EntradaAlmacenController;
+use App\Http\Controllers\SalidaAlmacenController;
 use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\MisTareasController;
@@ -58,6 +62,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/modelos',             [OrdenTrabajoController::class,      'modelosPorMarca'])->name('api.modelos');
     Route::get('/api/catalogo-mo',         [CatalogoMoController::class,        'porVehiculo'])->name('api.catalogo-mo');
     Route::get('/api/catalogo-repuestos',  [CatalogoRepuestosController::class, 'buscar'])->name('api.catalogo-repuestos');
+    Route::get('/api/catalogo-insumos',    [CatalogoInsumosController::class,   'buscar'])->name('api.catalogo-insumos');
+    Route::get('/api/salidas/pendientes/{cotizacion}', [SalidaAlmacenController::class, 'pendientesCotizacion'])->name('api.salidas.pendientes');
 });
 
 // Transiciones de estado OT (Coordinador/Admin)
@@ -124,6 +130,30 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,COTIZADOR'])->group(function 
     Route::get('/cotizaciones/previa/crear',                   [CotizacionController::class, 'createPrevia'])->name('cotizaciones.previa.create');
     Route::post('/cotizaciones/previa',                        [CotizacionController::class, 'storePrevia'])->name('cotizaciones.previa.store');
     Route::post('/cotizaciones/{cotizacion}/vincular-ot',      [CotizacionController::class, 'vincularOT'])->name('cotizaciones.vincular-ot');
+});
+
+// Módulo Almacén (ADMIN + ALMACEN)
+Route::middleware(['auth', 'role:ADMIN,ALMACEN'])->prefix('almacen')->name('almacen.')->group(function () {
+    Route::get('/',                                [AlmacenController::class,       'index'])->name('index');
+    Route::get('/catalogo',                        [CatalogoInsumosController::class,'index'])->name('catalogo.index');
+    Route::post('/catalogo',                       [CatalogoInsumosController::class,'store'])->name('catalogo.store');
+    Route::put('/catalogo/{catalogoInsumo}',       [CatalogoInsumosController::class,'update'])->name('catalogo.update');
+    Route::delete('/catalogo/{catalogoInsumo}',    [CatalogoInsumosController::class,'destroy'])->name('catalogo.destroy');
+    Route::post('/catalogo/{catalogoInsumo}/restaurar', [CatalogoInsumosController::class,'restaurar'])->name('catalogo.restaurar');
+
+    Route::get('/entradas',                        [EntradaAlmacenController::class,'index'])->name('entradas.index');
+    Route::get('/entradas/crear',                  [EntradaAlmacenController::class,'create'])->name('entradas.create');
+    Route::post('/entradas',                       [EntradaAlmacenController::class,'store'])->name('entradas.store');
+    Route::get('/entradas/{entrada}',              [EntradaAlmacenController::class,'show'])->name('entradas.show');
+
+    Route::get('/salidas',                         [SalidaAlmacenController::class,'index'])->name('salidas.index');
+    Route::get('/salidas/crear',                   [SalidaAlmacenController::class,'create'])->name('salidas.create');
+    Route::post('/salidas',                        [SalidaAlmacenController::class,'store'])->name('salidas.store');
+    Route::get('/salidas/{salida}',                [SalidaAlmacenController::class,'show'])->name('salidas.show');
+
+    Route::get('/ots',                             [AlmacenController::class,'ots'])->name('ots.index');
+    Route::get('/ots/{orden}',                     [AlmacenController::class,'otShow'])->name('ots.show');
+    Route::get('/pendientes',                      [AlmacenController::class,'pendientes'])->name('pendientes');
 });
 
 // Catálogo de Repuestos (solo ADMIN)

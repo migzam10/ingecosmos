@@ -170,6 +170,43 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
         </div>
         @endif
 
+        {{-- Insumos de Pintura (Fase 3) --}}
+        @if($cotizacion->itemsInsumo->count())
+        <div class="card mb-3">
+            <div class="card-header"><h3 class="card-title">Insumos de Pintura</h3></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead>
+                        <tr>
+                            <th>Descripción</th>
+                            <th class="text-end" style="width:80px">Cantidad</th>
+                            <th class="text-center" style="width:80px">Unidad</th>
+                            <th class="text-end" style="width:120px">P. Venta</th>
+                            <th class="text-end" style="width:120px">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($cotizacion->itemsInsumo as $item)
+                        <tr>
+                            <td>{{ $item->descripcion }}</td>
+                            <td class="text-end">{{ number_format($item->cantidad_solicitada, 2) }}</td>
+                            <td class="text-center text-muted small">{{ $item->insumo?->unidad_medida }}</td>
+                            <td class="text-end">$ {{ number_format($item->precio_venta, 0, ',', '.') }}</td>
+                            <td class="text-end">$ {{ number_format($item->precio_total, 0, ',', '.') }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot class="table-light">
+                        <tr>
+                            <td colspan="4" class="text-end fw-bold">Subtotal Insumos</td>
+                            <td class="text-end fw-bold">$ {{ number_format($cotizacion->subtotal_insumos, 0, ',', '.') }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+        @endif
+
         {{-- Suministros (legado) --}}
         @if($cotizacion->itemsSuministro->count())
         <div class="card mb-3">
@@ -204,7 +241,8 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
             <div class="card-header"><h3 class="card-title">Resumen</h3></div>
             <div class="card-body">
                 @php
-                    $subtotalNeto = $cotizacion->subtotal_mo + $cotizacion->subtotal_rto + $cotizacion->subtotal_suministros;
+                    $subtotalNeto = $cotizacion->subtotal_mo + $cotizacion->subtotal_rto
+                                 + $cotizacion->subtotal_insumos + $cotizacion->subtotal_suministros;
                     $ivaVal = $cotizacion->iva_valor ?? 0;
                 @endphp
                 <table class="table table-sm mb-0">
@@ -214,8 +252,11 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
                     @if($cotizacion->subtotal_rto > 0)
                     <tr><td class="text-muted">Repuestos</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_rto, 0, ',', '.') }}</td></tr>
                     @endif
+                    @if($cotizacion->subtotal_insumos > 0)
+                    <tr><td class="text-muted">Insumos Pintura</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_insumos, 0, ',', '.') }}</td></tr>
+                    @endif
                     @if($cotizacion->subtotal_suministros > 0)
-                    <tr><td class="text-muted">Insumos Pintura</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_suministros, 0, ',', '.') }}</td></tr>
+                    <tr><td class="text-muted">Insumos (legado)</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_suministros, 0, ',', '.') }}</td></tr>
                     @endif
                     @if($cotizacion->subtotal_terceros > 0)
                     <tr><td class="text-muted">Subcontratados</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_terceros, 0, ',', '.') }}</td></tr>

@@ -149,6 +149,28 @@
                     </li>
                     @endif
 
+                    @if(in_array('ADMIN', $roles) || in_array('ALMACEN', $roles))
+                    <li class="nav-item">
+                        <a class="nav-link {{ request()->routeIs('almacen.*') ? 'active' : '' }}"
+                           href="{{ route('almacen.index') }}">
+                            <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                     fill="none" stroke="currentColor" stroke-width="2">
+                                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                    <path d="M3 21l18 0"/>
+                                    <path d="M3 7l9 -4l9 4"/>
+                                    <path d="M3 7l0 14"/>
+                                    <path d="M21 7l0 14"/>
+                                    <path d="M9 21l0 -9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1l0 9"/>
+                                    <path d="M7 7l0 .01"/>
+                                    <path d="M17 7l0 .01"/>
+                                </svg>
+                            </span>
+                            <span class="nav-link-title">Almacén</span>
+                        </a>
+                    </li>
+                    @endif
+
                     @if(in_array('ADMIN', $roles))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('catalogo-repuestos.*') ? 'active' : '' }}"
