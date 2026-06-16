@@ -360,7 +360,7 @@ document.getElementById('buscar-rto').addEventListener('input', function () {
     const q = this.value.trim(), res = document.getElementById('resultados-rto');
     if (q.length < 2) { res.style.display = 'none'; return; }
     tRto = setTimeout(() => {
-        fetch(`${URL_RTO}?buscar=${encodeURIComponent(q)}`)
+        fetch(`${URL_RTO}?id_marca=${ID_MARCA_PREVIA || ''}&id_modelo=${ID_MODELO_PREVIA || ''}&buscar=${encodeURIComponent(q)}`)
             .then(r => r.json()).then(items => {
                 res.innerHTML = '';
                 if (!items.length) { res.innerHTML = '<div class="list-group-item text-muted small">Sin resultados</div>'; }

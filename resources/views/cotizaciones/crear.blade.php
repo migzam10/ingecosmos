@@ -448,7 +448,7 @@ document.getElementById('buscar-rto').addEventListener('input', function () {
     if (q.length < 2) { res.style.display = 'none'; return; }
 
     searchRtoTimeout = setTimeout(() => {
-        fetch(`${URL_RTO}?buscar=${encodeURIComponent(q)}`)
+        fetch(`${URL_RTO}?id_marca=${ID_MARCA}&id_modelo=${ID_MODELO || ''}&buscar=${encodeURIComponent(q)}`)
             .then(r => r.json())
             .then(items => {
                 res.innerHTML = '';

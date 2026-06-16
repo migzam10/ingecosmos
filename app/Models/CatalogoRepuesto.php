@@ -8,13 +8,22 @@ class CatalogoRepuesto extends Model
 {
     protected $table = 'catalogo_repuestos';
 
-    protected $fillable = ['descripcion', 'precio_referencia', 'activo'];
+    protected $fillable = [
+        'nivel', 'id_marca', 'id_modelo', 'descripcion', 'precio_referencia', 'activo',
+    ];
 
     protected function casts(): array
     {
-        return [
-            'activo'            => 'boolean',
-            'precio_referencia' => 'decimal:2',
-        ];
+        return ['activo' => 'boolean'];
+    }
+
+    public function marca()
+    {
+        return $this->belongsTo(MarcaVehiculo::class, 'id_marca');
+    }
+
+    public function modelo()
+    {
+        return $this->belongsTo(ModeloVehiculo::class, 'id_modelo');
     }
 }

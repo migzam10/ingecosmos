@@ -61,7 +61,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/placa',               [OrdenTrabajoController::class,      'buscarPlaca'])->name('api.placa');
     Route::get('/api/modelos',             [OrdenTrabajoController::class,      'modelosPorMarca'])->name('api.modelos');
     Route::get('/api/catalogo-mo',         [CatalogoMoController::class,        'porVehiculo'])->name('api.catalogo-mo');
-    Route::get('/api/catalogo-repuestos',  [CatalogoRepuestosController::class, 'buscar'])->name('api.catalogo-repuestos');
+    Route::get('/api/catalogo-repuestos',  [CatalogoRepuestosController::class, 'porVehiculo'])->name('api.catalogo-repuestos');
     Route::get('/api/catalogo-insumos',    [CatalogoInsumosController::class,   'buscar'])->name('api.catalogo-insumos');
     Route::get('/api/salidas/pendientes/{cotizacion}', [SalidaAlmacenController::class, 'pendientesCotizacion'])->name('api.salidas.pendientes');
 });
@@ -170,10 +170,12 @@ Route::middleware(['auth', 'role:ADMIN,ALMACEN,COORDINADOR'])->prefix('almacen')
 
 // Catálogo de Repuestos (solo ADMIN)
 Route::middleware(['auth', 'role:ADMIN'])->group(function () {
-    Route::get('/catalogo-repuestos',                          [CatalogoRepuestosController::class, 'index'])->name('catalogo-repuestos.index');
-    Route::post('/catalogo-repuestos',                         [CatalogoRepuestosController::class, 'store'])->name('catalogo-repuestos.store');
-    Route::put('/catalogo-repuestos/{catalogoRepuesto}',       [CatalogoRepuestosController::class, 'update'])->name('catalogo-repuestos.update');
-    Route::delete('/catalogo-repuestos/{catalogoRepuesto}',    [CatalogoRepuestosController::class, 'destroy'])->name('catalogo-repuestos.destroy');
+    Route::get('/catalogo-repuestos',                               [CatalogoRepuestosController::class, 'index'])->name('catalogo-repuestos.index');
+    Route::get('/catalogo-repuestos/crear',                         [CatalogoRepuestosController::class, 'create'])->name('catalogo-repuestos.create');
+    Route::post('/catalogo-repuestos',                              [CatalogoRepuestosController::class, 'store'])->name('catalogo-repuestos.store');
+    Route::get('/catalogo-repuestos/{catalogoRepuesto}/editar',     [CatalogoRepuestosController::class, 'edit'])->name('catalogo-repuestos.edit');
+    Route::put('/catalogo-repuestos/{catalogoRepuesto}',            [CatalogoRepuestosController::class, 'update'])->name('catalogo-repuestos.update');
+    Route::delete('/catalogo-repuestos/{catalogoRepuesto}',         [CatalogoRepuestosController::class, 'destroy'])->name('catalogo-repuestos.destroy');
     Route::post('/catalogo-repuestos/{catalogoRepuesto}/restaurar', [CatalogoRepuestosController::class, 'restaurar'])->name('catalogo-repuestos.restaurar');
 });
 
