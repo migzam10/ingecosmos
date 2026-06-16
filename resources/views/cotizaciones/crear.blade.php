@@ -117,9 +117,8 @@
 
         {{-- INSUMOS DE PINTURA --}}
         <div class="card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <h3 class="card-title mb-0">Insumos</h3>
-                <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-ins">+ Ítem manual</button>
             </div>
             <div class="card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
@@ -621,7 +620,6 @@ function actualizarTotalIns(input) {
     recalcular();
 }
 
-document.getElementById('btn-agregar-ins').onclick = () => agregarInsumo();
 
 // ── INIT ──────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function () {
