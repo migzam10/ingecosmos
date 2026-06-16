@@ -239,18 +239,12 @@ const URL_RTO      = '{{ route("api.catalogo-repuestos") }}';
 const FECHA_INICIO = '{{ $orden->fecha_inicio_proceso ?? "" }}';
 
 @if(isset($cotizacion))
-const ITEMS_MO_EDIT  = @json($cotizacion->itemsMo->map(fn($i) => [
-    'descripcion'    => $i->descripcion,
-    'precio'         => (float)$i->precio,
-    'id_catalogo_mo' => $i->id_catalogo_mo,
-]));
-const ITEMS_RTO_EDIT = @json($cotizacion->itemsRepuesto->map(fn($i) => [
-    'descripcion'          => $i->descripcion,
-    'unidades'             => (float)$i->unidades,
-    'precio_unitario'      => (float)$i->precio_unitario,
-    'precio_total'         => (float)$i->precio_total,
-    'id_catalogo_repuesto' => $i->id_catalogo_repuesto,
-]));
+@php
+$_moEdit  = $cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo])->values()->toArray();
+$_rtoEdit = $cotizacion->itemsRepuesto->map(fn($i) => ['descripcion' => $i->descripcion, 'unidades' => (float)$i->unidades, 'precio_unitario' => (float)$i->precio_unitario, 'precio_total' => (float)$i->precio_total, 'id_catalogo_repuesto' => $i->id_catalogo_repuesto])->values()->toArray();
+@endphp
+const ITEMS_MO_EDIT  = @json($_moEdit);
+const ITEMS_RTO_EDIT = @json($_rtoEdit);
 const IVA_EDIT = {{ (float)($cotizacion->iva_valor ?? 0) }};
 @else
 const ITEMS_MO_EDIT  = [];

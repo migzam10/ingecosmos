@@ -197,7 +197,6 @@
                             <span class="nav-link-title">Producción / KPIs</span>
                         </a>
                     </li>
-                    @endif
 
                     @if(in_array('ADMIN', $roles))
                     <li class="nav-item dropdown">
