@@ -3,7 +3,19 @@
 @section('page_title', 'Entrada del ' . $entrada->fecha->format('d/m/Y'))
 @section('breadcrumb', 'Almacén / Entradas')
 @section('page_actions')
-<a href="{{ route('almacen.entradas.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+<div class="d-flex gap-2 flex-wrap">
+    <a href="{{ route('almacen.entradas.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+    @if(auth()->user()->hasAnyRole(['ADMIN','COORDINADOR']))
+    <a href="{{ route('almacen.entradas.edit', $entrada) }}" class="btn btn-outline-primary btn-sm">Editar</a>
+    <form method="POST" action="{{ route('almacen.entradas.destroy', $entrada) }}" class="d-inline">
+        @csrf @method('DELETE')
+        <button type="submit" class="btn btn-outline-danger btn-sm"
+                data-confirm="¿Eliminar esta entrada? El stock se descontará automáticamente.">
+            Eliminar
+        </button>
+    </form>
+    @endif
+</div>
 @endsection
 
 @section('content')

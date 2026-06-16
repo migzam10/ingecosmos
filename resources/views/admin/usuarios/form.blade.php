@@ -41,10 +41,11 @@
                     @php
                     $desc = [
                         'ADMIN'       => 'Acceso total al sistema',
-                        'COORDINADOR' => 'Torre, técnicos, autorización, producción',
+                        'COORDINADOR' => 'Torre, técnicos, autorización, producción, almacén',
                         'COTIZADOR'   => 'Crear y editar cotizaciones',
                         'RECEPCION'   => 'Crear órdenes de trabajo',
                         'TECNICO'     => 'Ver y gestionar sus propias tareas',
+                        'ALMACEN'     => 'Entradas, salidas e inventario de insumos',
                     ][$rol];
                     $checked = in_array($rol, old('roles', $usuario->roles ?? []));
                     @endphp

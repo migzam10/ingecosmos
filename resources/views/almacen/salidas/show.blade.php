@@ -3,7 +3,19 @@
 @section('page_title', 'Salida del ' . $salida->fecha->format('d/m/Y'))
 @section('breadcrumb', 'Almacén / Salidas')
 @section('page_actions')
-<a href="{{ route('almacen.salidas.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+<div class="d-flex gap-2 flex-wrap">
+    <a href="{{ route('almacen.salidas.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+    @if(auth()->user()->hasAnyRole(['ADMIN','COORDINADOR']))
+    <a href="{{ route('almacen.salidas.edit', $salida) }}" class="btn btn-outline-primary btn-sm">Editar</a>
+    <form method="POST" action="{{ route('almacen.salidas.destroy', $salida) }}" class="d-inline">
+        @csrf @method('DELETE')
+        <button type="submit" class="btn btn-outline-danger btn-sm"
+                data-confirm="¿Eliminar esta salida? El stock se revertirá y los insumos de cotización volverán a pendiente.">
+            Eliminar
+        </button>
+    </form>
+    @endif
+</div>
 @endsection
 
 @section('content')

@@ -132,8 +132,8 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,COTIZADOR'])->group(function 
     Route::post('/cotizaciones/{cotizacion}/vincular-ot',      [CotizacionController::class, 'vincularOT'])->name('cotizaciones.vincular-ot');
 });
 
-// Módulo Almacén (ADMIN + ALMACEN)
-Route::middleware(['auth', 'role:ADMIN,ALMACEN'])->prefix('almacen')->name('almacen.')->group(function () {
+// Módulo Almacén (ADMIN + ALMACEN + COORDINADOR)
+Route::middleware(['auth', 'role:ADMIN,ALMACEN,COORDINADOR'])->prefix('almacen')->name('almacen.')->group(function () {
     Route::get('/',                                [AlmacenController::class,       'index'])->name('index');
     Route::get('/catalogo',                        [CatalogoInsumosController::class,'index'])->name('catalogo.index');
     Route::post('/catalogo',                       [CatalogoInsumosController::class,'store'])->name('catalogo.store');
@@ -145,11 +145,23 @@ Route::middleware(['auth', 'role:ADMIN,ALMACEN'])->prefix('almacen')->name('alma
     Route::get('/entradas/crear',                  [EntradaAlmacenController::class,'create'])->name('entradas.create');
     Route::post('/entradas',                       [EntradaAlmacenController::class,'store'])->name('entradas.store');
     Route::get('/entradas/{entrada}',              [EntradaAlmacenController::class,'show'])->name('entradas.show');
+    // Edit/delete solo ADMIN y COORDINADOR
+    Route::middleware('role:ADMIN,COORDINADOR')->group(function () {
+        Route::get('/entradas/{entrada}/editar',   [EntradaAlmacenController::class,'edit'])->name('entradas.edit');
+        Route::put('/entradas/{entrada}',          [EntradaAlmacenController::class,'update'])->name('entradas.update');
+        Route::delete('/entradas/{entrada}',       [EntradaAlmacenController::class,'destroy'])->name('entradas.destroy');
+    });
 
     Route::get('/salidas',                         [SalidaAlmacenController::class,'index'])->name('salidas.index');
     Route::get('/salidas/crear',                   [SalidaAlmacenController::class,'create'])->name('salidas.create');
     Route::post('/salidas',                        [SalidaAlmacenController::class,'store'])->name('salidas.store');
     Route::get('/salidas/{salida}',                [SalidaAlmacenController::class,'show'])->name('salidas.show');
+    // Edit/delete solo ADMIN y COORDINADOR
+    Route::middleware('role:ADMIN,COORDINADOR')->group(function () {
+        Route::get('/salidas/{salida}/editar',     [SalidaAlmacenController::class,'edit'])->name('salidas.edit');
+        Route::put('/salidas/{salida}',            [SalidaAlmacenController::class,'update'])->name('salidas.update');
+        Route::delete('/salidas/{salida}',         [SalidaAlmacenController::class,'destroy'])->name('salidas.destroy');
+    });
 
     Route::get('/ots',                             [AlmacenController::class,'ots'])->name('ots.index');
     Route::get('/ots/{orden}',                     [AlmacenController::class,'otShow'])->name('ots.show');

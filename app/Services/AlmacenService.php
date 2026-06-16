@@ -71,6 +71,15 @@ class AlmacenService
                     );
                 }
 
+                if (!empty($item['id_item_cotizacion_insumo'])) {
+                    $itemCot = ItemCotizacionInsumo::find($item['id_item_cotizacion_insumo']);
+                    if ($itemCot && $cantidad > $itemCot->cantidad_pendiente) {
+                        throw new \RuntimeException(
+                            "No puede entregar {$cantidad} de «{$insumo->nombre}»: solo quedan {$itemCot->cantidad_pendiente} {$insumo->unidad_medida} pendientes en la cotización."
+                        );
+                    }
+                }
+
                 ItemSalidaAlmacen::create([
                     'id_salida'                => $salida->id,
                     'id_insumo'                => $item['id_insumo'],
@@ -78,6 +87,130 @@ class AlmacenService
                     'descripcion'              => $item['descripcion'],
                     'cantidad'                 => $cantidad,
                     'precio_venta'             => (float)($item['precio_venta'] ?? 0),
+                ]);
+
+                $insumo->decrement('stock_actual', $cantidad);
+            }
+
+            return $salida->load('items.insumo');
+        });
+    }
+
+    public function eliminarEntrada(EntradaAlmacen $entrada): void
+    {
+        DB::transaction(function () use ($entrada) {
+            $entrada->load('items');
+            foreach ($entrada->items as $item) {
+                CatalogoInsumo::where('id', $item->id_insumo)
+                    ->decrement('stock_actual', (float) $item->cantidad);
+            }
+            $entrada->delete();
+        });
+    }
+
+    public function actualizarEntrada(EntradaAlmacen $entrada, array $data): EntradaAlmacen
+    {
+        return DB::transaction(function () use ($entrada, $data) {
+            // Revertir stock de los ítems anteriores
+            $entrada->load('items');
+            foreach ($entrada->items as $item) {
+                CatalogoInsumo::where('id', $item->id_insumo)
+                    ->decrement('stock_actual', (float) $item->cantidad);
+            }
+            $entrada->items()->delete();
+
+            // Actualizar cabecera
+            $entrada->update([
+                'fecha'         => $data['fecha'],
+                'observaciones' => $data['observaciones'] ?? null,
+            ]);
+
+            // Aplicar nuevos ítems
+            foreach (($data['items'] ?? []) as $item) {
+                if (empty($item['id_insumo']) || empty($item['cantidad'])) continue;
+                $cantidad = (float) $item['cantidad'];
+                if ($cantidad <= 0) continue;
+
+                ItemEntradaAlmacen::create([
+                    'id_entrada'    => $entrada->id,
+                    'id_insumo'     => $item['id_insumo'],
+                    'cantidad'      => $cantidad,
+                    'precio_compra' => isset($item['precio_compra']) && $item['precio_compra'] !== ''
+                        ? (float) $item['precio_compra'] : null,
+                ]);
+
+                CatalogoInsumo::where('id', $item['id_insumo'])
+                    ->increment('stock_actual', $cantidad);
+            }
+
+            return $entrada->load('items.insumo');
+        });
+    }
+
+    public function eliminarSalida(SalidaAlmacen $salida): void
+    {
+        DB::transaction(function () use ($salida) {
+            $salida->load('items');
+            foreach ($salida->items as $item) {
+                CatalogoInsumo::where('id', $item->id_insumo)
+                    ->increment('stock_actual', (float) $item->cantidad);
+            }
+            $salida->delete();
+            // Al eliminar los ItemSalidaAlmacen (cascade), cantidad_entregada de los
+            // ItemCotizacionInsumo referenciados disminuye automáticamente → vuelven a pendiente
+        });
+    }
+
+    public function actualizarSalida(SalidaAlmacen $salida, array $data): SalidaAlmacen
+    {
+        return DB::transaction(function () use ($salida, $data) {
+            // Revertir stock de los ítems anteriores (devolver al inventario)
+            $salida->load('items');
+            foreach ($salida->items as $item) {
+                CatalogoInsumo::where('id', $item->id_insumo)
+                    ->increment('stock_actual', (float) $item->cantidad);
+            }
+            $salida->items()->delete();
+            // Tras borrar los ItemSalidaAlmacen, cantidad_pendiente de los ítems de
+            // cotización aumenta → el check posterior usa el estado correcto
+
+            // Actualizar cabecera
+            $salida->update([
+                'entregado_a'   => $data['entregado_a'],
+                'fecha'         => $data['fecha'],
+                'observaciones' => $data['observaciones'] ?? null,
+            ]);
+
+            // Aplicar nuevos ítems con validaciones
+            foreach (($data['items'] ?? []) as $item) {
+                if (empty($item['id_insumo']) || empty($item['cantidad'])) continue;
+                $cantidad = (float) $item['cantidad'];
+                if ($cantidad <= 0) continue;
+
+                $insumo = CatalogoInsumo::lockForUpdate()->findOrFail($item['id_insumo']);
+
+                if ((float) $insumo->stock_actual < $cantidad) {
+                    throw new \RuntimeException(
+                        "Stock insuficiente para «{$insumo->nombre}». Disponible: {$insumo->stock_actual} {$insumo->unidad_medida}."
+                    );
+                }
+
+                if (!empty($item['id_item_cotizacion_insumo'])) {
+                    $itemCot = ItemCotizacionInsumo::find($item['id_item_cotizacion_insumo']);
+                    if ($itemCot && $cantidad > $itemCot->cantidad_pendiente) {
+                        throw new \RuntimeException(
+                            "No puede entregar {$cantidad} de «{$insumo->nombre}»: solo quedan {$itemCot->cantidad_pendiente} {$insumo->unidad_medida} pendientes."
+                        );
+                    }
+                }
+
+                ItemSalidaAlmacen::create([
+                    'id_salida'                 => $salida->id,
+                    'id_insumo'                 => $item['id_insumo'],
+                    'id_item_cotizacion_insumo' => $item['id_item_cotizacion_insumo'] ?? null,
+                    'descripcion'               => $item['descripcion'],
+                    'cantidad'                  => $cantidad,
+                    'precio_venta'              => (float) ($item['precio_venta'] ?? 0),
                 ]);
 
                 $insumo->decrement('stock_actual', $cantidad);

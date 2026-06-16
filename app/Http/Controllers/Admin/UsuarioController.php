@@ -10,7 +10,7 @@ use Illuminate\Validation\Rules\Password;
 
 class UsuarioController extends Controller
 {
-    const ROLES_DISPONIBLES = ['ADMIN', 'COORDINADOR', 'COTIZADOR', 'RECEPCION', 'TECNICO'];
+    const ROLES_DISPONIBLES = ['ADMIN', 'COORDINADOR', 'COTIZADOR', 'RECEPCION', 'TECNICO', 'ALMACEN'];
 
     public function index()
     {

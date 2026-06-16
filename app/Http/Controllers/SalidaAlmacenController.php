@@ -93,6 +93,42 @@ class SalidaAlmacenController extends Controller
         return view('almacen.salidas.show', compact('salida'));
     }
 
+    public function edit(SalidaAlmacen $salida)
+    {
+        $salida->load(['items.insumo', 'items.itemCotizacion', 'cotizacion.ot.vehiculo.marca']);
+        return view('almacen.salidas.editar', compact('salida'));
+    }
+
+    public function update(Request $request, SalidaAlmacen $salida)
+    {
+        $request->validate([
+            'entregado_a'            => 'required|string|max:150',
+            'fecha'                  => 'required|date|before_or_equal:today',
+            'items'                  => 'required|array|min:1',
+            'items.*.id_insumo'      => 'required|exists:catalogo_insumos,id',
+            'items.*.cantidad'       => 'required|numeric|min:0.01',
+            'items.*.descripcion'    => 'required|string|max:200',
+            'observaciones'          => 'nullable|string|max:500',
+        ]);
+
+        try {
+            $salida = $this->service->actualizarSalida($salida, $request->all());
+
+            return redirect()->route('almacen.salidas.show', $salida)
+                ->with('success', 'Salida actualizada. Stock ajustado correctamente.');
+        } catch (\RuntimeException $e) {
+            return back()->withInput()->with('error', $e->getMessage());
+        }
+    }
+
+    public function destroy(SalidaAlmacen $salida)
+    {
+        $this->service->eliminarSalida($salida);
+
+        return redirect()->route('almacen.salidas.index')
+            ->with('success', 'Salida eliminada. Stock revertido. Los insumos de cotización vuelven a estado pendiente.');
+    }
+
     /** API: insumos pendientes de una cotización para el form de salida */
     public function pendientesCotizacion(Cotizacion $cotizacion)
     {
