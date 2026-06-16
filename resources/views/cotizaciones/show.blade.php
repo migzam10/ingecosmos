@@ -170,10 +170,10 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
         </div>
         @endif
 
-        {{-- Insumos de Pintura (Fase 3) --}}
+        {{-- Insumos (Fase 3) --}}
         @if($cotizacion->itemsInsumo->count())
         <div class="card mb-3">
-            <div class="card-header"><h3 class="card-title">Insumos de Pintura</h3></div>
+            <div class="card-header"><h3 class="card-title">Insumos</h3></div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0">
                     <thead>
@@ -210,7 +210,7 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
         {{-- Suministros (legado) --}}
         @if($cotizacion->itemsSuministro->count())
         <div class="card mb-3">
-            <div class="card-header"><h3 class="card-title">Insumos de Pintura <span class="badge bg-secondary ms-1 fs-6">Histórico</span></h3></div>
+            <div class="card-header"><h3 class="card-title">Insumos <span class="badge bg-secondary ms-1 fs-6">Histórico</span></h3></div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0">
                     <thead><tr><th>Descripción</th><th class="text-end">Costo</th><th class="text-end">Precio</th></tr></thead>
@@ -253,7 +253,7 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
                     <tr><td class="text-muted">Repuestos</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_rto, 0, ',', '.') }}</td></tr>
                     @endif
                     @if($cotizacion->subtotal_insumos > 0)
-                    <tr><td class="text-muted">Insumos Pintura</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_insumos, 0, ',', '.') }}</td></tr>
+                    <tr><td class="text-muted">Insumos</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_insumos, 0, ',', '.') }}</td></tr>
                     @endif
                     @if($cotizacion->subtotal_suministros > 0)
                     <tr><td class="text-muted">Insumos (legado)</td><td class="text-end">$ {{ number_format($cotizacion->subtotal_suministros, 0, ',', '.') }}</td></tr>

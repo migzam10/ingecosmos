@@ -174,7 +174,7 @@
 
 {{-- INSUMOS DE PINTURA (Fase 3) --}}
 @if($cotizacion->itemsInsumo->count())
-<h2>Insumos de Pintura</h2>
+<h2>Insumos</h2>
 <table>
     <thead>
         <tr>
@@ -207,7 +207,7 @@
 
 {{-- INSUMOS (legado) --}}
 @if($cotizacion->itemsSuministro->count())
-<h2>Insumos de Pintura</h2>
+<h2>Insumos</h2>
 <table>
     <thead>
         <tr>
@@ -250,7 +250,7 @@
         <tr><td>Repuestos</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_rto, 0, ',', '.') }}</td></tr>
         @endif
         @if($cotizacion->subtotal_insumos > 0)
-        <tr><td>Insumos Pintura</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_insumos, 0, ',', '.') }}</td></tr>
+        <tr><td>Insumos</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_insumos, 0, ',', '.') }}</td></tr>
         @endif
         @if($cotizacion->subtotal_suministros > 0)
         <tr><td>Insumos (legado)</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_suministros, 0, ',', '.') }}</td></tr>

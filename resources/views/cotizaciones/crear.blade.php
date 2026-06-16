@@ -118,7 +118,7 @@
         {{-- INSUMOS DE PINTURA --}}
         <div class="card mb-3">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h3 class="card-title mb-0">Insumos de Pintura</h3>
+                <h3 class="card-title mb-0">Insumos</h3>
                 <button type="button" class="btn btn-sm btn-outline-primary" id="btn-agregar-ins">+ Ítem manual</button>
             </div>
             <div class="card-body border-bottom pb-2">
