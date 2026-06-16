@@ -177,6 +177,7 @@ class OrdenTrabajoController extends Controller
         );
 
         $data = $request->validate([
+            'numero_ot'                => "nullable|integer|min:1|unique:ordenes_trabajo,numero_ot,{$orden->id}",
             'id_marca'                 => 'required|exists:marcas_vehiculo,id',
             'id_modelo'                => 'nullable|exists:modelos_vehiculo,id',
             'color'                    => 'nullable|string|max:50',
@@ -221,7 +222,7 @@ class OrdenTrabajoController extends Controller
             }
 
             // Actualizar OT
-            $orden->update([
+            $updateOT = [
                 'id_empresa_cliente'    => $data['id_empresa_cliente'],
                 'area'                  => $data['area'],
                 'km_ingreso'            => $data['km_ingreso'],
@@ -233,7 +234,13 @@ class OrdenTrabajoController extends Controller
                 'fecha_ingreso'         => $data['fecha_ingreso'],
                 'observaciones'         => $data['observaciones'],
                 'actualizado_por'       => Auth::id(),
-            ]);
+            ];
+
+            if (!empty($data['numero_ot']) && !$orden->cotizaciones()->exists()) {
+                $updateOT['numero_ot'] = (int) $data['numero_ot'];
+            }
+
+            $orden->update($updateOT);
         });
 
         return redirect()->route('ordenes.show', $orden)

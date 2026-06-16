@@ -109,6 +109,15 @@
             <div class="card-header"><h3 class="card-title">Datos de Ingreso</h3></div>
             <div class="card-body">
                 <div class="row g-2">
+                    @if(!$orden->cotizaciones()->exists())
+                    <div class="col-6 col-md-2">
+                        <label class="form-label"># OT <small class="text-muted">(editable)</small></label>
+                        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_ot"
+                               class="form-control @error('numero_ot') is-invalid @enderror"
+                               value="{{ old('numero_ot', $orden->numero_ot) }}">
+                        @error('numero_ot')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    @endif
                     <div class="col-12 col-md-5">
                         <label class="form-label">Empresa / CIA <span class="text-danger">*</span></label>
                         <select name="id_empresa_cliente" class="form-select" required>

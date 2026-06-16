@@ -23,19 +23,6 @@
     @endif
     @endif
 
-    {{-- Cambiar número de OT — visible solo si no tiene cotizaciones --}}
-    @if($esGestor && !$orden->cotizaciones()->exists())
-    <form method="POST" action="{{ route('ot.cambiar-numero', $orden) }}"
-          class="d-flex gap-1 align-items-center"
-          data-confirm="¿Cambiar el número de esta OT?">
-        @csrf @method('PATCH')
-        <input type="text" inputmode="numeric" pattern="[0-9]+" name="numero_ot"
-               class="form-control form-control-sm" style="width:110px"
-               value="{{ $orden->numero_ot }}" title="Número de OT">
-        <button class="btn btn-outline-secondary btn-sm" type="submit">Cambiar # OT</button>
-    </form>
-    @endif
-
     @if(in_array($orden->estado_proceso, ['PTE_COTIZACION','PTE_AUTORIZACION']))
     @if(in_array('ADMIN',$rAcc) || in_array('COTIZADOR',$rAcc) || in_array('COORDINADOR',$rAcc))
     <a href="{{ route('cotizaciones.create', $orden) }}" class="btn btn-primary btn-sm">
