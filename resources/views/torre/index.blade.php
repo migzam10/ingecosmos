@@ -19,7 +19,7 @@
 
             <a class="nav-link text-nowrap {{ $tab === 'incumplidas' ? 'active' : '' }}"
                href="{{ request()->fullUrlWithQuery(['tab' => 'incumplidas', 'page' => null]) }}">
-                <span class="text-danger">●</span> Incumplidas
+                <span class="text-danger"><x-icon name="dot" size="14" /></span> Incumplidas
                 @if($conteos['incumplidas'] > 0)
                 <span class="badge bg-danger ms-1">{{ $conteos['incumplidas'] }}</span>
                 @else
@@ -29,7 +29,7 @@
 
             <a class="nav-link text-nowrap {{ $tab === 'entregar_hoy' ? 'active' : '' }}"
                href="{{ request()->fullUrlWithQuery(['tab' => 'entregar_hoy', 'page' => null]) }}">
-                <span class="text-warning">●</span> Entregar Hoy
+                <span class="text-warning"><x-icon name="dot" size="14" /></span> Entregar Hoy
                 @if($conteos['entregar_hoy'] > 0)
                 <span class="badge bg-warning ms-1">{{ $conteos['entregar_hoy'] }}</span>
                 @else
@@ -39,13 +39,13 @@
 
             <a class="nav-link text-nowrap {{ $tab === 'a_tiempo' ? 'active' : '' }}"
                href="{{ request()->fullUrlWithQuery(['tab' => 'a_tiempo', 'page' => null]) }}">
-                <span class="text-success">●</span> A Tiempo
+                <span class="text-success"><x-icon name="dot" size="14" /></span> A Tiempo
                 <span class="badge bg-secondary-lt ms-1">{{ $conteos['a_tiempo'] }}</span>
             </a>
 
             <a class="nav-link text-nowrap {{ $tab === 'sin_fecha' ? 'active' : '' }}"
                href="{{ request()->fullUrlWithQuery(['tab' => 'sin_fecha', 'page' => null]) }}">
-                <span class="text-muted">●</span> Sin Fecha
+                <span class="text-muted"><x-icon name="dot" size="14" /></span> Sin Fecha
                 <span class="badge bg-secondary-lt ms-1">{{ $conteos['sin_fecha'] }}</span>
             </a>
 
@@ -112,7 +112,7 @@
 
             <div class="col-12 col-md-1 d-flex gap-1">
                 <button type="submit" class="btn btn-sm btn-secondary flex-grow-1">Filtrar</button>
-                <a href="{{ route('torre.index') }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">✕</a>
+                <a href="{{ route('torre.index') }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros"><x-icon name="x" /></a>
             </div>
         </form>
     </div>

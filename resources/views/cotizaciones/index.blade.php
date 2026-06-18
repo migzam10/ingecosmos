@@ -18,7 +18,7 @@
             <input type="text" name="buscar" class="form-control form-control-sm"
                    placeholder="# COT o placa..." value="{{ request('buscar') }}" style="max-width:220px">
             <button class="btn btn-sm btn-secondary">Buscar</button>
-            <a href="{{ route('cotizaciones.index') }}" class="btn btn-sm btn-outline-secondary">✕</a>
+            <a href="{{ route('cotizaciones.index') }}" class="btn btn-sm btn-outline-secondary"><x-icon name="x" /></a>
         </form>
     </div>
     <div class="table-responsive">

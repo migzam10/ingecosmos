@@ -3,7 +3,7 @@
 @section('page_title', 'Registrar Entrada de Inventario')
 @section('breadcrumb', 'Almacén / Entradas')
 @section('page_actions')
-<a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm">← Almacén</a>
+<a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Almacén</a>
 @endsection
 
 @section('content')
@@ -37,7 +37,7 @@
             </div>
             <div class="card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text">🔍</span>
+                    <span class="input-group-text"><x-icon name="search" /></span>
                     <input type="text" id="buscar-insumo" class="form-control" placeholder="Buscar insumo...">
                 </div>
                 <div id="resultados-busqueda" class="list-group mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
@@ -121,7 +121,7 @@ function agregarItem(insumo = null) {
         <td><input type="number" name="items[${i}][cantidad]" class="form-control form-control-sm text-end" value="1" min="0.01" step="0.01" required oninput="actualizarResumen()"></td>
         <td class="text-center small text-muted">${insumo?.unidad_medida || '—'}</td>
         <td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items[${i}][precio_compra]" class="form-control text-end" min="0" step="1" placeholder="Opt."></div></td>
-        <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove();actualizarResumen()">✕</button></td>`;
+        <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove();actualizarResumen()"><x-icon name="x" /></button></td>`;
     document.getElementById('body-items').appendChild(tr);
     if (insumo) {
         const hiddenInput = tr.querySelector('input[name^="items["]');

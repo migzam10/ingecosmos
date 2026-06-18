@@ -11,9 +11,9 @@
         <div class="card-header">
             <h3 class="card-title">
                 @if($resultado['exitCode'] === 0)
-                <span class="text-success">✓ Migración completada</span>
+                <span class="text-success"><x-icon name="check" /> Migración completada</span>
                 @else
-                <span class="text-danger">✗ Migración finalizada con errores</span>
+                <span class="text-danger"><x-icon name="x" /> Migración finalizada con errores</span>
                 @endif
             </h3>
         </div>

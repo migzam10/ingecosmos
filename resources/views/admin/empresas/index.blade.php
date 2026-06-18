@@ -50,12 +50,12 @@
                             <form method="POST" action="{{ route('admin.empresas.destroy', $empresa) }}"
                                   data-confirm="¿Desactivar {{ $empresa->nombre }}?">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">✕</button>
+                                <button class="btn btn-sm btn-outline-danger"><x-icon name="x" /></button>
                             </form>
                             @else
                             <form method="POST" action="{{ route('admin.empresas.restaurar', $empresa) }}">
                                 @csrf
-                                <button class="btn btn-sm btn-outline-success">↩</button>
+                                <button class="btn btn-sm btn-outline-success"><x-icon name="arrow-back-up" /></button>
                             </form>
                             @endif
                         </div>

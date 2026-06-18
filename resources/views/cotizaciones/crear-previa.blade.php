@@ -5,7 +5,7 @@
 @section('breadcrumb', 'Cotizaciones')
 
 @section('page_actions')
-<a href="{{ route('cotizaciones.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+<a href="{{ route('cotizaciones.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Volver</a>
 @endsection
 
 @section('content')
@@ -95,7 +95,7 @@
             </div>
             <div class="card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text">🔍</span>
+                    <span class="input-group-text"><x-icon name="search" /></span>
                     <input type="text" id="buscar-mo" class="form-control" placeholder="Buscar en catálogo MO...">
                 </div>
                 <div id="resultados-mo" class="list-group mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
@@ -125,7 +125,7 @@
             </div>
             <div class="card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text">🔍</span>
+                    <span class="input-group-text"><x-icon name="search" /></span>
                     <input type="text" id="buscar-rto" class="form-control" placeholder="Buscar en catálogo de repuestos...">
                 </div>
                 <div id="resultados-rto" class="list-group mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
@@ -160,7 +160,7 @@
             </div>
             <div class="card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text">🔍</span>
+                    <span class="input-group-text"><x-icon name="search" /></span>
                     <input type="text" id="buscar-ins" class="form-control" placeholder="Buscar en catálogo de insumos...">
                 </div>
                 <div id="resultados-ins" class="list-group mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
@@ -407,7 +407,7 @@ document.addEventListener('click', e => {
 function agregarMO(desc='', precio=0, idCat=null) {
     const i = cMo++;
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td><input type="hidden" name="items_mo[${i}][id_catalogo_mo]" value="${idCat||''}"><input type="text" name="items_mo[${i}][descripcion]" class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required></td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_mo[${i}][precio]" class="form-control text-end inp-precio-mo" value="${precio}" min="0" step="1" oninput="recalcular()" required></div></td><td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove();recalcular()">✕</button></td>`;
+    tr.innerHTML = `<td><input type="hidden" name="items_mo[${i}][id_catalogo_mo]" value="${idCat||''}"><input type="text" name="items_mo[${i}][descripcion]" class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required></td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_mo[${i}][precio]" class="form-control text-end inp-precio-mo" value="${precio}" min="0" step="1" oninput="recalcular()" required></div></td><td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove();recalcular()"><x-icon name="x" /></button></td>`;
     document.getElementById('body-mo').appendChild(tr);
     recalcular();
 }
@@ -415,7 +415,7 @@ function agregarRTO(desc='', unidades=1, unitario=0, idCat=null) {
     const i = cRto++;
     const total = Math.round(unidades * unitario);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td><input type="hidden" name="items_repuesto[${i}][id_catalogo_repuesto]" value="${idCat||''}"><input type="text" name="items_repuesto[${i}][descripcion]" class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required></td><td><input type="number" name="items_repuesto[${i}][unidades]" class="form-control form-control-sm text-end inp-und-rto" value="${unidades}" min="0.01" step="0.01" oninput="actualizarTotalRto(this)"></td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_repuesto[${i}][precio_unitario]" class="form-control text-end inp-unit-rto" value="${unitario}" min="0" step="1" oninput="actualizarTotalRto(this)"></div></td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_repuesto[${i}][precio_total]" class="form-control text-end inp-total-rto" value="${total}" min="0" step="1" oninput="recalcular()"></div></td><td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove();recalcular()">✕</button></td>`;
+    tr.innerHTML = `<td><input type="hidden" name="items_repuesto[${i}][id_catalogo_repuesto]" value="${idCat||''}"><input type="text" name="items_repuesto[${i}][descripcion]" class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required></td><td><input type="number" name="items_repuesto[${i}][unidades]" class="form-control form-control-sm text-end inp-und-rto" value="${unidades}" min="0.01" step="0.01" oninput="actualizarTotalRto(this)"></td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_repuesto[${i}][precio_unitario]" class="form-control text-end inp-unit-rto" value="${unitario}" min="0" step="1" oninput="actualizarTotalRto(this)"></div></td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_repuesto[${i}][precio_total]" class="form-control text-end inp-total-rto" value="${total}" min="0" step="1" oninput="recalcular()"></div></td><td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove();recalcular()"><x-icon name="x" /></button></td>`;
     document.getElementById('body-rto').appendChild(tr);
     recalcular();
 }
@@ -430,7 +430,7 @@ function agregarInsumo(idInsumo=null, desc='', cantidad=1, precioVenta=0, unidad
     const i = cIns++;
     const total = Math.round(cantidad * precioVenta);
     const tr = document.createElement('tr');
-    tr.innerHTML = `<td><input type="hidden" name="items_insumo[${i}][id_insumo]" value="${idInsumo||''}"><input type="text" name="items_insumo[${i}][descripcion]" class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required></td><td><input type="number" name="items_insumo[${i}][cantidad]" class="form-control form-control-sm text-end inp-cant-ins" value="${cantidad}" min="0.01" step="0.01" oninput="actualizarTotalIns(this)"></td><td class="text-center text-muted small"><input type="hidden" name="items_insumo[${i}][unidad_medida]" value="${unidad}">${unidad}</td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_insumo[${i}][precio_venta]" class="form-control text-end inp-pv-ins" value="${precioVenta}" min="0" step="1" oninput="actualizarTotalIns(this)"></div></td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_insumo[${i}][precio_total]" class="form-control text-end inp-total-ins" value="${total}" min="0" step="1" oninput="recalcular()"></div></td><td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove();recalcular()">✕</button></td>`;
+    tr.innerHTML = `<td><input type="hidden" name="items_insumo[${i}][id_insumo]" value="${idInsumo||''}"><input type="text" name="items_insumo[${i}][descripcion]" class="form-control form-control-sm" value="${desc}" placeholder="Descripción..." required></td><td><input type="number" name="items_insumo[${i}][cantidad]" class="form-control form-control-sm text-end inp-cant-ins" value="${cantidad}" min="0.01" step="0.01" oninput="actualizarTotalIns(this)"></td><td class="text-center text-muted small"><input type="hidden" name="items_insumo[${i}][unidad_medida]" value="${unidad}">${unidad}</td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_insumo[${i}][precio_venta]" class="form-control text-end inp-pv-ins" value="${precioVenta}" min="0" step="1" oninput="actualizarTotalIns(this)"></div></td><td><div class="input-group input-group-sm"><span class="input-group-text">$</span><input type="number" name="items_insumo[${i}][precio_total]" class="form-control text-end inp-total-ins" value="${total}" min="0" step="1" oninput="recalcular()"></div></td><td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove();recalcular()"><x-icon name="x" /></button></td>`;
     document.getElementById('body-ins').appendChild(tr);
     recalcular();
 }

@@ -61,7 +61,7 @@
             </div>
             <div class="col-6 col-md-1 d-flex gap-1">
                 <button type="submit" class="btn btn-sm btn-secondary flex-grow-1">Filtrar</button>
-                <a href="{{ route('catalogo-repuestos.index') }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros">✕</a>
+                <a href="{{ route('catalogo-repuestos.index') }}" class="btn btn-sm btn-outline-secondary" title="Limpiar filtros"><x-icon name="x" /></a>
             </div>
         </form>
     </div>
@@ -115,12 +115,12 @@
                             <form method="POST" action="{{ route('catalogo-repuestos.destroy', $item) }}"
                                   data-confirm="¿Desactivar este repuesto?">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">✕</button>
+                                <button class="btn btn-sm btn-outline-danger"><x-icon name="x" /></button>
                             </form>
                             @else
                             <form method="POST" action="{{ route('catalogo-repuestos.restaurar', $item) }}">
                                 @csrf
-                                <button class="btn btn-sm btn-outline-success">↩</button>
+                                <button class="btn btn-sm btn-outline-success"><x-icon name="arrow-back-up" /></button>
                             </form>
                             @endif
                         </div>

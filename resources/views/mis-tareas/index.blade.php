@@ -180,7 +180,7 @@ $pausaAbierta = $trabajo->pausas->firstWhere('retomado_en', null);
         {{-- Aviso si está detenido --}}
         @if($pausado && $pausaAbierta)
         <div class="alert alert-danger py-2 mb-3 small">
-            <strong>⏸ Detenido</strong> desde {{ $pausaAbierta->detenido_en->format('d/m/Y') }} —
+            <strong><x-icon name="player-pause" /> Detenido</strong> desde {{ $pausaAbierta->detenido_en->format('d/m/Y') }} —
             {{ $pausaAbierta->motivo }}
         </div>
         @endif
@@ -243,7 +243,7 @@ $pausaAbierta = $trabajo->pausas->firstWhere('retomado_en', null);
                     <div class="col-auto">
                         <button type="submit" class="btn btn-warning"
                                 data-confirm="¿Iniciar el trabajo en OT #{{ $ot->numero_ot }}?">
-                            ▶ Iniciar Trabajo
+                            <x-icon name="player-play" /> Iniciar Trabajo
                         </button>
                     </div>
                 </form>
@@ -311,7 +311,7 @@ $pausaAbierta = $trabajo->pausas->firstWhere('retomado_en', null);
                     <div class="col-auto">
                         <button type="submit" class="btn btn-outline-danger"
                                 data-confirm="¿Detener el trabajo en OT #{{ $ot->numero_ot }}?">
-                            ⏸ Detener
+                            <x-icon name="player-pause" /> Detener
                         </button>
                     </div>
                 </form>
@@ -337,7 +337,7 @@ $pausaAbierta = $trabajo->pausas->firstWhere('retomado_en', null);
                     <div class="col-auto">
                         <button type="submit" class="btn btn-primary"
                                 data-confirm="¿Retomar el trabajo en OT #{{ $ot->numero_ot }}?">
-                            ▶ Retomar
+                            <x-icon name="player-play" /> Retomar
                         </button>
                     </div>
                 </form>
@@ -364,7 +364,7 @@ $pausaAbierta = $trabajo->pausas->firstWhere('retomado_en', null);
                     <div class="col-auto">
                         <button type="submit" class="btn btn-success"
                                 data-confirm="¿Marcar como FINALIZADO el trabajo en OT #{{ $ot->numero_ot }}? Esta acción no se puede deshacer.">
-                            ✓ Finalizar Trabajo
+                            <x-icon name="check" /> Finalizar Trabajo
                         </button>
                     </div>
                 </form>
@@ -378,7 +378,7 @@ $pausaAbierta = $trabajo->pausas->firstWhere('retomado_en', null);
 @empty
 <div class="card">
     <div class="card-body text-center text-muted py-5">
-        <div class="mb-2" style="font-size:2rem;">✓</div>
+        <div class="mb-2"><x-icon name="check" size="40" class="text-success" /></div>
         No tienes tareas pendientes asignadas.
     </div>
 </div>

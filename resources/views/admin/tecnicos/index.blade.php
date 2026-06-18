@@ -36,7 +36,7 @@
                             <form method="POST" action="{{ route('admin.tecnicos.destroy', $tecnico) }}"
                                   data-confirm="¿Desactivar a {{ $tecnico->nombre }}?">
                                 @csrf @method('DELETE')
-                                <button class="btn btn-sm btn-outline-danger">✕</button>
+                                <button class="btn btn-sm btn-outline-danger"><x-icon name="x" /></button>
                             </form>
                         </div>
                     </td>

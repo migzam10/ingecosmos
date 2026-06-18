@@ -66,3 +66,18 @@
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
+
+/* Iconos de línea inline (componente <x-icon>) — alineación con el texto de botones/títulos */
+.icon-inline {
+    display: inline-block;
+    vertical-align: -0.15em;
+}
+
+/* Toggle de filas (catálogo de marcas/modelos): chevron que rota */
+.toggle-ico {
+    display: inline-block;
+    transition: transform 0.15s ease;
+}
+.toggle-ico.collapsed {
+    transform: rotate(-90deg);
+}

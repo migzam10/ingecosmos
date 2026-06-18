@@ -9,7 +9,7 @@
 @if($alertasDemanda->count())
 <div class="card border-danger mb-3">
     <div class="card-header bg-danger-lt">
-        <h3 class="card-title text-danger">⚠ Insumos con stock insuficiente para cubrir demanda</h3>
+        <h3 class="card-title text-danger"><x-icon name="alert-triangle" /> Insumos con stock insuficiente para cubrir demanda</h3>
     </div>
     <div class="table-responsive">
         <table class="table table-sm mb-0">
@@ -72,7 +72,7 @@
             @endif
             @if($ot)
             <a href="{{ route('almacen.salidas.create') }}?tipo=COTIZACION&numero_ot={{ $ot->numero_ot }}"
-               class="btn btn-sm btn-warning">↓ Registrar Salida</a>
+               class="btn btn-sm btn-warning"><x-icon name="download" /> Registrar Salida</a>
             @endif
         </div>
     </div>

@@ -17,7 +17,7 @@
                 <div class="h1 text-primary">{{ $totalInsumos }}</div>
                 <div class="text-muted small">Insumos activos</div>
             </div>
-            <a href="{{ route('almacen.catalogo.index') }}" class="card-footer text-muted small">Ver catálogo →</a>
+            <a href="{{ route('almacen.catalogo.index') }}" class="card-footer text-muted small">Ver catálogo <x-icon name="arrow-right" /></a>
         </div>
     </div>
     <div class="col-6 col-md-3">
@@ -26,7 +26,7 @@
                 <div class="h1 {{ $pendientesCount ? 'text-info' : 'text-success' }}">{{ $pendientesCount }}</div>
                 <div class="text-muted small">OTs con entregas pendientes</div>
             </div>
-            <a href="{{ route('almacen.pendientes') }}" class="card-footer text-muted small">Ver pendientes →</a>
+            <a href="{{ route('almacen.pendientes') }}" class="card-footer text-muted small">Ver pendientes <x-icon name="arrow-right" /></a>
         </div>
     </div>
     <div class="col-6 col-md-3">
@@ -35,7 +35,7 @@
                 <div class="h1 {{ $stockBajo->count() ? 'text-warning' : 'text-success' }}">{{ $stockBajo->count() }}</div>
                 <div class="text-muted small">Stock bajo / agotado</div>
             </div>
-            <span class="card-footer text-muted small">{{ $stockBajo->count() ? 'Ver detalle abajo ↓' : 'Todo en orden' }}</span>
+            <span class="card-footer text-muted small">@if($stockBajo->count())Ver detalle abajo <x-icon name="arrow-down" />@else Todo en orden @endif</span>
         </div>
     </div>
     <div class="col-6 col-md-3">
@@ -44,7 +44,7 @@
                 <div class="h1 {{ $alertasDemanda->count() ? 'text-danger' : 'text-success' }}">{{ $alertasDemanda->count() }}</div>
                 <div class="text-muted small">Alertas de demanda</div>
             </div>
-            <a href="{{ route('almacen.pendientes') }}" class="card-footer text-muted small">Ver alertas →</a>
+            <a href="{{ route('almacen.pendientes') }}" class="card-footer text-muted small">Ver alertas <x-icon name="arrow-right" /></a>
         </div>
     </div>
 </div>
@@ -55,7 +55,7 @@
     <div class="col-12 col-md-6">
         <div class="card border-warning">
             <div class="card-header bg-warning-lt">
-                <h3 class="card-title text-warning">⚠ Insumos con stock bajo</h3>
+                <h3 class="card-title text-warning"><x-icon name="alert-triangle" /> Insumos con stock bajo</h3>
             </div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0">
@@ -81,7 +81,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Últimas entradas</h3>
-                <a href="{{ route('almacen.entradas.index') }}" class="text-muted small">Ver todas →</a>
+                <a href="{{ route('almacen.entradas.index') }}" class="text-muted small">Ver todas <x-icon name="arrow-right" /></a>
             </div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0">
@@ -107,7 +107,7 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h3 class="card-title">Últimas salidas</h3>
-                <a href="{{ route('almacen.salidas.index') }}" class="text-muted small">Ver todas →</a>
+                <a href="{{ route('almacen.salidas.index') }}" class="text-muted small">Ver todas <x-icon name="arrow-right" /></a>
             </div>
             <div class="table-responsive">
                 <table class="table table-sm mb-0">

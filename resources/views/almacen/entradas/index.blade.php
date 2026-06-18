@@ -4,7 +4,7 @@
 @section('breadcrumb', 'Almacén / Entradas')
 @section('page_actions')
 <div class="d-flex gap-2">
-    <a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm">← Almacén</a>
+    <a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Almacén</a>
     <a href="{{ route('almacen.entradas.create') }}" class="btn btn-success btn-sm">+ Registrar Entrada</a>
 </div>
 @endsection

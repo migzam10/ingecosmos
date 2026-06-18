@@ -26,7 +26,7 @@
        class="btn btn-primary btn-sm" target="_blank">Generar Recibo PDF</a>
     @endif
     <a href="{{ route('liquidacion.index', ['mes' => $mes, 'anio' => $anio]) }}"
-       class="btn btn-outline-secondary btn-sm">← Volver</a>
+       class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Volver</a>
 </div>
 @endsection
 
@@ -125,7 +125,7 @@
                                                value="{{ $trabajo->valor_liquidar }}"
                                                min="0" step="1" style="width:90px">
                                     </div>
-                                    <button class="btn btn-sm btn-outline-secondary">✓</button>
+                                    <button class="btn btn-sm btn-outline-secondary"><x-icon name="check" /></button>
                                 </form>
                             </td>
                         </tr>
@@ -215,7 +215,7 @@
                                 <form method="POST" action="{{ route('pagos.eliminar', $pago) }}"
                                       data-confirm="¿Eliminar este pago de $ {{ number_format($pago->monto, 0, ',', '.') }}?">
                                     @csrf @method('DELETE')
-                                    <button class="btn btn-sm btn-ghost-danger py-0 px-1">✕</button>
+                                    <button class="btn btn-sm btn-ghost-danger py-0 px-1"><x-icon name="x" /></button>
                                 </form>
                                 </div>
                             </td>

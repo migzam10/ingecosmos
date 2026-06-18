@@ -19,7 +19,7 @@
                 </div>
                 <div class="col-6">
                     <div class="kpi-value {{ $archivoLocal ? 'text-success' : 'text-danger' }}">
-                        {{ $archivoLocal ? '✓ Disponible' : '✗ No encontrado' }}
+                        @if($archivoLocal)<x-icon name="check" /> Disponible @else<x-icon name="x" /> No encontrado @endif
                     </div>
                     <div class="kpi-label mt-1">TORRE_CONTROL_2025.xlsx</div>
                 </div>

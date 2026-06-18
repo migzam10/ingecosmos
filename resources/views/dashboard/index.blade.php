@@ -183,9 +183,9 @@
                     'entrega_parcial'      => 'Entrega parcial sin retorno',
                 ];
                 $grupos = [
-                    'roja'    => ['color' => 'danger', 'icono' => '🔴'],
-                    'naranja' => ['color' => 'warning', 'icono' => '🟠'],
-                    'amarilla'=> ['color' => 'yellow',  'icono' => '🟡'],
+                    'roja'    => ['color' => 'danger'],
+                    'naranja' => ['color' => 'warning'],
+                    'amarilla'=> ['color' => 'yellow'],
                 ];
                 @endphp
 
@@ -193,7 +193,7 @@
                 @if(count($alertas[$nivel]))
                 <div class="p-3 border-bottom">
                     <div class="fw-bold text-{{ $cfg['color'] }} mb-2">
-                        {{ $cfg['icono'] }}
+                        <x-icon name="dot" size="14" />
                         {{ ['roja'=>'Urgente','naranja'=>'Atención requerida','amarilla'=>'Aviso'][$nivel] }}
                         <span class="badge bg-{{ $cfg['color'] }}-lt text-{{ $cfg['color'] }} ms-1">
                             {{ count($alertas[$nivel]) }}

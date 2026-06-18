@@ -31,7 +31,7 @@
     @endif
     @endif
 
-    <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+    <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Volver</a>
 </div>
 @endsection
 
@@ -60,11 +60,11 @@
                             @endphp
                             @if($oportuno)
                             <span class="badge bg-success">
-                                ✓ Entrega oportuna{{ $diasDiff > 0 ? ' · ' . $diasDiff . ' días antes' : '' }}
+                                <x-icon name="check" /> Entrega oportuna{{ $diasDiff > 0 ? ' · ' . $diasDiff . ' días antes' : '' }}
                             </span>
                             @else
                             <span class="badge bg-danger">
-                                ✗ Entrega tardía · {{ $diasDiff }} días de retraso
+                                <x-icon name="x" /> Entrega tardía · {{ $diasDiff }} días de retraso
                             </span>
                             @endif
                             @endif
@@ -241,17 +241,17 @@
                 <div class="d-flex gap-3">
                     <div>
                         <span class="badge {{ $orden->llaves_entregadas ? 'bg-success-lt' : 'bg-secondary-lt' }}">
-                            {{ $orden->llaves_entregadas ? '✓' : '✗' }} Llaves
+                            @if($orden->llaves_entregadas)<x-icon name="check" />@else<x-icon name="x" />@endif Llaves
                         </span>
                     </div>
                     <div>
                         <span class="badge {{ $orden->documentos_entregados ? 'bg-success-lt' : 'bg-secondary-lt' }}">
-                            {{ $orden->documentos_entregados ? '✓' : '✗' }} Documentos
+                            @if($orden->documentos_entregados)<x-icon name="check" />@else<x-icon name="x" />@endif Documentos
                         </span>
                     </div>
                     <div>
                         <span class="badge {{ $orden->ingreso_grua ? 'bg-warning-lt' : 'bg-secondary-lt' }}">
-                            {{ $orden->ingreso_grua ? '🚛 Grúa' : 'Propio' }}
+                            @if($orden->ingreso_grua)<x-icon name="truck" /> Grúa @else Propio @endif
                         </span>
                     </div>
                 </div>
@@ -465,7 +465,7 @@
                                     <form method="POST" action="{{ route('fotos.destroy', $foto) }}"
                                           data-confirm="¿Eliminar esta foto? No se puede recuperar.">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-ghost-danger py-0 px-1">✕</button>
+                                        <button class="btn btn-sm btn-ghost-danger py-0 px-1"><x-icon name="x" /></button>
                                     </form>
                                     @endif
                                 </div>
@@ -573,7 +573,7 @@
                                             <input type="number" name="valor_liquidar" class="form-control text-end"
                                                    value="{{ $trabajo->valor_liquidar }}" min="0" step="1">
                                         </div>
-                                        <button class="btn btn-sm btn-outline-secondary">✓</button>
+                                        <button class="btn btn-sm btn-outline-secondary"><x-icon name="check" /></button>
                                     </form>
                                 </td>
                                 @endif
@@ -585,7 +585,7 @@
                                           action="{{ route('ordenes.tecnicos.destroy', [$orden, $trabajo]) }}"
                                           data-confirm="¿Quitar este técnico?">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger">✕</button>
+                                        <button class="btn btn-sm btn-outline-danger"><x-icon name="x" /></button>
                                     </form>
                                     @endif
                                     @endif
@@ -597,6 +597,100 @@
                 </div>
                 @else
                 <p class="text-muted small mb-3">Sin técnicos asignados aún.</p>
+                @endif
+
+                {{-- Correcciones / reversa (solo ADMIN) --}}
+                @php
+                $esAdmin     = in_array('ADMIN', Auth::user()->roles ?: []);
+                $corregibles = $orden->trabajosTecnico->where('estado', '!=', 'PENDIENTE');
+                $nombresEspCorr = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'];
+                @endphp
+                @if($esAdmin && $corregibles->count() > 0)
+                <div class="border-top pt-3 mt-2">
+                    <details>
+                        <summary class="fw-semibold small text-muted mb-2" style="cursor:pointer">
+                            <x-icon name="tool" /> Correcciones de admin (reversa de inicio/fin y ajuste de fechas)
+                        </summary>
+                        <div class="mt-2">
+                            @foreach($corregibles as $trb)
+                            <div class="mb-3 p-2 border rounded">
+                                <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+                                    <span class="fw-semibold small">{{ $trb->tecnico->nombre }}</span>
+                                    <span class="badge bg-secondary-lt">{{ $nombresEspCorr[$trb->especialidad] ?? $trb->especialidad }}</span>
+                                    @switch($trb->estado)
+                                        @case('FINALIZADO') <span class="badge bg-success-lt">Finalizado</span> @break
+                                        @case('EN_PROCESO') <span class="badge bg-warning-lt">En proceso</span> @break
+                                        @case('PAUSADO')    <span class="badge bg-danger-lt">Detenido</span> @break
+                                    @endswitch
+                                </div>
+
+                                @if($trb->liquidado)
+                                <div class="alert alert-secondary py-2 mb-0 small">
+                                    Trabajo ya liquidado — no se puede corregir.
+                                </div>
+                                @else
+
+                                {{-- Ajuste de fechas --}}
+                                <form method="POST" action="{{ route('correccion-trabajo.fechas', $trb) }}"
+                                      class="row g-2 align-items-end mb-2">
+                                    @csrf
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label mb-1 small">Inicio</label>
+                                        <input type="date" name="inicio_en" class="form-control form-control-sm"
+                                               value="{{ $trb->inicio_en?->toDateString() }}"
+                                               max="{{ now()->toDateString() }}" required>
+                                    </div>
+                                    @if($trb->estado === 'FINALIZADO')
+                                    <div class="col-6 col-md-4">
+                                        <label class="form-label mb-1 small">Fin</label>
+                                        <input type="date" name="fin_en" class="form-control form-control-sm"
+                                               value="{{ $trb->fin_en?->toDateString() }}"
+                                               max="{{ now()->toDateString() }}" required>
+                                    </div>
+                                    @endif
+                                    <div class="col-auto">
+                                        <button class="btn btn-sm btn-outline-primary"
+                                                data-confirm="¿Guardar las fechas corregidas?">
+                                            Guardar fechas
+                                        </button>
+                                    </div>
+                                </form>
+
+                                {{-- Reversa de estado --}}
+                                <div class="d-flex flex-wrap gap-2">
+                                    @if(in_array($trb->estado, ['EN_PROCESO', 'PAUSADO']))
+                                    <form method="POST" action="{{ route('correccion-trabajo.deshacer-inicio', $trb) }}">
+                                        @csrf
+                                        <button class="btn btn-sm btn-outline-danger"
+                                                data-confirm="¿Deshacer el inicio? El trabajo volverá a PENDIENTE y se borrarán sus detenciones.">
+                                            <x-icon name="arrow-back-up" /> Deshacer inicio
+                                        </button>
+                                    </form>
+                                    @endif
+
+                                    @if($trb->estado === 'FINALIZADO')
+                                        @if($orden->estado_proceso === 'ENTREGADO')
+                                        <span class="text-muted small align-self-center">
+                                            OT ya entregada — no se puede deshacer la finalización.
+                                        </span>
+                                        @else
+                                        <form method="POST" action="{{ route('correccion-trabajo.deshacer-finalizar', $trb) }}">
+                                            @csrf
+                                            <button class="btn btn-sm btn-outline-danger"
+                                                    data-confirm="¿Deshacer la finalización? El trabajo volverá a EN PROCESO@if($orden->estado_proceso === 'PROGRAMADO_ENTREGA') y la OT regresará a EN PROCESO@endif.">
+                                                <x-icon name="arrow-back-up" /> Deshacer finalización
+                                            </button>
+                                        </form>
+                                        @endif
+                                    @endif
+                                </div>
+
+                                @endif
+                            </div>
+                            @endforeach
+                        </div>
+                    </details>
+                </div>
                 @endif
 
                 {{-- Actividad de técnicos: comentarios y fotos --}}

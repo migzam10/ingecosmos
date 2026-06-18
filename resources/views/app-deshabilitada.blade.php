@@ -67,7 +67,7 @@
 </head>
 <body>
   <div class="contenedor">
-    <span class="icono">🔒</span>
+    <span class="icono"><x-icon name="lock" size="64" /></span>
     <span class="badge">Acceso suspendido</span>
     <h1>Esta aplicación no está disponible</h1>
     <p>El acceso a este sistema ha sido suspendido temporalmente.</p>

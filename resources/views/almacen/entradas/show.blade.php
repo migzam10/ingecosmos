@@ -4,7 +4,7 @@
 @section('breadcrumb', 'Almacén / Entradas')
 @section('page_actions')
 <div class="d-flex gap-2 flex-wrap">
-    <a href="{{ route('almacen.entradas.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+    <a href="{{ route('almacen.entradas.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Volver</a>
     @if(auth()->user()->hasAnyRole(['ADMIN','COORDINADOR']))
     <a href="{{ route('almacen.entradas.edit', $entrada) }}" class="btn btn-outline-primary btn-sm">Editar</a>
     <form method="POST" action="{{ route('almacen.entradas.destroy', $entrada) }}" class="d-inline">

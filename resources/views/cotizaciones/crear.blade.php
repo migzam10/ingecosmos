@@ -46,7 +46,7 @@
             </div>
             <div class="card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text">🔍</span>
+                    <span class="input-group-text"><x-icon name="search" /></span>
                     <input type="text" id="buscar-mo" class="form-control"
                            placeholder="Buscar en catálogo MO (filtra por marca/modelo del vehículo)...">
                 </div>
@@ -86,7 +86,7 @@
             </div>
             <div class="card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text">🔍</span>
+                    <span class="input-group-text"><x-icon name="search" /></span>
                     <input type="text" id="buscar-rto" class="form-control"
                            placeholder="Buscar en catálogo de repuestos...">
                 </div>
@@ -122,7 +122,7 @@
             </div>
             <div class="card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text">🔍</span>
+                    <span class="input-group-text"><x-icon name="search" /></span>
                     <input type="text" id="buscar-ins" class="form-control"
                            placeholder="Buscar en catálogo de insumos...">
                 </div>
@@ -432,7 +432,7 @@ function agregarMO(desc = '', precio = 0, idCat = null) {
         </td>
         <td>
             <button type="button" class="btn btn-sm btn-ghost-danger"
-                    onclick="this.closest('tr').remove(); recalcular()">✕</button>
+                    onclick="this.closest('tr').remove(); recalcular()"><x-icon name="x" /></button>
         </td>`;
     document.getElementById('body-mo').appendChild(tr);
     recalcular();
@@ -513,7 +513,7 @@ function agregarRTO(desc = '', unidades = 1, unitario = 0, idCat = null) {
         </td>
         <td>
             <button type="button" class="btn btn-sm btn-ghost-danger"
-                    onclick="this.closest('tr').remove(); recalcular()">✕</button>
+                    onclick="this.closest('tr').remove(); recalcular()"><x-icon name="x" /></button>
         </td>`;
     document.getElementById('body-rto').appendChild(tr);
     recalcular();
@@ -606,7 +606,7 @@ function agregarInsumo(idInsumo = null, desc = '', cantidad = 1, precioVenta = 0
         </td>
         <td>
             <button type="button" class="btn btn-sm btn-ghost-danger"
-                    onclick="this.closest('tr').remove(); recalcular()">✕</button>
+                    onclick="this.closest('tr').remove(); recalcular()"><x-icon name="x" /></button>
         </td>`;
     document.getElementById('body-ins').appendChild(tr);
     recalcular();

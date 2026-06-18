@@ -32,7 +32,7 @@
                                     <button class="btn btn-link p-0 text-start fw-medium text-decoration-none"
                                             onclick="toggleModelos({{ $marca->id }})"
                                             id="btn-marca-{{ $marca->id }}">
-                                        <span id="ico-{{ $marca->id }}">▶</span>
+                                        <span id="ico-{{ $marca->id }}" class="toggle-ico collapsed"><x-icon name="chevron-down" /></span>
                                         {{ $marca->nombre }}
                                     </button>
                                 </td>
@@ -52,7 +52,7 @@
                                         <form method="POST" action="{{ route('admin.marcas.destroy', $marca) }}"
                                               data-confirm="¿Eliminar la marca {{ $marca->nombre }}?">
                                             @csrf @method('DELETE')
-                                            <button class="btn btn-xs btn-ghost-danger">✕</button>
+                                            <button class="btn btn-xs btn-ghost-danger"><x-icon name="x" /></button>
                                         </form>
                                         @endif
                                     </div>
@@ -69,13 +69,13 @@
                                             <span id="texto-modelo-{{ $modelo->id }}">{{ $modelo->nombre }}</span>
                                             <button class="btn btn-xs btn-ghost-secondary p-0 ms-1"
                                                     onclick="editarModelo({{ $modelo->id }}, '{{ addslashes($modelo->nombre) }}', {{ $marca->id }})"
-                                                    title="Editar">✎</button>
+                                                    title="Editar"><x-icon name="pencil" /></button>
                                             @if(!$modelo->vehiculos_count && !$modelo->catalogo_mo_count)
                                             <form method="POST" action="{{ route('admin.modelos.destroy', $modelo) }}"
                                                   data-confirm="¿Eliminar el modelo {{ $modelo->nombre }}?"
                                                   class="d-inline">
                                                 @csrf @method('DELETE')
-                                                <button class="btn btn-xs btn-ghost-danger p-0" title="Eliminar">✕</button>
+                                                <button class="btn btn-xs btn-ghost-danger p-0" title="Eliminar"><x-icon name="x" /></button>
                                             </form>
                                             @endif
                                         </div>
@@ -132,7 +132,7 @@
             <div class="card-header">
                 <h3 class="card-title">Editar Marca</h3>
                 <div class="card-options">
-                    <button class="btn btn-sm btn-ghost-secondary" onclick="cancelarEditarMarca()">✕</button>
+                    <button class="btn btn-sm btn-ghost-secondary" onclick="cancelarEditarMarca()"><x-icon name="x" /></button>
                 </div>
             </div>
             <div class="card-body">
@@ -153,7 +153,7 @@
             <div class="card-header">
                 <h3 class="card-title">Editar Modelo</h3>
                 <div class="card-options">
-                    <button class="btn btn-sm btn-ghost-secondary" onclick="cancelarEditarModelo()">✕</button>
+                    <button class="btn btn-sm btn-ghost-secondary" onclick="cancelarEditarModelo()"><x-icon name="x" /></button>
                 </div>
             </div>
             <div class="card-body">
@@ -180,10 +180,10 @@ function toggleModelos(idMarca) {
     const ico  = document.getElementById('ico-' + idMarca);
     if (fila.classList.contains('d-none')) {
         fila.classList.remove('d-none');
-        ico.textContent = '▼';
+        ico.classList.remove('collapsed');
     } else {
         fila.classList.add('d-none');
-        ico.textContent = '▶';
+        ico.classList.add('collapsed');
     }
 }
 

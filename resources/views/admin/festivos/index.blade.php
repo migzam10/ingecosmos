@@ -7,7 +7,7 @@
 @section('page_actions')
 <div class="d-flex gap-2 flex-wrap">
     <a href="{{ route('admin.festivos.plantilla') }}" class="btn btn-outline-success btn-sm">
-        ↓ Descargar plantilla Excel
+        <x-icon name="download" /> Descargar plantilla Excel
     </a>
 </div>
 @endsection
@@ -77,7 +77,7 @@
                                     <form method="POST" action="{{ route('admin.festivos.destroy', $f) }}"
                                           data-confirm="¿Eliminar el festivo \"{{ $f->nombre }}\" ({{ $f->fecha->format('d/m/Y') }})?">
                                         @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-ghost-danger py-0 px-1">✕</button>
+                                        <button class="btn btn-sm btn-ghost-danger py-0 px-1"><x-icon name="x" /></button>
                                     </form>
                                 </td>
                             </tr>
@@ -148,7 +148,7 @@
                     </ul>
                     <div class="mt-2">
                         <a href="{{ route('admin.festivos.plantilla') }}"
-                           class="text-success fw-medium">↓ Descargar plantilla oficial</a>
+                           class="text-success fw-medium"><x-icon name="download" /> Descargar plantilla oficial</a>
                     </div>
                 </div>
 
@@ -165,7 +165,7 @@
                         @enderror
                     </div>
                     <button type="submit" class="btn btn-success btn-sm w-100">
-                        ↑ Importar festivos
+                        <x-icon name="upload" /> Importar festivos
                     </button>
                 </form>
             </div>

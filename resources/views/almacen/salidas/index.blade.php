@@ -4,8 +4,8 @@
 @section('breadcrumb', 'Almacén / Salidas')
 @section('page_actions')
 <div class="d-flex gap-2">
-    <a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm">← Almacén</a>
-    <a href="{{ route('almacen.salidas.create') }}" class="btn btn-warning btn-sm">↓ Registrar Salida</a>
+    <a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Almacén</a>
+    <a href="{{ route('almacen.salidas.create') }}" class="btn btn-warning btn-sm"><x-icon name="download" /> Registrar Salida</a>
 </div>
 @endsection
 

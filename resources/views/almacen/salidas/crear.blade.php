@@ -3,7 +3,7 @@
 @section('page_title', 'Registrar Salida de Inventario')
 @section('breadcrumb', 'Almacén / Salidas')
 @section('page_actions')
-<a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm">← Almacén</a>
+<a href="{{ route('almacen.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Almacén</a>
 @endsection
 
 @section('content')
@@ -85,7 +85,7 @@
             {{-- Búsqueda — solo salida directa --}}
             <div id="bloque-busqueda-directa" class="{{ $tipo === 'COTIZACION' ? 'd-none' : '' }} card-body border-bottom pb-2">
                 <div class="input-group input-group-sm">
-                    <span class="input-group-text">🔍</span>
+                    <span class="input-group-text"><x-icon name="search" /></span>
                     <input type="text" id="buscar-insumo" class="form-control" placeholder="Buscar insumo...">
                 </div>
                 <div id="resultados-busqueda" class="list-group mt-1" style="display:none; max-height:200px; overflow-y:auto;"></div>
@@ -128,7 +128,7 @@
                                        required>
                             </td>
                             <td class="text-center text-muted small">{{ $item->insumo?->unidad_medida }}</td>
-                            <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()">✕</button></td>
+                            <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()"><x-icon name="x" /></button></td>
                         </tr>
                         @endforeach
                     </tbody>
@@ -237,7 +237,7 @@ function agregarItemDirecto(insumo) {
         <td>${insumo.nombre} <span class="small text-muted">(stock: ${insumo.stock_actual} ${insumo.unidad_medida})</span></td>
         <td><input type="number" name="items[${i}][cantidad]" class="form-control form-control-sm text-end" value="1" min="0.01" step="0.01" max="${insumo.stock_actual}" required></td>
         <td class="text-center text-muted small">${insumo.unidad_medida}</td>
-        <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()">✕</button></td>`;
+        <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()"><x-icon name="x" /></button></td>`;
     document.getElementById('body-items').appendChild(tr);
 }
 
@@ -259,7 +259,7 @@ document.getElementById('btn-agregar').onclick = () => {
         </td>
         <td><input type="number" name="items[${i}][cantidad]" class="form-control form-control-sm text-end" value="1" min="0.01" step="0.01" required></td>
         <td class="text-center text-muted small">—</td>
-        <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()">✕</button></td>`;
+        <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()"><x-icon name="x" /></button></td>`;
     document.getElementById('body-items').appendChild(tr);
 };
 </script>

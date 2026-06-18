@@ -6,7 +6,7 @@
 
 @section('page_actions')
 <a href="{{ route('mis-tareas.index') }}" class="btn btn-outline-secondary btn-sm">
-    ← Tareas activas
+    <x-icon name="arrow-left" /> Tareas activas
 </a>
 @endsection
 

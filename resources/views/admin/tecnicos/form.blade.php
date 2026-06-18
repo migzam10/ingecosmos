@@ -70,7 +70,7 @@
                 <div class="form-text">
                     Solo aparecen usuarios con rol TECNICO sin técnico asignado.
                     Crea primero el usuario en
-                    <a href="{{ route('admin.usuarios.create') }}" target="_blank">Administración → Usuarios</a>.
+                    <a href="{{ route('admin.usuarios.create') }}" target="_blank">Administración <x-icon name="arrow-right" /> Usuarios</a>.
                 </div>
             </div>
 

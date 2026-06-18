@@ -4,9 +4,9 @@
 @section('breadcrumb', 'Almacén / OTs')
 @section('page_actions')
 <div class="d-flex gap-2">
-    <a href="{{ route('almacen.ots.index') }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+    <a href="{{ route('almacen.ots.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Volver</a>
     <a href="{{ route('almacen.salidas.create') }}?tipo=COTIZACION&numero_ot={{ $orden->numero_ot }}"
-       class="btn btn-warning btn-sm">↓ Registrar Salida</a>
+       class="btn btn-warning btn-sm"><x-icon name="download" /> Registrar Salida</a>
 </div>
 @endsection
 
@@ -65,13 +65,13 @@
                     <td class="text-end">{{ number_format($item->cantidad_solicitada, 2) }}</td>
                     <td class="text-end text-success">{{ number_format($entregado, 2) }}</td>
                     <td class="text-end fw-bold {{ $pendiente > 0 ? 'text-warning' : 'text-success' }}">
-                        {{ $pendiente > 0 ? number_format($pendiente, 2) : '✓' }}
+                        @if($pendiente > 0){{ number_format($pendiente, 2) }}@else<x-icon name="check" />@endif
                     </td>
                     <td class="text-center text-muted small">{{ $item->insumo?->unidad_medida }}</td>
                     <td class="text-center small {{ $stock < $pendiente && $pendiente > 0 ? 'text-danger fw-bold' : 'text-muted' }}">
                         {{ number_format($stock, 2) }}
                         @if($stock < $pendiente && $pendiente > 0)
-                        <div class="text-danger" style="font-size:10px">⚠ Insuficiente</div>
+                        <div class="text-danger" style="font-size:10px"><x-icon name="alert-triangle" size="13" /> Insuficiente</div>
                         @endif
                     </td>
                 </tr>

@@ -160,7 +160,7 @@
     </div>
 </div>
 @endforeach
-<a href="{{ route('mis-tareas.index') }}" class="btn btn-outline-primary btn-sm mt-1">Ver todas mis tareas →</a>
+<a href="{{ route('mis-tareas.index') }}" class="btn btn-outline-primary btn-sm mt-1">Ver todas mis tareas <x-icon name="arrow-right" /></a>
 @else
 <div class="alert alert-success">
     No tienes tareas pendientes en este momento.

@@ -3,7 +3,7 @@
 @section('page_title', 'Editar Entrada del ' . $entrada->fecha->format('d/m/Y'))
 @section('breadcrumb', 'Almacén / Entradas')
 @section('page_actions')
-<a href="{{ route('almacen.entradas.show', $entrada) }}" class="btn btn-outline-secondary btn-sm">← Volver</a>
+<a href="{{ route('almacen.entradas.show', $entrada) }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Volver</a>
 @endsection
 
 @section('content')

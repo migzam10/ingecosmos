@@ -57,7 +57,7 @@ $activo = !in_array($estado, $cerrados);
     <div class="col-auto">
         <button class="btn btn-success btn-sm"
                 data-confirm="¿Registrar autorización de la CIA?">
-            ✓ Registrar Autorización
+            <x-icon name="check" /> Registrar Autorización
         </button>
     </div>
 </form>
@@ -80,7 +80,7 @@ $activo = !in_array($estado, $cerrados);
     <div class="col-auto">
         <button class="btn btn-primary btn-sm"
                 data-confirm="¿Confirmar llegada del repuesto?">
-            ✓ Repuesto Llegó →
+            <x-icon name="check" /> Repuesto Llegó <x-icon name="arrow-right" />
         </button>
     </div>
 </form>
@@ -99,7 +99,7 @@ $activo = !in_array($estado, $cerrados);
     <div class="col-auto">
         <button class="btn btn-success btn-sm"
                 data-confirm="¿Confirmar llegada de repuestos?">
-            ✓ Repuesto Llegó
+            <x-icon name="check" /> Repuesto Llegó
         </button>
     </div>
 </form>
@@ -122,7 +122,7 @@ $activo = !in_array($estado, $cerrados);
     <div class="col-auto">
         <button class="btn btn-primary btn-sm"
                 data-confirm="¿Iniciar proceso? Esto calculará la salida estimada.">
-            ▶ Iniciar Proceso
+            <x-icon name="player-play" /> Iniciar Proceso
         </button>
     </div>
 </form>
@@ -145,7 +145,7 @@ $activo = !in_array($estado, $cerrados);
     <div class="col-auto">
         <button class="btn btn-primary btn-sm"
                 data-confirm="¿Marcar reparación como terminada y programar entrega?">
-            Programar Entrega →
+            Programar Entrega <x-icon name="arrow-right" />
         </button>
     </div>
 </form>
@@ -199,7 +199,7 @@ $activo = !in_array($estado, $cerrados);
     <div class="col-auto">
         <button class="btn btn-success btn-sm"
                 data-confirm="¿Confirmar entrega del vehículo al cliente?">
-            ✓ Entregar Vehículo
+            <x-icon name="check" /> Entregar Vehículo
         </button>
     </div>
 </form>

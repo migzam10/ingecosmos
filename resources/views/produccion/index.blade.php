@@ -7,7 +7,7 @@
 @section('page_actions')
 <a href="{{ route('produccion.exportar', request()->query()) }}"
    class="btn btn-success btn-sm">
-    ↓ Exportar CSV
+    <x-icon name="download" /> Exportar CSV
 </a>
 @endsection
 
@@ -270,7 +270,7 @@ $nombreMes = $mes !== 'todos' ? $mesesLabelsShort[(int)$mes - 1] : null;
         </h3>
         <a href="{{ route('produccion.excel-clientes', request()->only('anio','mes','area')) }}"
            class="btn btn-sm btn-outline-success ms-auto">
-            ↓ Detalle mensual Excel
+            <x-icon name="download" /> Detalle mensual Excel
         </a>
     </div>
     <div class="table-responsive">

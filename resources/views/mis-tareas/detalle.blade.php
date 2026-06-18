@@ -6,7 +6,7 @@
 
 @section('page_actions')
 <a href="{{ route('mis-tareas.index') }}" class="btn btn-outline-secondary btn-sm">
-    ← Mis Tareas
+    <x-icon name="arrow-left" /> Mis Tareas
 </a>
 <a href="{{ route('mis-tareas.historial') }}" class="btn btn-outline-secondary btn-sm ms-1">
     Historial

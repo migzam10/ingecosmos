@@ -81,28 +81,28 @@
                     </td>
                     <td class="text-end">
                         <div class="btn-group btn-group-sm acciones-display-{{ $item->id }}">
-                            <button type="button" class="btn btn-outline-secondary" onclick="editarFila({{ $item->id }})">✏️</button>
+                            <button type="button" class="btn btn-outline-secondary" onclick="editarFila({{ $item->id }})"><x-icon name="pencil" /></button>
                             @if($item->activo)
                             <form method="POST" action="{{ route('almacen.catalogo.destroy', $item) }}"
                                   data-confirm="¿Desactivar «{{ $item->nombre }}»?">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-outline-danger">⊘</button>
+                                <button type="submit" class="btn btn-outline-danger"><x-icon name="ban" /></button>
                             </form>
                             @else
                             <form method="POST" action="{{ route('almacen.catalogo.restaurar', $item) }}"
                                   data-confirm="¿Reactivar «{{ $item->nombre }}»?">
                                 @csrf
-                                <button type="submit" class="btn btn-outline-success">↺</button>
+                                <button type="submit" class="btn btn-outline-success"><x-icon name="restore" /></button>
                             </form>
                             @endif
                         </div>
                         <div class="btn-group btn-group-sm acciones-edit-{{ $item->id }} d-none">
                             <form method="POST" action="{{ route('almacen.catalogo.update', $item) }}" id="form-edit-{{ $item->id }}">
                                 @csrf @method('PUT')
-                                <button type="submit" class="btn btn-success">✓</button>
+                                <button type="submit" class="btn btn-success"><x-icon name="check" /></button>
                             </form>
                             <button type="button" class="btn btn-outline-secondary"
-                                    onclick="cancelarEdicion({{ $item->id }}, @json($item->nombre), '{{ $item->unidad_medida }}', {{ $item->precio_venta }}, {{ $item->stock_minimo }})">✕</button>
+                                    onclick="cancelarEdicion({{ $item->id }}, @json($item->nombre), '{{ $item->unidad_medida }}', {{ $item->precio_venta }}, {{ $item->stock_minimo }})"><x-icon name="x" /></button>
                         </div>
                     </td>
                 </tr>
