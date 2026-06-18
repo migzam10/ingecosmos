@@ -69,7 +69,23 @@
 @php
 $ot = $trabajo->ot;
 $enProceso = $trabajo->estado === 'EN_PROCESO';
-$bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
+$pausado   = $trabajo->estado === 'PAUSADO';
+$bordeClase = match($trabajo->estado) {
+    'EN_PROCESO' => 'border-warning',
+    'PAUSADO'    => 'border-danger',
+    default      => 'border-secondary',
+};
+$estadoTexto = match($trabajo->estado) {
+    'EN_PROCESO' => 'En proceso',
+    'PAUSADO'    => 'Detenido',
+    default      => 'Pendiente',
+};
+$estadoBadge = match($trabajo->estado) {
+    'EN_PROCESO' => 'bg-warning text-dark',
+    'PAUSADO'    => 'bg-danger text-white',
+    default      => 'bg-secondary-lt',
+};
+$pausaAbierta = $trabajo->pausas->firstWhere('retomado_en', null);
 @endphp
 
 <div class="card mb-3 border-start border-4 {{ $bordeClase }}">
@@ -82,9 +98,9 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                     <span class="fw-bold text-primary fs-5"># {{ $ot->numero_ot }}</span>
                     <span class="badge bg-blue-lt fw-bold">{{ $ot->vehiculo->placa }}</span>
                     <span class="badge bg-secondary-lt">{{ $ot->area }}</span>
-                    <span class="badge {{ $enProceso ? 'bg-warning text-dark' : 'bg-secondary-lt' }}">
+                    <span class="badge {{ $estadoBadge }}">
                         {{ $nombresEsp2[$trabajo->especialidad] ?? $trabajo->especialidad }}
-                        — {{ $enProceso ? 'En proceso' : 'Pendiente' }}
+                        — {{ $estadoTexto }}
                     </span>
                     <a href="{{ route('mis-tareas.vehiculo', $trabajo) }}"
                        class="btn btn-sm btn-outline-secondary">
@@ -156,6 +172,42 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                          class="rounded border"
                          style="height:64px;width:64px;object-fit:cover">
                 </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+
+        {{-- Aviso si está detenido --}}
+        @if($pausado && $pausaAbierta)
+        <div class="alert alert-danger py-2 mb-3 small">
+            <strong>⏸ Detenido</strong> desde {{ $pausaAbierta->detenido_en->format('d/m/Y') }} —
+            {{ $pausaAbierta->motivo }}
+        </div>
+        @endif
+
+        {{-- Historial de detenciones --}}
+        @if($trabajo->pausas->count() > 0)
+        <div class="mb-3">
+            <div class="fw-semibold small text-muted mb-1">Detenciones</div>
+            <div class="border rounded p-2 bg-light" style="max-height:160px;overflow-y:auto">
+                @foreach($trabajo->pausas as $pausa)
+                <div class="d-flex gap-2 mb-2 {{ !$loop->last ? 'border-bottom pb-2' : '' }}">
+                    <div class="flex-shrink-0">
+                        <span class="badge {{ $pausa->retomado_en ? 'bg-secondary-lt' : 'bg-danger text-white' }}">
+                            {{ $pausa->detenido_en->format('d/m/Y') }}
+                        </span>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="small">{{ $pausa->motivo }}</div>
+                        <div class="text-muted" style="font-size:.7rem">
+                            @if($pausa->retomado_en)
+                                Retomado el {{ $pausa->retomado_en->format('d/m/Y') }}
+                            @else
+                                <span class="text-danger">En pausa</span>
+                            @endif
+                        </div>
+                    </div>
+                </div>
                 @endforeach
             </div>
         </div>
@@ -236,8 +288,64 @@ $bordeClase = $enProceso ? 'border-warning' : 'border-secondary';
                 </form>
             </div>
 
-            {{-- Finalizar --}}
+            {{-- Detener (cuando está en proceso) --}}
             @if($trabajo->estado === 'EN_PROCESO')
+            <div class="col-12">
+                <form method="POST" action="{{ route('mis-tareas.detener', $trabajo) }}"
+                      class="row g-2 align-items-end">
+                    @csrf
+                    <div class="col-12 col-md-5">
+                        <label class="form-label mb-1 small">Motivo de la detención</label>
+                        <input type="text" name="motivo" class="form-control form-control-sm" required
+                               placeholder="Ej: esperando repuesto, otro técnico revisa primero" maxlength="200">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label mb-1 small">
+                            Fecha <span class="text-muted fw-normal">(opcional, hoy)</span>
+                        </label>
+                        <input type="date" name="detenido_en" class="form-control form-control-sm"
+                               value="{{ now()->toDateString() }}"
+                               min="{{ $trabajo->inicio_en?->toDateString() ?? now()->toDateString() }}"
+                               max="{{ now()->toDateString() }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-outline-danger"
+                                data-confirm="¿Detener el trabajo en OT #{{ $ot->numero_ot }}?">
+                            ⏸ Detener
+                        </button>
+                    </div>
+                </form>
+            </div>
+            @endif
+
+            {{-- Retomar (cuando está detenido) --}}
+            @if($trabajo->estado === 'PAUSADO')
+            <div class="col-12">
+                <form method="POST" action="{{ route('mis-tareas.retomar', $trabajo) }}"
+                      class="row g-2 align-items-end">
+                    @csrf
+                    <div class="col-12 col-md-5">
+                        <label class="form-label mb-1 small">
+                            Fecha de reanudación
+                            <span class="text-muted fw-normal">(opcional, hoy)</span>
+                        </label>
+                        <input type="date" name="retomado_en" class="form-control form-control-sm"
+                               value="{{ now()->toDateString() }}"
+                               min="{{ $pausaAbierta?->detenido_en->toDateString() ?? now()->toDateString() }}"
+                               max="{{ now()->toDateString() }}">
+                    </div>
+                    <div class="col-auto">
+                        <button type="submit" class="btn btn-primary"
+                                data-confirm="¿Retomar el trabajo en OT #{{ $ot->numero_ot }}?">
+                            ▶ Retomar
+                        </button>
+                    </div>
+                </form>
+            </div>
+            @endif
+
+            {{-- Finalizar --}}
+            @if(in_array($trabajo->estado, ['EN_PROCESO', 'PAUSADO']))
             <div class="col-12">
                 <form method="POST" action="{{ route('mis-tareas.finalizar', $trabajo) }}"
                       class="row g-2 align-items-end">

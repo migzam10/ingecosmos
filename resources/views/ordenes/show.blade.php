@@ -556,6 +556,8 @@
                                     <span class="badge bg-success-lt">Finalizado</span>
                                     @elseif($trabajo->estado === 'EN_PROCESO')
                                     <span class="badge bg-warning-lt">En proceso</span>
+                                    @elseif($trabajo->estado === 'PAUSADO')
+                                    <span class="badge bg-danger-lt">Detenido</span>
                                     @else
                                     <span class="badge bg-secondary-lt">Pendiente</span>
                                     @endif
@@ -600,7 +602,7 @@
                 {{-- Actividad de técnicos: comentarios y fotos --}}
                 @php
                 $conActividad = $orden->trabajosTecnico->filter(
-                    fn($t) => $t->historialComentarios->count() > 0 || $t->fotos->count() > 0
+                    fn($t) => $t->historialComentarios->count() > 0 || $t->fotos->count() > 0 || $t->pausas->count() > 0
                 );
                 @endphp
                 @if($conActividad->count() > 0)
@@ -612,7 +614,32 @@
                         <div class="fw-semibold small mb-2">
                             {{ $trb->tecnico->nombre }}
                             <span class="badge bg-secondary-lt ms-1">{{ $nombresEspAct[$trb->especialidad] ?? $trb->especialidad }}</span>
+                            @if($trb->estado === 'PAUSADO')
+                            <span class="badge bg-danger-lt ms-1">Detenido</span>
+                            @endif
                         </div>
+
+                        {{-- Detenciones del técnico --}}
+                        @if($trb->pausas->count() > 0)
+                        <div class="mb-2">
+                            <div class="text-muted small mb-1">Detenciones ({{ $trb->pausas->count() }})</div>
+                            @foreach($trb->pausas as $pausa)
+                            <div class="d-flex gap-2 small mb-1">
+                                <span class="text-muted text-nowrap" style="font-size:.7rem;min-width:90px">
+                                    {{ $pausa->detenido_en->format('d/m/Y') }}
+                                </span>
+                                <span>
+                                    {{ $pausa->motivo }}
+                                    @if($pausa->retomado_en)
+                                    <span class="text-muted">— retomado el {{ $pausa->retomado_en->format('d/m/Y') }}</span>
+                                    @else
+                                    <span class="badge bg-danger-lt ms-1">En pausa</span>
+                                    @endif
+                                </span>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
 
                         {{-- Comentarios del técnico --}}
                         @if($trb->historialComentarios->count() > 0)

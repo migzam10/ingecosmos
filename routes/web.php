@@ -246,6 +246,8 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,TECNICO'])->group(function ()
     Route::get('/mis-tareas/{trabajo}/detalle',       [MisTareasController::class, 'detalle'])->name('mis-tareas.detalle');
     Route::get('/mis-tareas/{trabajo}/vehiculo',      [MisTareasController::class, 'vehiculo'])->name('mis-tareas.vehiculo');
     Route::post('/mis-tareas/{trabajo}/iniciar',      [MisTareasController::class, 'iniciar'])->name('mis-tareas.iniciar');
+    Route::post('/mis-tareas/{trabajo}/detener',      [MisTareasController::class, 'detener'])->name('mis-tareas.detener');
+    Route::post('/mis-tareas/{trabajo}/retomar',      [MisTareasController::class, 'retomar'])->name('mis-tareas.retomar');
     Route::post('/mis-tareas/{trabajo}/guardar',      [MisTareasController::class, 'guardar'])->name('mis-tareas.guardar');
     Route::post('/mis-tareas/{trabajo}/finalizar',    [MisTareasController::class, 'finalizar'])->name('mis-tareas.finalizar');
 });

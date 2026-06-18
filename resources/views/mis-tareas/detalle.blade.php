@@ -110,6 +110,39 @@ $nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'M
         </div>
     </div>
 
+    {{-- Detenciones --}}
+    @if($trabajo->pausas->count() > 0)
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    Detenciones
+                    <span class="badge bg-secondary-lt ms-1">{{ $trabajo->pausas->count() }}</span>
+                </h3>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    @foreach($trabajo->pausas as $pausa)
+                    <div class="list-group-item">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="badge bg-danger-lt">Detenido {{ $pausa->detenido_en->format('d/m/Y') }}</span>
+                            <span class="text-muted" style="font-size:.75rem">
+                                @if($pausa->retomado_en)
+                                    Retomado {{ $pausa->retomado_en->format('d/m/Y') }}
+                                @else
+                                    En pausa
+                                @endif
+                            </span>
+                        </div>
+                        <div class="small">{{ $pausa->motivo }}</div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Fotos --}}
     @if($trabajo->fotos->count() > 0)
     <div class="col-12">

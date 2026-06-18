@@ -44,4 +44,15 @@ class TrabajoTecnico extends Model
     {
         return $this->hasMany(FotoOt::class, 'id_trabajo')->orderBy('created_at');
     }
+
+    public function pausas()
+    {
+        return $this->hasMany(PausaTrabajo::class, 'id_trabajo')->orderBy('detenido_en');
+    }
+
+    // Pausa abierta (detenida y sin retomar) si el trabajo está PAUSADO
+    public function pausaAbierta()
+    {
+        return $this->hasOne(PausaTrabajo::class, 'id_trabajo')->whereNull('retomado_en')->latestOfMany();
+    }
 }

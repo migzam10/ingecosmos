@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ComentarioTrabajo;
 use App\Models\FotoOt;
 use App\Models\OrdenTrabajo;
+use App\Models\PausaTrabajo;
 use App\Models\TrabajoTecnico;
 use App\Services\OTService;
 use Illuminate\Http\Request;
@@ -25,10 +26,11 @@ class MisTareasController extends Controller
         $trabajos = TrabajoTecnico::with([
                 'ot.vehiculo.marca', 'ot.vehiculo.modelo', 'ot.empresaCliente',
                 'historialComentarios.tecnico', 'fotos',
+                'pausas.detenidoPor', 'pausas.retomadoPor',
             ])
             ->where('id_tecnico', $tecnico->id)
-            ->whereIn('estado', ['PENDIENTE', 'EN_PROCESO'])
-            ->orderByRaw("FIELD(estado,'EN_PROCESO','PENDIENTE')")
+            ->whereIn('estado', ['PENDIENTE', 'EN_PROCESO', 'PAUSADO'])
+            ->orderByRaw("FIELD(estado,'EN_PROCESO','PAUSADO','PENDIENTE')")
             ->orderBy('created_at')
             ->get();
 
@@ -86,6 +88,74 @@ class MisTareasController extends Controller
         return back()->with('success', 'Trabajo iniciado.');
     }
 
+    public function detener(Request $request, TrabajoTecnico $trabajo)
+    {
+        $this->autorizarTecnico($trabajo);
+
+        if ($trabajo->estado !== 'EN_PROCESO') {
+            return back()->with('error', 'Solo puedes detener un trabajo que esté en proceso.');
+        }
+
+        $request->validate([
+            'motivo'      => 'required|string|max:200',
+            'detenido_en' => 'nullable|date|before_or_equal:today',
+        ]);
+
+        $fechaDetencion = $request->filled('detenido_en')
+            ? \Carbon\Carbon::parse($request->detenido_en)
+            : now();
+
+        // No puede detenerse antes de haber iniciado
+        if ($trabajo->inicio_en && $fechaDetencion->lt($trabajo->inicio_en->startOfDay())) {
+            return back()->with('error', 'La fecha de detención no puede ser anterior al inicio del trabajo (' . $trabajo->inicio_en->format('d/m/Y') . ').');
+        }
+
+        PausaTrabajo::create([
+            'id_trabajo'   => $trabajo->id,
+            'motivo'       => $request->motivo,
+            'detenido_en'  => $fechaDetencion->toDateString(),
+            'detenido_por' => Auth::id(),
+        ]);
+
+        $trabajo->update(['estado' => 'PAUSADO']);
+
+        return back()->with('success', 'Trabajo detenido.');
+    }
+
+    public function retomar(Request $request, TrabajoTecnico $trabajo)
+    {
+        $this->autorizarTecnico($trabajo);
+
+        if ($trabajo->estado !== 'PAUSADO') {
+            return back()->with('error', 'Este trabajo no está detenido.');
+        }
+
+        $request->validate([
+            'retomado_en' => 'nullable|date|before_or_equal:today',
+        ]);
+
+        $fechaRetoma = $request->filled('retomado_en')
+            ? \Carbon\Carbon::parse($request->retomado_en)
+            : now();
+
+        $pausa = $trabajo->pausaAbierta;
+
+        if ($pausa && $fechaRetoma->startOfDay()->lt(\Carbon\Carbon::parse($pausa->detenido_en)->startOfDay())) {
+            return back()->with('error', 'La fecha de reanudación no puede ser anterior a la detención (' . $pausa->detenido_en->format('d/m/Y') . ').');
+        }
+
+        if ($pausa) {
+            $pausa->update([
+                'retomado_en'  => $fechaRetoma->toDateString(),
+                'retomado_por' => Auth::id(),
+            ]);
+        }
+
+        $trabajo->update(['estado' => 'EN_PROCESO']);
+
+        return back()->with('success', 'Trabajo retomado.');
+    }
+
     public function guardar(Request $request, TrabajoTecnico $trabajo)
     {
         $this->autorizarTecnico($trabajo);
@@ -141,7 +211,7 @@ class MisTareasController extends Controller
     {
         $this->autorizarTecnico($trabajo);
 
-        if ($trabajo->estado !== 'EN_PROCESO') {
+        if (!in_array($trabajo->estado, ['EN_PROCESO', 'PAUSADO'])) {
             return back()->with('error', 'Debes iniciar el trabajo antes de finalizarlo.');
         }
 
@@ -156,6 +226,14 @@ class MisTareasController extends Controller
         // No puede ser anterior al inicio del trabajo
         if ($trabajo->inicio_en && $finEn->lt($trabajo->inicio_en->startOfDay())) {
             return back()->with('error', 'La fecha de finalización no puede ser anterior al inicio del trabajo (' . $trabajo->inicio_en->format('d/m/Y') . ').');
+        }
+
+        // Si estaba detenido, cierra la pausa abierta a la fecha de finalización
+        if ($trabajo->estado === 'PAUSADO' && ($pausa = $trabajo->pausaAbierta)) {
+            $pausa->update([
+                'retomado_en'  => $finEn->toDateString(),
+                'retomado_por' => Auth::id(),
+            ]);
         }
 
         $trabajo->update([
@@ -200,7 +278,7 @@ class MisTareasController extends Controller
 
         $trabajo->load([
             'ot.vehiculo.marca', 'ot.vehiculo.modelo', 'ot.empresaCliente',
-            'historialComentarios.tecnico', 'fotos',
+            'historialComentarios.tecnico', 'fotos', 'pausas',
         ]);
 
         return view('mis-tareas.detalle', compact('trabajo'));
