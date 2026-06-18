@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\CorreccionTrabajoController;
 use App\Http\Controllers\Admin\EmpresaClienteController;
 use App\Http\Controllers\Admin\MigracionController;
 use App\Http\Controllers\Admin\TecnicoAdminController;
@@ -182,6 +183,13 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
 // Torre de Control
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/torre', [TorreController::class, 'index'])->name('torre.index');
+});
+
+// Correcciones del trabajo del técnico (reversa — solo ADMIN)
+Route::middleware(['auth', 'role:ADMIN'])->group(function () {
+    Route::post('/trabajos/{trabajo}/correccion/deshacer-finalizar', [CorreccionTrabajoController::class, 'deshacerFinalizar'])->name('correccion-trabajo.deshacer-finalizar');
+    Route::post('/trabajos/{trabajo}/correccion/deshacer-inicio',     [CorreccionTrabajoController::class, 'deshacerInicio'])->name('correccion-trabajo.deshacer-inicio');
+    Route::post('/trabajos/{trabajo}/correccion/fechas',              [CorreccionTrabajoController::class, 'editarFechas'])->name('correccion-trabajo.fechas');
 });
 
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
