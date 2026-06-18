@@ -26,6 +26,7 @@ use App\Http\Controllers\MisTareasController;
 use App\Http\Controllers\FotoOtController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\TorreController;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('dashboard'));
@@ -259,5 +260,51 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,TECNICO'])->group(function ()
     Route::post('/mis-tareas/{trabajo}/guardar',      [MisTareasController::class, 'guardar'])->name('mis-tareas.guardar');
     Route::post('/mis-tareas/{trabajo}/finalizar',    [MisTareasController::class, 'finalizar'])->name('mis-tareas.finalizar');
 });
+
+/*
+|--------------------------------------------------------------------------
+| Ruta de despliegue (hosting cPanel SIN SSH/terminal)
+|--------------------------------------------------------------------------
+| Permite ejecutar migraciones y limpiar caché por HTTP, ya que el hosting
+| no tiene consola. Protegida con un token secreto en .env (DEPLOY_TOKEN).
+|
+| USO:  https://TU-DOMINIO/deploy/EL_TOKEN_SECRETO
+|
+| SEGURIDAD:
+|  - Si DEPLOY_TOKEN no está definido en .env, la ruta responde 403.
+|  - Nunca ejecuta comandos destructivos (no fresh/refresh/reset).
+|  - Recomendado: borrar/comentar esta ruta cuando termines el despliegue.
+*/
+Route::get('/deploy/{token}', function (string $token) {
+    $esperado = env('DEPLOY_TOKEN');
+
+    abort_unless(is_string($esperado) && $esperado !== '' && hash_equals($esperado, $token), 403);
+
+    $log = [];
+
+    // 1) Migraciones pendientes (hacia adelante; --force es obligatorio en producción)
+    Artisan::call('migrate', ['--force' => true]);
+    $log['migrate'] = Artisan::output();
+
+    // 2) Enlace simbólico de storage (ignora el error si ya existe)
+    try {
+        Artisan::call('storage:link');
+        $log['storage:link'] = Artisan::output();
+    } catch (\Throwable $e) {
+        $log['storage:link'] = 'omitido: ' . $e->getMessage();
+    }
+
+    // 3) Limpiar caché de config, rutas y vistas (para que tome el código nuevo)
+    Artisan::call('optimize:clear');
+    $log['optimize:clear'] = Artisan::output();
+
+    $salida = '';
+    foreach ($log as $paso => $texto) {
+        $salida .= "===== {$paso} =====\n" . trim($texto) . "\n\n";
+    }
+
+    return response('<pre>' . e($salida) . '</pre>')
+        ->header('Content-Type', 'text/html; charset=utf-8');
+})->name('deploy.run');
 
 require __DIR__.'/auth.php';
