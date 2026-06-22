@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\MigracionController;
 use App\Http\Controllers\Admin\TecnicoAdminController;
 use App\Http\Controllers\Admin\FestivoController;
 use App\Http\Controllers\Admin\MarcaModeloController;
+use App\Http\Controllers\Admin\ConfiguracionEmpresaController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\AsignarTecnicoController;
 use App\Http\Controllers\EntregaParcialController;
@@ -242,6 +243,13 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     // Migración Excel histórico
     Route::get('/admin/migracion',        [MigracionController::class, 'index'])->name('admin.migracion.index');
     Route::post('/admin/migracion/ejecutar', [MigracionController::class, 'ejecutar'])->name('admin.migracion.ejecutar');
+});
+
+// Configuración empresa — solo ADMIN
+Route::middleware(['auth', 'role:ADMIN'])->group(function () {
+    Route::get('/admin/configuracion',              [ConfiguracionEmpresaController::class, 'index'])->name('admin.configuracion.index');
+    Route::put('/admin/configuracion',              [ConfiguracionEmpresaController::class, 'update'])->name('admin.configuracion.update');
+    Route::delete('/admin/configuracion/logo',      [ConfiguracionEmpresaController::class, 'eliminarLogo'])->name('admin.configuracion.eliminar-logo');
 });
 
 // Recibo PDF de pago — visible también para el técnico dueño del pago

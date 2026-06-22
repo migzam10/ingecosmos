@@ -6,6 +6,10 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
     <title>@yield('title', 'INGECOSMOS') — Taller</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @php $__empresa = \App\Models\ConfiguracionEmpresa::getActual(); @endphp
+    @if($__empresa->logo_url)
+    <link rel="icon" type="image/png" href="{{ $__empresa->logo_url }}">
+    @endif
 
     <!-- Tabler CSS CDN -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/core@1.0.0-beta21/dist/css/tabler.min.css">
@@ -24,17 +28,22 @@
             </button>
 
             <h1 class="navbar-brand navbar-brand-autodark">
-                <a href="{{ route('dashboard') }}" class="text-white fw-bold text-decoration-none">
+                <a href="{{ route('dashboard') }}" class="text-white fw-bold text-decoration-none d-flex align-items-center gap-2">
+                    @if($__empresa->logo_url)
+                    <img src="{{ $__empresa->logo_url }}" alt="{{ $__empresa->razon_social ?? 'Logo' }}"
+                         style="height:32px; max-width:140px; object-fit:contain; filter:brightness(0) invert(1);">
+                    @else
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                          fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                         stroke-linejoin="round" class="me-2">
+                         stroke-linejoin="round">
                         <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
                         <circle cx="7" cy="17" r="2"/>
                         <circle cx="17" cy="17" r="2"/>
                         <path d="M5 17h-2v-6l2-5h9l4 5h1a2 2 0 0 1 2 2v4h-2"/>
                         <path d="M9 17h6"/>
                     </svg>
-                    INGECOSMOS
+                    {{ $__empresa->razon_social ?? 'INGECOSMOS' }}
+                    @endif
                 </a>
             </h1>
 
@@ -250,6 +259,12 @@
                             <a href="{{ route('admin.festivos.index') }}" class="dropdown-item {{ request()->routeIs('admin.festivos.*') ? 'active' : '' }}">
                                 Días Festivos
                             </a>
+                            @if(in_array('ADMIN', Auth::user()->roles ?? []))
+                            <div class="dropdown-divider"></div>
+                            <a href="{{ route('admin.configuracion.index') }}" class="dropdown-item {{ request()->routeIs('admin.configuracion.*') ? 'active' : '' }}">
+                                Empresa / Logo
+                            </a>
+                            @endif
                         </div>
                     </li>
                     @endif
