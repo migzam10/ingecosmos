@@ -103,13 +103,13 @@
                              class="border rounded p-1">
                         <div>
                             <div class="text-muted small mb-1">Logo actual</div>
-                            <form method="POST" action="{{ route('admin.configuracion.eliminar-logo') }}"
-                                  onsubmit="return confirm('¿Eliminar el logo actual?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    Eliminar logo
-                                </button>
-                            </form>
+                            {{-- Botón fuera del <form> principal: los <form> no pueden anidarse
+                                 (HTML inválido cerraría el form de "Guardar" antes de tiempo).
+                                 Este botón envía el form-eliminar-logo declarado tras el cierre
+                                 del formulario principal, más abajo. --}}
+                            <button type="submit" form="form-eliminar-logo" class="btn btn-sm btn-outline-danger">
+                                Eliminar logo
+                            </button>
                         </div>
                     </div>
                     @endif
@@ -135,6 +135,11 @@
                 <a href="{{ route('admin.usuarios.index') }}" class="btn btn-outline-secondary">Cancelar</a>
             </div>
 
+        </form>
+
+        <form id="form-eliminar-logo" method="POST" action="{{ route('admin.configuracion.eliminar-logo') }}"
+              onsubmit="return confirm('¿Eliminar el logo actual?')" class="d-none">
+            @csrf @method('DELETE')
         </form>
     </div>
 
