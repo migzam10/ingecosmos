@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConfiguracionEmpresa;
 use App\Models\PagoTecnico;
 use App\Models\Tecnico;
 use App\Models\TrabajoTecnico;
@@ -81,7 +82,9 @@ class LiquidacionController extends Controller
         $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-        $pdf = Pdf::loadView('liquidacion.recibo-pdf', compact('pago', 'meses'))
+        $config = ConfiguracionEmpresa::getActual();
+
+        $pdf = Pdf::loadView('liquidacion.recibo-pdf', compact('pago', 'meses', 'config'))
             ->setPaper([0, 0, 226, 340], 'portrait'); // media carta / recibo
 
         return $pdf->stream("recibo-pago-{$pago->id}.pdf");
@@ -109,7 +112,9 @@ class LiquidacionController extends Controller
         $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-        $pdf = Pdf::loadView('liquidacion.pdf', compact('data', 'meses'))
+        $config = ConfiguracionEmpresa::getActual();
+
+        $pdf = Pdf::loadView('liquidacion.pdf', compact('data', 'meses', 'config'))
             ->setPaper('letter', 'portrait');
 
         return $pdf->stream("liquidacion-{$tecnico->nombre}-{$meses[$mes]}-{$anio}.pdf");

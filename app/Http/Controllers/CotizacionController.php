@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ConfiguracionEmpresa;
 use App\Models\Cotizacion;
 use App\Models\HistorialOt;
 use App\Models\MarcaVehiculo;
@@ -182,7 +183,9 @@ class CotizacionController extends Controller
             'clientePrevia', 'marcaPrevia', 'modeloPrevia',
         ]);
 
-        $pdf = Pdf::loadView('cotizaciones.pdf', compact('cotizacion'))
+        $config = ConfiguracionEmpresa::getActual();
+
+        $pdf = Pdf::loadView('cotizaciones.pdf', compact('cotizacion', 'config'))
             ->setPaper('letter', 'portrait');
 
         return $pdf->stream("cotizacion-{$cotizacion->numero_cot}.pdf");
