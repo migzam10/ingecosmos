@@ -92,9 +92,20 @@ class CotizacionController extends Controller
         return view('cotizaciones.show', compact('cotizacion'));
     }
 
+    /**
+     * Una cotización en BORRADOR la edita cualquiera con acceso al módulo.
+     * Ya autorizada (o rechazada) solo la puede editar un administrador.
+     */
+    private function puedeEditar(Cotizacion $cotizacion): bool
+    {
+        return $cotizacion->estado === 'BORRADOR'
+            || (bool) Auth::user()?->hasRole('ADMIN');
+    }
+
     public function edit(Cotizacion $cotizacion)
     {
-        abort_if($cotizacion->estado !== 'BORRADOR', 403, 'Solo se puede editar una cotización en estado Borrador.');
+        abort_if(!$this->puedeEditar($cotizacion), 403,
+            'Una cotización ya autorizada solo la puede editar un administrador.');
 
         $cotizacion->load([
             'ot.vehiculo.marca', 'ot.vehiculo.modelo', 'ot.empresaCliente',
@@ -112,11 +123,20 @@ class CotizacionController extends Controller
 
     public function update(Request $request, Cotizacion $cotizacion)
     {
-        abort_if($cotizacion->estado !== 'BORRADOR', 403, 'Solo se puede editar una cotización en estado Borrador.');
+        abort_if(!$this->puedeEditar($cotizacion), 403,
+            'Una cotización ya autorizada solo la puede editar un administrador.');
 
         $request->validate([
             'numero_cot'                       => "nullable|integer|min:1|unique:cotizaciones,numero_cot,{$cotizacion->id}",
             'fecha_cotizacion'                 => 'nullable|date|before_or_equal:today',
+            'placa_previa'                     => 'nullable|string|max:10',
+            'km_previa'                        => 'nullable|integer|min:0|max:9999999',
+            'nombre_cliente'                   => 'nullable|string|max:150',
+            'cedula_cliente'                   => 'nullable|string|max:20',
+            'telefono_cliente'                 => 'nullable|string|max:20',
+            'descripcion_previa'               => 'nullable|string|max:1000',
+            'id_marca_previa'                  => 'nullable|exists:marcas_vehiculo,id',
+            'id_modelo_previa'                 => 'nullable|exists:modelos_vehiculo,id',
             'items_mo'                         => 'nullable|array',
             'items_mo.*.descripcion'           => 'required_with:items_mo.*.precio|string|max:200',
             'items_mo.*.precio'                => 'required_with:items_mo.*.descripcion|numeric|min:0',
@@ -205,7 +225,9 @@ class CotizacionController extends Controller
     {
         $request->validate([
             'numero_cot'                       => 'nullable|integer|min:1|unique:cotizaciones,numero_cot',
+            'fecha_cotizacion'                 => 'required|date|before_or_equal:today',
             'placa_previa'                     => 'required|string|max:10',
+            'km_previa'                        => 'nullable|integer|min:0|max:9999999',
             'nombre_cliente'                   => 'required|string|max:150',
             'cedula_cliente'                   => 'nullable|string|max:20',
             'telefono_cliente'                 => 'nullable|string|max:20',

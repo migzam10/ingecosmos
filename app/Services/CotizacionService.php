@@ -39,7 +39,7 @@ class CotizacionService
     public function crear(OrdenTrabajo $ot, array $data): Cotizacion
     {
         return DB::transaction(function () use ($ot, $data) {
-            $numeroCot = $this->siguiente($data['numero_cot'] ? (int) $data['numero_cot'] : null);
+            $numeroCot = $this->siguiente(!empty($data['numero_cot']) ? (int) $data['numero_cot'] : null);
 
             [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] = $this->calcularTotales($data);
             $ivaPct = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal);
@@ -49,6 +49,7 @@ class CotizacionService
                 'id_ot'               => $ot->id,
                 'creada_por'          => Auth::id(),
                 'estado'              => 'BORRADOR',
+                'fecha_cotizacion'    => $data['fecha_cotizacion'] ?? now()->toDateString(),
                 'subtotal_mo'         => $subtotalMo,
                 'subtotal_rto'        => $subtotalRto,
                 'subtotal_insumos'    => $subtotalInsumos,
@@ -80,7 +81,7 @@ class CotizacionService
     public function crearPrevia(array $data): Cotizacion
     {
         return DB::transaction(function () use ($data) {
-            $numeroCot = $this->siguiente($data['numero_cot'] ? (int) $data['numero_cot'] : null);
+            $numeroCot = $this->siguiente(!empty($data['numero_cot']) ? (int) $data['numero_cot'] : null);
 
             [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] = $this->calcularTotales($data);
             $ivaPct    = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal);
@@ -91,8 +92,10 @@ class CotizacionService
                 'id_ot'               => null,
                 'creada_por'          => Auth::id(),
                 'estado'              => 'BORRADOR',
+                'fecha_cotizacion'    => $data['fecha_cotizacion'] ?? now()->toDateString(),
                 'es_previa'           => true,
                 'placa_previa'        => strtoupper(trim($data['placa_previa'])),
+                'km_previa'           => $data['km_previa'] ?? null,
                 'id_cliente_previa'   => $idCliente,
                 'descripcion_previa'  => $data['descripcion_previa'] ?? null,
                 'id_marca_previa'     => $data['id_marca_previa']    ?? null,
@@ -158,6 +161,26 @@ class CotizacionService
                 'total'            => $total,
                 'observaciones'    => $data['observaciones'] ?? $cot->observaciones,
             ];
+
+            if (!empty($data['fecha_cotizacion'])) {
+                $updateCot['fecha_cotizacion'] = $data['fecha_cotizacion'];
+            }
+
+            // En una previa los datos del vehículo/cliente viven en la propia
+            // cotización, así que también deben guardarse al editarla.
+            if ($cot->es_previa) {
+                if (!empty($data['placa_previa'])) {
+                    $updateCot['placa_previa'] = strtoupper(trim($data['placa_previa']));
+                }
+                $updateCot['km_previa']          = $data['km_previa']          ?? null;
+                $updateCot['id_marca_previa']    = $data['id_marca_previa']    ?? null;
+                $updateCot['id_modelo_previa']   = $data['id_modelo_previa']   ?? null;
+                $updateCot['descripcion_previa'] = $data['descripcion_previa'] ?? null;
+
+                if (!empty($data['nombre_cliente'])) {
+                    $updateCot['id_cliente_previa'] = $this->actualizarClientePrevia($cot, $data);
+                }
+            }
 
             if (!empty($data['numero_cot'])) {
                 $nuevoCot = (int) $data['numero_cot'];
@@ -332,6 +355,28 @@ class CotizacionService
         }
 
         $ot->update($update);
+    }
+
+    /**
+     * Al editar una previa: actualiza el cliente ya ligado, o busca/crea uno
+     * nuevo si la cotización todavía no tenía cliente.
+     */
+    private function actualizarClientePrevia(Cotizacion $cot, array $data): ?int
+    {
+        $cliente = $cot->clientePrevia;
+
+        if (!$cliente) {
+            return $this->buscarOCrearCliente($data);
+        }
+
+        $cliente->update([
+            'nombre'   => trim($data['nombre_cliente']),
+            'cedula'   => $data['cedula_cliente']   ?? $cliente->cedula,
+            'telefono' => $data['telefono_cliente'] ?? $cliente->telefono,
+            'email'    => $data['email_cliente']    ?? $cliente->email,
+        ]);
+
+        return $cliente->id;
     }
 
     private function buscarOCrearCliente(array $data): ?int

@@ -10,6 +10,13 @@
 
 @section('content')
 
+@if(isset($cotizacion) && $cotizacion->estado !== 'BORRADOR')
+<div class="alert alert-danger">
+    <strong>Editando una cotización {{ strtolower($cotizacion->estado) }}.</strong>
+    Estás modificando una cotización que ya salió de Borrador. Solo un administrador puede hacer esto.
+</div>
+@endif
+
 @if(isset($cotizacion))
 <form method="POST" action="{{ route('cotizaciones.update', $cotizacion) }}" id="form-cot">
 @csrf @method('PUT')
@@ -50,6 +57,16 @@
                         <select name="id_modelo_previa" id="sel-modelo" class="form-select">
                             <option value="">Seleccionar...</option>
                         </select>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label class="form-label">Kilometraje</label>
+                        <div class="input-group">
+                            <input type="number" name="km_previa" min="0" step="1"
+                                   class="form-control @error('km_previa') is-invalid @enderror"
+                                   value="{{ old('km_previa', $cotizacion->km_previa ?? '') }}" placeholder="0">
+                            <span class="input-group-text">km</span>
+                            @error('km_previa')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                     </div>
                 </div>
                 <div class="row g-2 mt-1">
@@ -250,6 +267,14 @@
                         @error('numero_cot')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     @endif
+                    <div class="col-6">
+                        <label class="form-label small fw-bold">Fecha <span class="text-danger">*</span></label>
+                        <input type="date" name="fecha_cotizacion"
+                               class="form-control form-control-sm @error('fecha_cotizacion') is-invalid @enderror"
+                               value="{{ old('fecha_cotizacion', isset($cotizacion) ? $cotizacion->fecha_cotizacion?->format('Y-m-d') : now()->toDateString()) }}"
+                               max="{{ now()->toDateString() }}" required>
+                        @error('fecha_cotizacion')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
                 </div>
             </div>
             <div class="card-footer">

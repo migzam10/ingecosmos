@@ -14,6 +14,13 @@ class AsignarTecnicoController extends Controller
 
     public function store(Request $request, OrdenTrabajo $orden)
     {
+        // Sin cotización autorizada no hay trabajo aprobado que asignar
+        if (!$this->otService->puedeAsignarTecnicos($orden)) {
+            return back()->withErrors([
+                'sin_autorizacion' => 'No se pueden asignar técnicos hasta que la cotización esté autorizada.',
+            ]);
+        }
+
         $request->validate([
             'id_tecnico'       => 'required|exists:tecnicos,id',
             'especialidad'     => 'required|in:LAT,PREP,PINT,MEC,ELEC,SCANNER,AA',

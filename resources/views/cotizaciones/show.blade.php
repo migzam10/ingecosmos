@@ -24,6 +24,14 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
     <a href="{{ route('cotizaciones.edit', $cotizacion) }}" class="btn btn-outline-warning btn-sm">
         Editar
     </a>
+    @elseif(Auth::user()->hasRole('ADMIN'))
+    {{-- Ya autorizada/rechazada: solo el administrador puede corregirla --}}
+    <a href="{{ route('cotizaciones.edit', $cotizacion) }}" class="btn btn-outline-danger btn-sm"
+       data-confirm="Esta cotización ya está {{ strtolower($cotizacion->estado) }}. ¿Editarla de todas formas?">
+        Editar (admin)
+    </a>
+    @endif
+    @if($cotizacion->estado === 'BORRADOR')
     <form method="POST"
           action="{{ route('cotizaciones.destroy', $cotizacion) }}"
           data-confirm="¿Eliminar la cotización #{{ $cotizacion->numero_cot }}?{{ $esPrevia ? '' : ' La OT regresará a Pendiente de Cotización.' }}">

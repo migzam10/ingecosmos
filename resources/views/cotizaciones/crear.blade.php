@@ -6,6 +6,14 @@
 
 @section('content')
 
+@if(isset($cotizacion) && $cotizacion->estado !== 'BORRADOR')
+<div class="alert alert-danger">
+    <strong>Editando una cotización {{ strtolower($cotizacion->estado) }}.</strong>
+    Estás modificando una cotización que ya salió de Borrador; al guardar se recalculan
+    los valores de la OT. Solo un administrador puede hacer esto.
+</div>
+@endif
+
 @if(isset($cotizacion))
 <form method="POST" action="{{ route('cotizaciones.update', $cotizacion) }}" id="form-cot">
 @csrf @method('PUT')
@@ -231,7 +239,9 @@
                     <div class="col-6">
                         <label class="form-label small fw-bold">Fecha <span class="text-danger">*</span></label>
                         <input type="date" name="fecha_cotizacion" class="form-control form-control-sm"
-                               value="{{ isset($cotizacion) ? $cotizacion->ot->fecha_cotizacion?->format('Y-m-d') : now()->toDateString() }}"
+                               value="{{ isset($cotizacion)
+                                        ? ($cotizacion->fecha_cotizacion ?? $cotizacion->ot?->fecha_cotizacion)?->format('Y-m-d')
+                                        : now()->toDateString() }}"
                                max="{{ now()->toDateString() }}" required>
                     </div>
                 </div>

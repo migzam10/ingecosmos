@@ -776,8 +776,21 @@
                 @endif
 
                 {{-- Formulario asignar técnico --}}
-                @php $roles = Auth::user()->roles ?: []; @endphp
-                @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles))
+                @php
+                $roles = Auth::user()->roles ?: [];
+                $puedeAsignar = app(\App\Services\OTService::class)->puedeAsignarTecnicos($orden);
+                @endphp
+                @if((in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles)) && !$puedeAsignar)
+                <div class="alert alert-warning border-top mt-3 mb-0">
+                    <strong>Aún no se pueden asignar técnicos.</strong>
+                    La cotización de esta OT todavía no está autorizada. Registra la autorización
+                    para habilitar la asignación.
+                </div>
+                @endif
+                @if((in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles)) && $puedeAsignar)
+                @if($errors->has('sin_autorizacion'))
+                <div class="alert alert-danger mt-3">{{ $errors->first('sin_autorizacion') }}</div>
+                @endif
                 <form method="POST" action="{{ route('ordenes.tecnicos.store', $orden) }}"
                       class="row g-2 align-items-end border-top pt-3">
                     @csrf
