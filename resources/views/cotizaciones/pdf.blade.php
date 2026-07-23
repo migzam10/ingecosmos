@@ -18,17 +18,17 @@
     .label { color: #8a8f98; font-size: 9px; text-transform: uppercase; letter-spacing: .3px; }
     .value { font-weight: bold; font-size: 11.5px; color: #1f2937; }
 
-    h2 { font-size: 11.5px; background: #1a56db; color: white;
+    h2 { font-size: 11.5px; background: #040065; color: white;
          padding: 5px 9px; margin: 14px 0 0 0; border-radius: 3px; letter-spacing: .3px; }
 
     table.items { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
-    table.items th { background: #eef2ff; text-align: left; padding: 5px 7px;
+    table.items th { background: #ececf5; text-align: left; padding: 5px 7px;
          font-size: 9.5px; text-transform: uppercase; color: #4b5563; letter-spacing: .2px;
-         border-bottom: 1px solid #dde2f0; }
+         border-bottom: 1px solid #dcdae8; }
     table.items td { padding: 5px 7px; border-bottom: 1px solid #f0f1f3; }
     table.items tbody tr:nth-child(even) td { background: #fbfbfc; }
     .text-right { text-align: right; }
-    .subtotal-row td { background: #f1f4fd !important; font-weight: bold; border-top: 1.5px solid #c7d3f2; }
+    .subtotal-row td { background: #f0f0f7 !important; font-weight: bold; border-top: 1.5px solid #c9c7dd; }
 
     .resumen-wrap { margin-top: 16px; clear: both; }
     .resumen { width: 270px; float: right; border: 1px solid #e5e7eb; border-radius: 4px; overflow: hidden; }
@@ -36,16 +36,16 @@
     .resumen td { padding: 5px 10px; }
     .resumen .iva-row td { color: #6b7280; border-top: 1px solid #f0f1f3; }
     .resumen .subtotal-neto td { background: #f8f9fa; font-weight: bold; border-top: 1px solid #f0f1f3; }
-    .resumen .total-row td { font-size: 14px; font-weight: bold; color: #1a56db;
-                              background: #eef2ff; border-top: 2px solid #1a56db; padding-top: 7px; padding-bottom: 7px; }
+    .resumen .total-row td { font-size: 14px; font-weight: bold; color: #040065;
+                              background: #ececf5; border-top: 2px solid #040065; padding-top: 7px; padding-bottom: 7px; }
 
     .kpis { clear: both; margin-top: 14px; }
     .kpi-item { border: 1px solid #e5e7eb; padding: 7px 14px; text-align: center; border-radius: 4px; }
-    .kpi-val { font-size: 17px; font-weight: bold; color: #1a56db; }
+    .kpi-val { font-size: 17px; font-weight: bold; color: #040065; }
     .kpi-lab { font-size: 9px; color: #8a8f98; text-transform: uppercase; letter-spacing: .2px; }
 
     .observaciones { clear: both; margin-top: 16px; padding: 9px 12px; background: #f8f9fa;
-                     border-left: 3px solid #1a56db; border-radius: 3px; font-size: 10px; color: #374151; }
+                     border-left: 3px solid #040065; border-radius: 3px; font-size: 10px; color: #374151; }
 
     .generado { clear: both; margin-top: 18px; font-size: 9px; color: #9ca3af; }
 
@@ -60,12 +60,16 @@
 
 @php
     $titulo = $cotizacion->es_previa ? 'COTIZACIÓN PREVIA' : 'COTIZACIÓN';
+    $fechaCot = $cotizacion->fecha_cotizacion ?? $cotizacion->created_at;
+    $km = $cotizacion->kilometraje();
 @endphp
 @include('pdf._header', [
-    'config' => $config,
-    'titulo' => $titulo,
-    'numero' => $cotizacion->numero_cot,
-    'fecha'  => $cotizacion->created_at->format('d/m/Y'),
+    'config'  => $config,
+    'titulo'  => $titulo,
+    'numero'  => $cotizacion->numero_cot,
+    'fecha'   => $fechaCot->format('d/m/Y'),
+    'color'   => '#040065',
+    'logoMax' => 92,
 ])
 
 <div class="info-grid">
@@ -76,6 +80,11 @@
             @if($cotizacion->marcaPrevia)
             <div class="info-row"><span class="label">Vehículo</span><br>
                 <span class="value">{{ $cotizacion->marcaPrevia->nombre }}{{ $cotizacion->modeloPrevia ? ' ' . $cotizacion->modeloPrevia->nombre : '' }}</span>
+            </div>
+            @endif
+            @if($km)
+            <div class="info-row"><span class="label">Kilometraje</span><br>
+                <span class="value">{{ number_format($km, 0, ',', '.') }} km</span>
             </div>
             @endif
         </div>
@@ -112,6 +121,11 @@
             <div class="info-row"><span class="label">Vehículo</span><br>
                 <span class="value">{{ $cotizacion->ot->vehiculo->marca->nombre }} {{ $cotizacion->ot->vehiculo->modelo?->nombre }}</span>
             </div>
+            @if($km)
+            <div class="info-row"><span class="label">Kilometraje</span><br>
+                <span class="value">{{ number_format($km, 0, ',', '.') }} km</span>
+            </div>
+            @endif
         </div>
     </div>
     <div class="info-col">

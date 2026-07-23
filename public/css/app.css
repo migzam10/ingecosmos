@@ -57,6 +57,21 @@
     cursor: pointer;
 }
 
+/* Badges de color sólido: Tabler les deja el texto gris por defecto y sobre
+   estos fondos no se alcanza a leer. Se fuerza texto blanco. */
+.badge.bg-primary,
+.badge.bg-secondary,
+.badge.bg-success,
+.badge.bg-danger,
+.badge.bg-info,
+.badge.bg-dark {
+    color: #fff !important;
+}
+/* El amarillo es claro: ahí el texto legible es el oscuro. */
+.badge.bg-warning {
+    color: #1a2029 !important;
+}
+
 /* Estado badges */
 .estado-badge {
     font-size: 0.7rem;

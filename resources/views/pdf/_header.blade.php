@@ -6,10 +6,14 @@
       $numero  string|int|null  Consecutivo del documento
       $fecha   string|null  Fecha ya formateada para mostrar
       $badge   string|null  Etiqueta secundaria, ej. "PREVIA"
+      $color   string|null  Color corporativo del documento (default azul Tabler)
+      $logoMax int|null     Lado máximo del logo en px (default 56)
 --}}
 @php
     $razonSocial = trim($config->razon_social ?? '') ?: 'INGECOSMOS';
     $tieneLogo   = !empty($config->logo_path) && file_exists($config->logo_path);
+    $colorDoc    = $color   ?? '#1a56db';
+    $logoLado    = $logoMax ?? 56;
 @endphp
 <table style="width:100%; border-collapse:collapse;">
     <tr>
@@ -17,8 +21,8 @@
             <table style="border-collapse:collapse;">
                 <tr>
                     @if($tieneLogo)
-                    <td style="width:58px; vertical-align:middle; padding-right:12px;">
-                        <img src="{{ $config->logo_path }}" style="max-width:56px; max-height:56px;">
+                    <td style="width:{{ $logoLado + 2 }}px; vertical-align:middle; padding-right:12px;">
+                        <img src="{{ $config->logo_path }}" style="max-width:{{ $logoLado }}px; max-height:{{ $logoLado }}px;">
                     </td>
                     @endif
                     <td style="vertical-align:middle;">
@@ -33,7 +37,7 @@
             </table>
         </td>
         <td style="text-align:right; vertical-align:middle;">
-            <div style="display:inline-block; background:#1a56db; color:#fff; font-size:12px; font-weight:bold;
+            <div style="display:inline-block; background:{{ $colorDoc }}; color:#fff; font-size:12px; font-weight:bold;
                         padding:5px 14px; border-radius:3px; letter-spacing:.4px;">
                 {{ $titulo }}{{ !empty($numero) ? ' N.º ' . $numero : '' }}
             </div>
@@ -49,5 +53,5 @@
         </td>
     </tr>
 </table>
-<div style="border-bottom:3px solid #1a56db; margin-top:9px;"></div>
+<div style="border-bottom:3px solid {{ $colorDoc }}; margin-top:9px;"></div>
 <div style="border-bottom:1px solid #e5e7eb; margin-bottom:16px;"></div>
