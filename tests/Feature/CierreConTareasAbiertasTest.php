@@ -99,8 +99,8 @@ class CierreConTareasAbiertasTest extends TestCase
         $this->assertSame('EN_PROCESO', $ot->fresh()->estado_proceso);
     }
 
-    /** Contraprueba: una tarea PENDIENTE NO bloquea la entrega. */
-    public function test_pendiente_no_bloquea_entrega(): void
+    /** Una tarea PENDIENTE (asignada pero no iniciada) también bloquea la entrega. */
+    public function test_pendiente_bloquea_entrega(): void
     {
         $admin = User::find(1);
         $tecnico = Tecnico::first();
@@ -108,6 +108,27 @@ class CierreConTareasAbiertasTest extends TestCase
         TrabajoTecnico::create([
             'id_ot' => $ot->id, 'id_tecnico' => $tecnico->id,
             'especialidad' => 'MEC', 'estado' => 'PENDIENTE',
+        ]);
+
+        $resp = $this->actingAs($admin)
+            ->from(route('ordenes.show', $ot))
+            ->post(route('ot.entregar', $ot), ['fecha_entrega_cliente' => now()->toDateString()]);
+
+        $resp->assertSessionHasErrors('tareas_abiertas');
+        $this->assertSame('PROGRAMADO_ENTREGA', $ot->fresh()->estado_proceso);
+    }
+
+    /** Con todas las tareas FINALIZADO sí se puede entregar. */
+    public function test_entrega_ok_con_todo_finalizado(): void
+    {
+        $admin = User::find(1);
+        $tecnico = Tecnico::first();
+        $ot = $this->crearOT('PROGRAMADO_ENTREGA');
+        TrabajoTecnico::create([
+            'id_ot' => $ot->id, 'id_tecnico' => $tecnico->id,
+            'especialidad' => 'MEC', 'estado' => 'FINALIZADO',
+            'inicio_en' => now()->subDays(2), 'fin_en' => now()->subDay(),
+            'valor_liquidar' => 50000,
         ]);
 
         $resp = $this->actingAs($admin)

@@ -126,14 +126,15 @@ class EstadoOTController extends Controller
             'comentario'            => 'nullable|string|max:300',
         ]);
 
-        // No se puede entregar con trabajo de técnico iniciado y sin finalizar.
-        $iniciadasSinFin = $this->otService->trabajosIniciadosSinFinalizar($orden);
-        if ($iniciadasSinFin->isNotEmpty()) {
-            $nombres = $iniciadasSinFin
+        // No se puede entregar si algún técnico asignado no ha finalizado su tarea
+        // (haya empezado o no). Cada tarea debe finalizarse o el admin quitarla.
+        $sinFinalizar = $this->otService->trabajosSinFinalizar($orden);
+        if ($sinFinalizar->isNotEmpty()) {
+            $nombres = $sinFinalizar
                 ->map(fn($t) => $t->tecnico->nombre . ' (' . $t->especialidad . ')')
                 ->join(', ');
             return back()->withErrors([
-                'tareas_abiertas' => "No se puede entregar: estos técnicos tienen trabajo iniciado sin finalizar: {$nombres}. Deben finalizarlo, o el administrador deshacer su inicio y quitar la tarea.",
+                'tareas_abiertas' => "No se puede entregar: estos técnicos no han finalizado su tarea: {$nombres}. Cada uno debe finalizarla, o el administrador quitarla (si ya la inició, primero deshacer el inicio).",
             ])->withInput();
         }
 
@@ -193,14 +194,14 @@ class EstadoOTController extends Controller
             'fecha_evento' => 'required|date|before_or_equal:today',
         ]);
 
-        // Tampoco se puede cerrar (salida especial) con trabajo iniciado sin finalizar.
-        $iniciadasSinFin = $this->otService->trabajosIniciadosSinFinalizar($orden);
-        if ($iniciadasSinFin->isNotEmpty()) {
-            $nombres = $iniciadasSinFin
+        // Tampoco se puede cerrar (salida especial) si algún técnico no ha finalizado.
+        $sinFinalizar = $this->otService->trabajosSinFinalizar($orden);
+        if ($sinFinalizar->isNotEmpty()) {
+            $nombres = $sinFinalizar
                 ->map(fn($t) => $t->tecnico->nombre . ' (' . $t->especialidad . ')')
                 ->join(', ');
             return back()->withErrors([
-                'tareas_abiertas' => "No se puede cerrar la OT: estos técnicos tienen trabajo iniciado sin finalizar: {$nombres}. Deben finalizarlo, o el administrador deshacer su inicio y quitar la tarea.",
+                'tareas_abiertas' => "No se puede cerrar la OT: estos técnicos no han finalizado su tarea: {$nombres}. Cada uno debe finalizarla, o el administrador quitarla (si ya la inició, primero deshacer el inicio).",
             ])->withInput();
         }
 

@@ -80,14 +80,15 @@ class OTService
     }
 
     /**
-     * Tareas de técnico con trabajo iniciado pero sin finalizar (EN_PROCESO / PAUSADO).
-     * Son las que impiden entregar o cerrar una OT: el trabajo está a medias.
-     * Las PENDIENTE (asignadas sin iniciar) NO bloquean — se pueden quitar aparte.
+     * Tareas de técnico que no están finalizadas (PENDIENTE / EN_PROCESO / PAUSADO).
+     * Impiden entregar o cerrar una OT: mientras un técnico asignado no haya
+     * terminado —lo haya empezado o no— la OT no se puede cerrar. Cada tarea
+     * debe finalizarse o el administrador debe quitarla.
      */
-    public function trabajosIniciadosSinFinalizar(OrdenTrabajo $ot)
+    public function trabajosSinFinalizar(OrdenTrabajo $ot)
     {
         return $ot->trabajosTecnico()
-            ->whereIn('estado', ['EN_PROCESO', 'PAUSADO'])
+            ->whereIn('estado', ['PENDIENTE', 'EN_PROCESO', 'PAUSADO'])
             ->with('tecnico')
             ->get();
     }

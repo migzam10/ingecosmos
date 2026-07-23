@@ -157,20 +157,20 @@ $activo = !in_array($estado, $cerrados);
     $tecnicosSinValor = $orden->trabajosTecnico
         ->where('estado', 'FINALIZADO')
         ->filter(fn($t) => !$t->valor_liquidar || $t->valor_liquidar == 0);
-    $tareasIniciadas = $orden->trabajosTecnico
-        ->whereIn('estado', ['EN_PROCESO', 'PAUSADO']);
+    $tareasSinFinalizar = $orden->trabajosTecnico
+        ->whereIn('estado', ['PENDIENTE', 'EN_PROCESO', 'PAUSADO']);
 @endphp
-@if($tareasIniciadas->isNotEmpty())
+@if($tareasSinFinalizar->isNotEmpty())
 <div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
     <x-icon name="alert-triangle" class="mt-1 flex-shrink-0" />
     <div>
-        <div class="fw-bold">No se puede entregar — hay trabajo sin finalizar</div>
+        <div class="fw-bold">No se puede entregar — hay tareas sin finalizar</div>
         <div class="small mt-1">
-            Estos técnicos iniciaron su trabajo pero no lo han finalizado:
-            <strong>{{ $tareasIniciadas->map(fn($t) => $t->tecnico->nombre.' ('.$t->especialidad.')')->join(', ') }}</strong>.
+            Estos técnicos no han finalizado su tarea:
+            <strong>{{ $tareasSinFinalizar->map(fn($t) => $t->tecnico->nombre.' ('.$t->especialidad.')')->join(', ') }}</strong>.
         </div>
         <div class="small text-muted mt-1">
-            Deben finalizarlo desde su panel, o un administrador puede deshacer el inicio y quitar la tarea en la sección de técnicos.
+            Cada técnico debe finalizarla desde su panel, o un administrador puede quitarla en la sección de técnicos (si ya la inició, primero deshacer el inicio).
         </div>
     </div>
 </div>
@@ -233,13 +233,13 @@ $activo = !in_array($estado, $cerrados);
     </button>
     <div class="collapse mt-2" id="panel-especial">
         @php
-            $tareasIniciadasEsp = $orden->trabajosTecnico->whereIn('estado', ['EN_PROCESO', 'PAUSADO']);
+            $tareasSinFinalizarEsp = $orden->trabajosTecnico->whereIn('estado', ['PENDIENTE', 'EN_PROCESO', 'PAUSADO']);
         @endphp
-        @if($tareasIniciadasEsp->isNotEmpty())
+        @if($tareasSinFinalizarEsp->isNotEmpty())
         <div class="alert alert-warning py-2 small mb-2">
-            <strong>Hay trabajo de técnico sin finalizar</strong>
-            ({{ $tareasIniciadasEsp->map(fn($t) => $t->tecnico->nombre.' ('.$t->especialidad.')')->join(', ') }}).
-            No se podrá cerrar la OT hasta que se finalice o el administrador deshaga el inicio y quite la tarea.
+            <strong>Hay tareas de técnico sin finalizar</strong>
+            ({{ $tareasSinFinalizarEsp->map(fn($t) => $t->tecnico->nombre.' ('.$t->especialidad.')')->join(', ') }}).
+            No se podrá cerrar la OT hasta que cada técnico la finalice o el administrador la quite.
         </div>
         @endif
         <form method="POST" action="{{ route('ot.especial', $orden) }}" class="row g-2 align-items-end">
