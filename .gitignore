@@ -9,6 +9,7 @@
 .env
 .env.backup
 .env.production
+.env.testing
 .phpactor.json
 .phpunit.result.cache
 Homestead.json
@@ -24,6 +25,7 @@ yarn-error.log
 /.claude
 CLAUDE.md
 MANUAL_USUARIO.md
+/docs
 *.sql
 **/.DS_Store
 .DS_Store

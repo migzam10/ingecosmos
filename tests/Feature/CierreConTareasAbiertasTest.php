@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\EmpresaCliente;
+use App\Models\MarcaVehiculo;
 use App\Models\OrdenTrabajo;
 use App\Models\Tecnico;
 use App\Models\TrabajoTecnico;
@@ -15,26 +16,60 @@ class CierreConTareasAbiertasTest extends TestCase
 {
     use DatabaseTransactions; // rollback automático: no ensucia la BD
 
+    /** Un vehículo cualquiera; si la BD de pruebas no tiene, se crea uno. */
+    private function vehiculo(): Vehiculo
+    {
+        return Vehiculo::first() ?? Vehiculo::create([
+            'placa'    => 'TST' . random_int(100, 999),
+            'id_marca' => MarcaVehiculo::value('id'),
+        ]);
+    }
+
     private function crearOT(string $estado): OrdenTrabajo
     {
         return OrdenTrabajo::create([
             'numero_ot'          => 900000 + random_int(1, 99999),
             'area'               => 'MECANICA',
-            'id_vehiculo'        => Vehiculo::value('id'),
+            'id_vehiculo'        => $this->vehiculo()->id,
             'id_empresa_cliente' => EmpresaCliente::value('id'),
             'estado_proceso'     => $estado,
             'estado_semaforo'    => 'A_TIEMPO',
             'fecha_ingreso'      => now()->subDays(10)->toDateString(),
             'fecha_inicio_proceso' => now()->subDays(5)->toDateString(),
             'fecha_terminacion'  => now()->subDay()->toDateString(),
-            'creado_por'         => User::value('id'),
+            'creado_por'         => $this->admin()->id,
         ]);
     }
 
+    /** Usuario con rol ADMIN (el seeder crea uno). */
+    private function admin(): User
+    {
+        return User::all()->first(fn($u) => in_array('ADMIN', $u->roles ?: []))
+            ?? User::first();
+    }
+
+    /**
+     * Un técnico con su usuario. Si ningún técnico tiene usuario ligado,
+     * se le crea uno para poder actuar como él.
+     */
     private function tecnicoUser(): array
     {
         $user = User::all()->first(fn($u) => $u->tecnico);
-        return [$user, $user->tecnico];
+        if ($user) {
+            return [$user, $user->tecnico];
+        }
+
+        $tecnico = Tecnico::first();
+        $user    = User::create([
+            'name'     => $tecnico->nombre,
+            'email'    => 'tec' . $tecnico->id . '@test.local',
+            'password' => bcrypt('secret'),
+            'roles'    => ['TECNICO'],
+            'activo'   => true,
+        ]);
+        $tecnico->update(['id_user' => $user->id]);
+
+        return [$user, $tecnico->fresh()];
     }
 
     /** El fix principal: finalizar la última tarea de una OT ENTREGADA NO la reabre. */
@@ -60,7 +95,7 @@ class CierreConTareasAbiertasTest extends TestCase
     /** No se puede entregar si un técnico tiene trabajo EN_PROCESO. */
     public function test_no_entregar_con_tarea_en_proceso(): void
     {
-        $admin = User::find(1);
+        $admin = $this->admin();
         $tecnico = Tecnico::first();
         $ot = $this->crearOT('PROGRAMADO_ENTREGA');
         TrabajoTecnico::create([
@@ -79,7 +114,7 @@ class CierreConTareasAbiertasTest extends TestCase
     /** No se puede cerrar (salida especial) si un técnico tiene trabajo EN_PROCESO. */
     public function test_no_cerrar_especial_con_tarea_en_proceso(): void
     {
-        $admin = User::find(1);
+        $admin = $this->admin();
         $tecnico = Tecnico::first();
         $ot = $this->crearOT('EN_PROCESO');
         TrabajoTecnico::create([
@@ -102,7 +137,7 @@ class CierreConTareasAbiertasTest extends TestCase
     /** Una tarea PENDIENTE (asignada pero no iniciada) también bloquea la entrega. */
     public function test_pendiente_bloquea_entrega(): void
     {
-        $admin = User::find(1);
+        $admin = $this->admin();
         $tecnico = Tecnico::first();
         $ot = $this->crearOT('PROGRAMADO_ENTREGA');
         TrabajoTecnico::create([
@@ -121,7 +156,7 @@ class CierreConTareasAbiertasTest extends TestCase
     /** Con todas las tareas FINALIZADO sí se puede entregar. */
     public function test_entrega_ok_con_todo_finalizado(): void
     {
-        $admin = User::find(1);
+        $admin = $this->admin();
         $tecnico = Tecnico::first();
         $ot = $this->crearOT('PROGRAMADO_ENTREGA');
         TrabajoTecnico::create([
