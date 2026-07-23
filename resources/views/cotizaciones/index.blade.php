@@ -39,14 +39,25 @@
                 @forelse($cotizaciones as $cot)
                 <tr>
                     <td class="fw-bold text-primary">{{ $cot->numero_cot }}</td>
+                    @if($cot->ot)
                     <td class="fw-bold">{{ $cot->ot->numero_ot }}</td>
                     <td>
-                        <span class="badge bg-blue-lt">{{ $cot->ot->vehiculo->placa }}</span>
+                        <span class="badge bg-blue-lt">{{ $cot->ot->vehiculo?->placa }}</span>
                         <span class="text-muted small ms-1">
-                            {{ $cot->ot->vehiculo->marca->nombre }}
+                            {{ $cot->ot->vehiculo?->marca?->nombre }}
                         </span>
                     </td>
-                    <td class="small">{{ $cot->ot->empresaCliente->nombre }}</td>
+                    <td class="small">{{ $cot->ot->empresaCliente?->nombre }}</td>
+                    @else
+                    <td><span class="badge bg-warning-lt">Previa</span></td>
+                    <td>
+                        @if($cot->placa_previa)
+                        <span class="badge bg-blue-lt">{{ $cot->placa_previa }}</span>
+                        @endif
+                        <span class="text-muted small ms-1">{{ $cot->marcaPrevia?->nombre }}</span>
+                    </td>
+                    <td class="small text-muted">—</td>
+                    @endif
                     <td class="text-end fw-bold">$ {{ number_format($cot->total, 0, ',', '.') }}</td>
                     <td>
                         <span class="badge bg-{{ $cot->estado === 'AUTORIZADA' ? 'success' : ($cot->estado === 'RECHAZADA' ? 'danger' : 'secondary') }}-lt">
