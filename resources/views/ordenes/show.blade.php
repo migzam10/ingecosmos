@@ -75,7 +75,10 @@
                             · Entrega estimada: <strong>{{ $orden->salida_estimada->format('d/m/Y') }}</strong>
                             @if($orden->estado_proceso !== 'ENTREGADO')
                             @php
-                            $dfal = now()->diffInDays($orden->salida_estimada, false);
+                            // Comparar a nivel de día: today() y salida_estimada están ambas a
+                            // medianoche, así el resultado es un entero exacto. Con now() la hora
+                            // actual metía una fracción y una OT que vencía HOY se pintaba vencida.
+                            $dfal = (int) today()->diffInDays($orden->salida_estimada, false);
                             @endphp
                             @if($dfal > 0)
                             <span class="text-success">({{ $dfal }} días)</span>
