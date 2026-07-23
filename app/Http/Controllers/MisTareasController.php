@@ -301,6 +301,13 @@ class MisTareasController extends Controller
 
     private function verificarFinOT(OrdenTrabajo $ot): void
     {
+        // Solo avanza automáticamente desde EN_PROCESO. Si la OT ya está
+        // cerrada (ENTREGADO, etc.) o en otro estado, finalizar la última
+        // tarea NO debe reabrirla ni cambiar su estado.
+        if ($ot->estado_proceso !== 'EN_PROCESO') {
+            return;
+        }
+
         $ot->load('trabajosTecnico');
 
         $total       = $ot->trabajosTecnico->count();

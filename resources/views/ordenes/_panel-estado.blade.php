@@ -157,7 +157,27 @@ $activo = !in_array($estado, $cerrados);
     $tecnicosSinValor = $orden->trabajosTecnico
         ->where('estado', 'FINALIZADO')
         ->filter(fn($t) => !$t->valor_liquidar || $t->valor_liquidar == 0);
+    $tareasIniciadas = $orden->trabajosTecnico
+        ->whereIn('estado', ['EN_PROCESO', 'PAUSADO']);
 @endphp
+@if($tareasIniciadas->isNotEmpty())
+<div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
+    <x-icon name="alert-triangle" class="mt-1 flex-shrink-0" />
+    <div>
+        <div class="fw-bold">No se puede entregar — hay trabajo sin finalizar</div>
+        <div class="small mt-1">
+            Estos técnicos iniciaron su trabajo pero no lo han finalizado:
+            <strong>{{ $tareasIniciadas->map(fn($t) => $t->tecnico->nombre.' ('.$t->especialidad.')')->join(', ') }}</strong>.
+        </div>
+        <div class="small text-muted mt-1">
+            Deben finalizarlo desde su panel, o un administrador puede deshacer el inicio y quitar la tarea en la sección de técnicos.
+        </div>
+    </div>
+</div>
+@endif
+@if($errors->has('tareas_abiertas'))
+<div class="alert alert-danger mb-3">{{ $errors->first('tareas_abiertas') }}</div>
+@endif
 @if($tecnicosSinValor->isNotEmpty())
 <div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
     <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md mt-1 flex-shrink-0"
@@ -212,6 +232,16 @@ $activo = !in_array($estado, $cerrados);
         Salida especial / Cerrar OT
     </button>
     <div class="collapse mt-2" id="panel-especial">
+        @php
+            $tareasIniciadasEsp = $orden->trabajosTecnico->whereIn('estado', ['EN_PROCESO', 'PAUSADO']);
+        @endphp
+        @if($tareasIniciadasEsp->isNotEmpty())
+        <div class="alert alert-warning py-2 small mb-2">
+            <strong>Hay trabajo de técnico sin finalizar</strong>
+            ({{ $tareasIniciadasEsp->map(fn($t) => $t->tecnico->nombre.' ('.$t->especialidad.')')->join(', ') }}).
+            No se podrá cerrar la OT hasta que se finalice o el administrador deshaga el inicio y quite la tarea.
+        </div>
+        @endif
         <form method="POST" action="{{ route('ot.especial', $orden) }}" class="row g-2 align-items-end">
             @csrf
             <div class="col-12 col-md-3">

@@ -126,6 +126,17 @@ class EstadoOTController extends Controller
             'comentario'            => 'nullable|string|max:300',
         ]);
 
+        // No se puede entregar con trabajo de técnico iniciado y sin finalizar.
+        $iniciadasSinFin = $this->otService->trabajosIniciadosSinFinalizar($orden);
+        if ($iniciadasSinFin->isNotEmpty()) {
+            $nombres = $iniciadasSinFin
+                ->map(fn($t) => $t->tecnico->nombre . ' (' . $t->especialidad . ')')
+                ->join(', ');
+            return back()->withErrors([
+                'tareas_abiertas' => "No se puede entregar: estos técnicos tienen trabajo iniciado sin finalizar: {$nombres}. Deben finalizarlo, o el administrador deshacer su inicio y quitar la tarea.",
+            ])->withInput();
+        }
+
         $tecnicosSinValor = $orden->trabajosTecnico()
             ->where('estado', 'FINALIZADO')
             ->where(function ($q) {
@@ -181,6 +192,17 @@ class EstadoOTController extends Controller
             'comentario'   => 'required|string|max:500',
             'fecha_evento' => 'required|date|before_or_equal:today',
         ]);
+
+        // Tampoco se puede cerrar (salida especial) con trabajo iniciado sin finalizar.
+        $iniciadasSinFin = $this->otService->trabajosIniciadosSinFinalizar($orden);
+        if ($iniciadasSinFin->isNotEmpty()) {
+            $nombres = $iniciadasSinFin
+                ->map(fn($t) => $t->tecnico->nombre . ' (' . $t->especialidad . ')')
+                ->join(', ');
+            return back()->withErrors([
+                'tareas_abiertas' => "No se puede cerrar la OT: estos técnicos tienen trabajo iniciado sin finalizar: {$nombres}. Deben finalizarlo, o el administrador deshacer su inicio y quitar la tarea.",
+            ])->withInput();
+        }
 
         DB::transaction(function () use ($orden, $request) {
             // Si la CIA rechaza, marcar cotización(es) activa(s) como RECHAZADA
