@@ -315,4 +315,44 @@ Route::get('/deploy/{token}', function (string $token) {
         ->header('Content-Type', 'text/html; charset=utf-8');
 })->name('deploy.run');
 
+/*
+|--------------------------------------------------------------------------
+| Normalización de tareas huérfanas (hosting cPanel SIN SSH/terminal)
+|--------------------------------------------------------------------------
+| Ejecuta por HTTP el comando ot:normalizar-tareas-huerfanas, que cierra las
+| tareas de técnico que quedaron iniciadas (EN_PROCESO/PAUSADO) en OTs ya
+| cerradas. Es de UN SOLO USO: tras corregir esos datos históricos y con el
+| código de bloqueo desplegado, no vuelven a generarse tareas huérfanas.
+|
+| USO:
+|  1) Previsualizar (no cambia nada):
+|     https://TU-DOMINIO/mantenimiento/EL_TOKEN_SECRETO/normalizar-tareas
+|  2) Aplicar los cambios:
+|     https://TU-DOMINIO/mantenimiento/EL_TOKEN_SECRETO/normalizar-tareas?apply=1
+|
+| SEGURIDAD:
+|  - Usa el mismo DEPLOY_TOKEN del .env. Sin token válido responde 403.
+|  - El comando es idempotente: volver a aplicarlo cuando no hay tareas
+|    huérfanas simplemente no hace nada.
+|  - Recomendado: borrar/comentar esta ruta cuando termines.
+*/
+Route::get('/mantenimiento/{token}/normalizar-tareas', function (string $token) {
+    $esperado = env('DEPLOY_TOKEN');
+
+    abort_unless(is_string($esperado) && $esperado !== '' && hash_equals($esperado, $token), 403);
+
+    $aplicar = request()->boolean('apply');
+
+    Artisan::call('ot:normalizar-tareas-huerfanas', $aplicar ? [] : ['--dry-run' => true]);
+    $salida = Artisan::output();
+
+    $encabezado = $aplicar
+        ? "===== MODO APLICAR — los cambios se guardaron =====\n\n"
+        : "===== MODO PREVISUALIZACIÓN (no se cambió nada) =====\n"
+        . "Para aplicar, agrega ?apply=1 al final de la URL.\n\n";
+
+    return response('<pre>' . e($encabezado . $salida) . '</pre>')
+        ->header('Content-Type', 'text/html; charset=utf-8');
+})->name('mantenimiento.normalizar-tareas');
+
 require __DIR__.'/auth.php';
