@@ -13,9 +13,13 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 /**
- * Cubre dos reglas:
- *  - No se asignan técnicos hasta que la cotización esté autorizada.
+ * Cubre las reglas de cotización:
  *  - Una cotización fuera de BORRADOR solo la edita un administrador.
+ *  - Las previas guardan su propia fecha (que puede ser hacia atrás) y el
+ *    kilometraje del vehículo.
+ *
+ * Nota: asignar técnicos NO exige cotización autorizada. El taller asigna
+ * desde que entra el carro, tenga cotización o no.
  */
 class CotizacionAutorizadaTest extends TestCase
 {
@@ -64,12 +68,11 @@ class CotizacionAutorizadaTest extends TestCase
         ]);
     }
 
-    /** Sin cotización autorizada no se puede asignar técnico. */
-    public function test_no_asignar_tecnico_sin_cotizacion_autorizada(): void
+    /** Se asigna técnico aunque la OT no tenga ninguna cotización. */
+    public function test_asignar_tecnico_sin_cotizacion(): void
     {
         $admin = $this->usuario(['ADMIN']);
-        $ot    = $this->crearOT('PTE_AUTORIZACION');
-        $this->crearCotizacion($ot, 'BORRADOR');
+        $ot    = $this->crearOT('PTE_COTIZACION');
 
         $resp = $this->actingAs($admin)
             ->from(route('ordenes.show', $ot))
@@ -79,16 +82,16 @@ class CotizacionAutorizadaTest extends TestCase
                 'fecha_asignacion' => now()->toDateString(),
             ]);
 
-        $resp->assertSessionHasErrors('sin_autorizacion');
-        $this->assertSame(0, $ot->trabajosTecnico()->count());
+        $resp->assertSessionHasNoErrors();
+        $this->assertSame(1, $ot->trabajosTecnico()->count());
     }
 
-    /** Con la cotización AUTORIZADA sí se asigna. */
-    public function test_asignar_tecnico_con_cotizacion_autorizada(): void
+    /** Y también con la cotización aún en BORRADOR (sin autorizar). */
+    public function test_asignar_tecnico_con_cotizacion_sin_autorizar(): void
     {
         $admin = $this->usuario(['ADMIN']);
         $ot    = $this->crearOT('PTE_AUTORIZACION');
-        $this->crearCotizacion($ot, 'AUTORIZADA');
+        $this->crearCotizacion($ot, 'BORRADOR');
 
         $resp = $this->actingAs($admin)
             ->from(route('ordenes.show', $ot))

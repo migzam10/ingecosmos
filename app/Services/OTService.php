@@ -93,20 +93,6 @@ class OTService
             ->get();
     }
 
-    /**
-     * No se puede asignar técnicos a una OT que todavía está en la etapa de
-     * cotización: primero la CIA debe autorizar. Una vez la OT pasa de
-     * PTE_AUTORIZACION (o ya tiene una cotización AUTORIZADA) queda habilitada.
-     */
-    public function puedeAsignarTecnicos(OrdenTrabajo $ot): bool
-    {
-        if (!in_array($ot->estado_proceso, ['PTE_COTIZACION', 'PTE_AUTORIZACION'])) {
-            return true;
-        }
-
-        return $ot->cotizaciones()->where('estado', 'AUTORIZADA')->exists();
-    }
-
     public function calcularTotal(OrdenTrabajo $ot): float
     {
         $total = $ot->valor_mo + $ot->valor_insumos_pint + $ot->valor_terceros + $ot->valor_op;
