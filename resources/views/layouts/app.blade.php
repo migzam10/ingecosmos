@@ -274,30 +274,39 @@
 
                 </ul>
 
-                <div class="my-2 my-lg-0">
-                    <div class="nav-item dropdown">
-                        <a href="#" class="nav-link d-flex lh-1 text-reset p-0 text-white" data-bs-toggle="dropdown">
-                            <span class="avatar avatar-sm"
-                                  style="background-color: #4c6ef5; color: #fff; font-weight: 700;">
-                                {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
-                            </span>
-                            <div class="d-none d-xl-block ps-2">
-                                <div>{{ Auth::user()->name ?? '' }}</div>
-                                <div class="mt-1 small text-muted">
-                                    {{ implode(', ', Auth::user()->roles ?? []) }}
-                                </div>
+                {{-- Perfil: pie del sidebar, separado del menú y con respiración
+                     respecto al borde inferior. En móvil queda tras el menú. --}}
+                <div class="nav-item dropdown mt-2 mt-lg-auto pt-2"
+                     style="border-top: 1px solid rgba(255,255,255,.12);">
+                    <a href="#" class="nav-link d-flex align-items-center lh-1 text-reset text-white px-2 py-2"
+                       data-bs-toggle="dropdown">
+                        <span class="avatar avatar-sm"
+                              style="background-color: #4c6ef5; color: #fff; font-weight: 700;">
+                            {{ strtoupper(substr(Auth::user()->name ?? 'U', 0, 1)) }}
+                        </span>
+                        <div class="d-none d-xl-block ps-2 overflow-hidden">
+                            <div class="text-truncate">{{ Auth::user()->name ?? '' }}</div>
+                            <div class="mt-1 small text-muted text-truncate">
+                                {{ implode(', ', Auth::user()->roles ?? []) }}
                             </div>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                            <a href="{{ route('profile.edit') }}" class="dropdown-item">Mi Perfil</a>
-                            <div class="dropdown-divider"></div>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger">
-                                    Cerrar Sesión
-                                </button>
-                            </form>
                         </div>
+                        <span class="ms-auto d-none d-xl-block text-muted">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                                <path d="M6 9l6 6l6 -6"/>
+                            </svg>
+                        </span>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
+                        <a href="{{ route('profile.edit') }}" class="dropdown-item">Mi Perfil</a>
+                        <div class="dropdown-divider"></div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item text-danger">
+                                Cerrar Sesión
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
