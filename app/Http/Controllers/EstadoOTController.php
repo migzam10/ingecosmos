@@ -153,7 +153,13 @@ class EstadoOTController extends Controller
             ])->withInput();
         }
 
-        abort_if($orden->estado_proceso !== 'PROGRAMADO_ENTREGA', 422, 'Estado incorrecto.');
+        // Se entrega desde el flujo normal (PROGRAMADO_ENTREGA) o desde una
+        // salida especial en la que el vehículo aún se entrega al cliente.
+        $estadosEntregables = [
+            'PROGRAMADO_ENTREGA',
+            'VFT', 'GARANTIA', 'ARREGLO_DIRECTO', 'EN_OTRO_TALLER', 'PTE_RETIRO', 'REPUESTOS_INSTALADOS',
+        ];
+        abort_if(!in_array($orden->estado_proceso, $estadosEntregables), 422, 'Estado incorrecto.');
 
         $fechaTerm = $orden->fecha_terminacion ?? Carbon::parse($request->fecha_entrega_cliente);
         $oportuno  = Carbon::parse($fechaTerm)
@@ -179,6 +185,7 @@ class EstadoOTController extends Controller
         $especiales = [
             'NO_AUTORIZADO', 'ORDEN_ANULADA', 'PERDIDA_TOTAL',
             'VFT', 'GARANTIA', 'ARREGLO_DIRECTO', 'EN_OTRO_TALLER', 'PTE_RETIRO',
+            'REPUESTOS_INSTALADOS',
         ];
 
         $cerrados = ['ENTREGADO', 'ORDEN_ANULADA', 'NO_AUTORIZADO', 'PERDIDA_TOTAL'];

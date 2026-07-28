@@ -1,7 +1,13 @@
 @php
 $estado = $orden->estado_proceso;
-$cerrados = ['ENTREGADO','NO_AUTORIZADO','ORDEN_ANULADA','PERDIDA_TOTAL','VFT','GARANTIA','ARREGLO_DIRECTO','EN_OTRO_TALLER','PTE_RETIRO'];
+// Cierres negativos: el vehículo no se entrega como reparación terminada.
+$negativos = ['NO_AUTORIZADO','ORDEN_ANULADA','PERDIDA_TOTAL'];
+// Salidas especiales tras las cuales el carro SÍ se entrega al cliente: permiten
+// registrar la entrega real (fecha) y pasar a ENTREGADO.
+$especialesEntregables = ['VFT','GARANTIA','ARREGLO_DIRECTO','EN_OTRO_TALLER','PTE_RETIRO','REPUESTOS_INSTALADOS'];
+$cerrados = array_merge(['ENTREGADO'], $negativos, $especialesEntregables);
 $activo = !in_array($estado, $cerrados);
+$puedeEntregarEspecial = in_array($estado, $especialesEntregables);
 @endphp
 
 {{-- Línea de progreso --}}
@@ -34,10 +40,20 @@ $activo = !in_array($estado, $cerrados);
     @endforeach
 </div>
 
-@if(!$activo)
+@if(!$activo && !$puedeEntregarEspecial)
 <div class="alert alert-secondary py-2">
     Esta OT está cerrada con estado <strong>{{ $estado }}</strong>.
 </div>
+@elseif($puedeEntregarEspecial)
+{{-- Salida especial con entrega pendiente: registrar la entrega real al cliente --}}
+<div class="alert alert-info d-flex align-items-center gap-2 py-2 mb-3">
+    <x-icon name="info-circle" class="flex-shrink-0" />
+    <div>
+        Esta OT está en salida especial (<x-estado-badge :estado="$estado" />).
+        Cuando el vehículo se entregue al cliente, registra la entrega para cerrarla como <strong>Entregado</strong>.
+    </div>
+</div>
+@include('ordenes._form-entregar')
 @else
 
 {{-- AUTORIZAR --}}
@@ -153,76 +169,7 @@ $activo = !in_array($estado, $cerrados);
 
 {{-- ENTREGAR --}}
 @if($estado === 'PROGRAMADO_ENTREGA')
-@php
-    $tecnicosSinValor = $orden->trabajosTecnico
-        ->where('estado', 'FINALIZADO')
-        ->filter(fn($t) => !$t->valor_liquidar || $t->valor_liquidar == 0);
-    $tareasSinFinalizar = $orden->trabajosTecnico
-        ->whereIn('estado', ['PENDIENTE', 'EN_PROCESO', 'PAUSADO']);
-@endphp
-@if($tareasSinFinalizar->isNotEmpty())
-<div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
-    <x-icon name="alert-triangle" class="mt-1 flex-shrink-0" />
-    <div>
-        <div class="fw-bold">No se puede entregar — hay tareas sin finalizar</div>
-        <div class="small mt-1">
-            Estos técnicos no han finalizado su tarea:
-            <strong>{{ $tareasSinFinalizar->map(fn($t) => $t->tecnico->nombre.' ('.$t->especialidad.')')->join(', ') }}</strong>.
-        </div>
-        <div class="small text-muted mt-1">
-            Cada técnico debe finalizarla desde su panel, o un administrador puede quitarla en la sección de técnicos (si ya la inició, primero deshacer el inicio).
-        </div>
-    </div>
-</div>
-@endif
-@if($errors->has('tareas_abiertas'))
-<div class="alert alert-danger mb-3">{{ $errors->first('tareas_abiertas') }}</div>
-@endif
-@if($tecnicosSinValor->isNotEmpty())
-<div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
-    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-md mt-1 flex-shrink-0"
-         width="24" height="24" viewBox="0 0 24 24" stroke-width="2"
-         stroke="currentColor" fill="none">
-        <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-        <path d="M12 9v4m0 4h.01"/>
-        <path d="M10.363 3.591l-8.106 13.534a1.914 1.914 0 0 0 1.636 2.871h16.214a1.914 1.914 0 0 0 1.636-2.87l-8.106-13.536a1.914 1.914 0 0 0-3.274 0z"/>
-    </svg>
-    <div>
-        <div class="fw-bold">No se puede entregar — faltan valores de liquidación</div>
-        <div class="small mt-1">
-            Los siguientes técnicos finalizaron su trabajo pero no tienen valor asignado:
-            <strong>{{ $tecnicosSinValor->pluck('tecnico.nombre')->join(', ') }}</strong>
-        </div>
-        <div class="small text-muted mt-1">
-            Asigna el valor en la sección de técnicos asignados más abajo en esta misma página.
-        </div>
-    </div>
-</div>
-@endif
-@if($errors->has('valor_liquidar'))
-<div class="alert alert-danger mb-3">
-    {{ $errors->first('valor_liquidar') }}
-</div>
-@endif
-<form method="POST" action="{{ route('ot.entregar', $orden) }}" class="row g-2 align-items-end">
-    @csrf
-    <div class="col-12 col-md-3">
-        <label class="form-label small fw-bold">Fecha entrega al cliente</label>
-        <input type="date" name="fecha_entrega_cliente" class="form-control form-control-sm"
-               value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required>
-    </div>
-    <div class="col-12 col-md-5">
-        <label class="form-label small">Comentario</label>
-        <input type="text" name="comentario" class="form-control form-control-sm"
-               placeholder="Observación...">
-    </div>
-    <div class="col-auto">
-        <button class="btn btn-success btn-sm"
-                data-confirm="¿Confirmar entrega del vehículo al cliente?">
-            <x-icon name="check" /> Entregar Vehículo
-        </button>
-    </div>
-</form>
+@include('ordenes._form-entregar')
 @endif
 
 {{-- ESTADOS ESPECIALES (siempre visible para OTs activas) --}}
@@ -256,6 +203,7 @@ $activo = !in_array($estado, $cerrados);
                     <option value="ARREGLO_DIRECTO">Arreglo Directo</option>
                     <option value="EN_OTRO_TALLER">En Otro Taller</option>
                     <option value="PTE_RETIRO">Pendiente de Retiro</option>
+                    <option value="REPUESTOS_INSTALADOS">Repuestos Instalados</option>
                 </select>
             </div>
             <div class="col-12 col-md-3">

@@ -19,6 +19,7 @@ $config = match($estado) {
     'ENTREGA_PARCIAL'     => ['color' => 'yellow',    'texto' => 'Entrega Parcial'],
     'EN_OTRO_TALLER'      => ['color' => 'pink',      'texto' => 'En Otro Taller'],
     'PTE_RETIRO'          => ['color' => 'muted',     'texto' => 'Pendiente de Retiro'],
+    'REPUESTOS_INSTALADOS'=> ['color' => 'azure',     'texto' => 'Repuestos Instalados'],
     default               => ['color' => 'secondary', 'texto' => $estado],
 };
 @endphp

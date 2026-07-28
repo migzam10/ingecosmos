@@ -55,7 +55,7 @@ class OTService
     {
         $terminados = [
             'ENTREGADO', 'NO_AUTORIZADO', 'ORDEN_ANULADA',
-            'PERDIDA_TOTAL', 'VFT', 'GARANTIA', 'ARREGLO_DIRECTO',
+            'PERDIDA_TOTAL', 'VFT', 'GARANTIA', 'ARREGLO_DIRECTO', 'REPUESTOS_INSTALADOS',
         ];
 
         if (in_array($ot->estado_proceso, $terminados)) {

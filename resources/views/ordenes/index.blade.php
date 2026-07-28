@@ -55,6 +55,7 @@
                     <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected' : '' }}>Llegada de repuesto</option>
                     <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected' : '' }}>En proceso</option>
                     <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected' : '' }}>Programado entrega</option>
+                    <option value="REPUESTOS_INSTALADOS" {{ request('estado')=='REPUESTOS_INSTALADOS' ? 'selected' : '' }}>Repuestos instalados</option>
                     <option value="GARANTIA"           {{ request('estado')=='GARANTIA'           ? 'selected' : '' }}>Garantía</option>
                     <option value="ENTREGA_PARCIAL"    {{ request('estado')=='ENTREGA_PARCIAL'    ? 'selected' : '' }}>Entrega parcial</option>
                     @else

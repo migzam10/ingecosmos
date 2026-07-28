@@ -63,6 +63,13 @@ class MisTareasController extends Controller
             ? \Carbon\Carbon::parse($request->inicio_en)
             : now();
 
+        // Si el inicio es hoy, guardar la hora real actual en vez de medianoche.
+        // (Backdating a un día anterior conserva su marca: no se puede inventar
+        // la hora real de un día pasado.)
+        if ($fechaInicio->isToday()) {
+            $fechaInicio = now();
+        }
+
         $minFecha = ($trabajo->fecha_asignacion
             ? \Carbon\Carbon::parse($trabajo->fecha_asignacion)
             : $trabajo->created_at)->startOfDay();
@@ -219,9 +226,14 @@ class MisTareasController extends Controller
             'fin_en' => 'nullable|date|before_or_equal:today',
         ]);
 
-        $finEn = $request->filled('fin_en')
-            ? \Carbon\Carbon::parse($request->fin_en)->endOfDay()
-            : now();
+        // Si la finalización es hoy, usar la hora real actual; si se registra
+        // hacia atrás (un día anterior) se usa el fin de ese día para que quede
+        // después de cualquier inicio del mismo día.
+        $finEn = now();
+        if ($request->filled('fin_en')) {
+            $fechaFin = \Carbon\Carbon::parse($request->fin_en);
+            $finEn = $fechaFin->isToday() ? now() : $fechaFin->endOfDay();
+        }
 
         // No puede ser anterior al inicio del trabajo
         if ($trabajo->inicio_en && $finEn->lt($trabajo->inicio_en->startOfDay())) {

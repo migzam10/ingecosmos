@@ -40,7 +40,7 @@ class AlertaService
         $activas = OrdenTrabajo::with(['vehiculo.marca', 'empresaCliente'])
             ->whereNotIn('estado_proceso', [
                 'ENTREGADO','NO_AUTORIZADO','ORDEN_ANULADA',
-                'PERDIDA_TOTAL','VFT','GARANTIA','ARREGLO_DIRECTO',
+                'PERDIDA_TOTAL','VFT','GARANTIA','ARREGLO_DIRECTO','REPUESTOS_INSTALADOS',
             ])->get();
 
         $alertas = [
