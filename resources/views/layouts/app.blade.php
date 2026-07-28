@@ -200,6 +200,8 @@
                     </li>
                     @endif
 
+                    {{-- Liquidación y Producción: solo ADMIN y COORDINADOR (igual que sus rutas) --}}
+                    @if(in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles))
                     <li class="nav-item">
                         <a class="nav-link {{ request()->routeIs('liquidacion.*') ? 'active' : '' }}"
                            href="{{ route('liquidacion.index') }}">
@@ -228,6 +230,7 @@
                             <span class="nav-link-title">Producción / KPIs</span>
                         </a>
                     </li>
+                    @endif
 
                     @if(in_array('ADMIN', $roles))
                     <li class="nav-item dropdown">
