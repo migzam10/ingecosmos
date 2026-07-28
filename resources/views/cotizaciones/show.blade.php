@@ -20,15 +20,25 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
     <a href="{{ route('cotizaciones.pdf', $cotizacion) }}" class="btn btn-primary btn-sm" target="_blank">
         Descargar PDF
     </a>
+    {{-- Autorizar cotización adicional (OT ya pasó la etapa de autorización) --}}
+    @if($cotizacion->estado === 'BORRADOR' && !$esPrevia && $cotizacion->ot
+        && !in_array($cotizacion->ot->estado_proceso, ['PTE_COTIZACION','PTE_AUTORIZACION'])
+        && Auth::user()->hasAnyRole(['ADMIN','COORDINADOR']))
+    <form method="POST" action="{{ route('cotizaciones.autorizar', $cotizacion) }}"
+          data-confirm="¿Autorizar la cotización #{{ $cotizacion->numero_cot }}? Se sumará al valor de la OT.">
+        @csrf
+        <button class="btn btn-success btn-sm">Autorizar</button>
+    </form>
+    @endif
     @if($cotizacion->estado === 'BORRADOR')
     <a href="{{ route('cotizaciones.edit', $cotizacion) }}" class="btn btn-outline-warning btn-sm">
         Editar
     </a>
-    @elseif(Auth::user()->hasRole('ADMIN'))
-    {{-- Ya autorizada/rechazada: solo el administrador puede corregirla --}}
+    @elseif(Auth::user()->hasAnyRole(['ADMIN','COORDINADOR']))
+    {{-- Ya autorizada/rechazada: el administrador o el coordinador pueden corregirla --}}
     <a href="{{ route('cotizaciones.edit', $cotizacion) }}" class="btn btn-outline-danger btn-sm"
        data-confirm="Esta cotización ya está {{ strtolower($cotizacion->estado) }}. ¿Editarla de todas formas?">
-        Editar (admin)
+        Editar
     </a>
     @endif
     @if($cotizacion->estado === 'BORRADOR')

@@ -127,6 +127,8 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,COTIZADOR'])->group(function 
     Route::get('/cotizaciones/{cotizacion}/editar',            [CotizacionController::class, 'edit'])->name('cotizaciones.edit');
     Route::put('/cotizaciones/{cotizacion}',                   [CotizacionController::class, 'update'])->name('cotizaciones.update');
     Route::delete('/cotizaciones/{cotizacion}',                [CotizacionController::class, 'destroy'])->name('cotizaciones.destroy');
+    // Autorizar una cotización adicional (el controlador exige ADMIN/COORDINADOR)
+    Route::post('/cotizaciones/{cotizacion}/autorizar',        [CotizacionController::class, 'autorizar'])->name('cotizaciones.autorizar');
     Route::get('/ordenes/{orden}/cotizar',                     [CotizacionController::class, 'create'])->name('cotizaciones.create');
     Route::post('/ordenes/{orden}/cotizar',                    [CotizacionController::class, 'store'])->name('cotizaciones.store');
     // Cotización previa (sin OT)

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Cotizacion;
+use App\Models\HistorialOt;
 use App\Models\ItemCotizacionInsumo;
 use App\Models\ItemCotizacionMo;
 use App\Models\ItemCotizacionRepuesto;
@@ -63,15 +64,31 @@ class CotizacionService
             ]);
 
             $this->guardarItems($cot, $data);
-            $this->actualizarOT($ot, $subtotalMo, $subtotalRto, $subtotalInsumos, $data);
+            $this->recalcularOTDesdeCotizaciones($ot);
 
             $fechaCot = $data['fecha_cotizacion'] ?? now()->toDateString();
-            $this->otService->cambiarEstado(
-                $ot,
-                'PTE_AUTORIZACION',
-                "Cotización #{$numeroCot} creada por " . Auth::user()->name,
-                $fechaCot
-            );
+
+            if (in_array($ot->estado_proceso, ['PTE_COTIZACION', 'PTE_AUTORIZACION'])) {
+                // Flujo normal: la(s) primera(s) cotización(es) llevan la OT a autorización.
+                $this->otService->cambiarEstado(
+                    $ot,
+                    'PTE_AUTORIZACION',
+                    "Cotización #{$numeroCot} creada por " . Auth::user()->name,
+                    $fechaCot
+                );
+            } else {
+                // Cotización ADICIONAL sobre una OT ya avanzada: NO se regresa el
+                // flujo a autorización; solo se deja constancia en el historial.
+                // La autoriza aparte el coordinador/administrador.
+                HistorialOt::create([
+                    'id_ot'           => $ot->id,
+                    'id_user'         => Auth::id(),
+                    'estado_anterior' => $ot->estado_proceso,
+                    'estado_nuevo'    => $ot->estado_proceso,
+                    'comentario'      => "Cotización adicional #{$numeroCot} creada por " . Auth::user()->name,
+                    'fecha_evento'    => $fechaCot,
+                ]);
+            }
 
             return $cot;
         });
@@ -124,13 +141,7 @@ class CotizacionService
         DB::transaction(function () use ($cot, $ot) {
             $cot->update(['id_ot' => $ot->id, 'es_previa' => false]);
 
-            $this->actualizarOT(
-                $ot,
-                (float) $cot->subtotal_mo,
-                (float) $cot->subtotal_rto,
-                (float) $cot->subtotal_insumos,
-                ['fecha_cotizacion' => now()->toDateString()]
-            );
+            $this->recalcularOTDesdeCotizaciones($ot);
 
             $this->otService->cambiarEstado(
                 $ot,
@@ -194,7 +205,7 @@ class CotizacionService
             $cot->update($updateCot);
 
             if ($cot->id_ot) {
-                $this->actualizarOT($cot->ot, $subtotalMo, $subtotalRto, $subtotalInsumos, $data);
+                $this->recalcularOTDesdeCotizaciones($cot->ot);
             }
 
             return $cot;
@@ -320,8 +331,22 @@ class CotizacionService
         }
     }
 
-    private function actualizarOT(OrdenTrabajo $ot, float $subtotalMo, float $subtotalRto, float $subtotalInsumos, array $data): void
+    /**
+     * Recalcula los valores de la OT SUMANDO todas sus cotizaciones vigentes
+     * (BORRADOR + AUTORIZADA; se excluyen las RECHAZADA). Así una cotización
+     * adicional se agrega al valor de la reparación en vez de reemplazarlo, y
+     * HA/DR/TG y la salida estimada se recalculan sobre el total acumulado.
+     */
+    public function recalcularOTDesdeCotizaciones(OrdenTrabajo $ot): void
     {
+        $cots = $ot->cotizaciones()
+            ->whereIn('estado', ['BORRADOR', 'AUTORIZADA'])
+            ->get();
+
+        $subtotalMo      = (float) $cots->sum('subtotal_mo');
+        $subtotalRto     = (float) $cots->sum('subtotal_rto');
+        $subtotalInsumos = (float) $cots->sum('subtotal_insumos');
+
         $empresa = $ot->empresaCliente;
 
         $baseHA = $subtotalMo + ($empresa->tipo === 'A' ? $subtotalRto : 0) + $subtotalInsumos;
@@ -337,7 +362,7 @@ class CotizacionService
 
         $totalOT = $subtotalMo + ($empresa->tipo === 'A' ? $subtotalRto : 0) + $subtotalInsumos;
 
-        $update = [
+        $ot->update([
             'valor_mo'           => $subtotalMo,
             'valor_rto'          => $subtotalRto,
             'valor_insumos_pint' => $subtotalInsumos,
@@ -348,13 +373,8 @@ class CotizacionService
             'dr'                 => $dr,
             'tg'                 => $tg,
             'salida_estimada'    => $salida,
-        ];
-
-        if (!empty($data['fecha_cotizacion'])) {
-            $update['fecha_cotizacion'] = $data['fecha_cotizacion'];
-        }
-
-        $ot->update($update);
+            'fecha_cotizacion'   => $cots->min('fecha_cotizacion') ?? $ot->fecha_cotizacion,
+        ]);
     }
 
     /**

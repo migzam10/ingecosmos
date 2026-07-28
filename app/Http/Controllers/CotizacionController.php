@@ -42,11 +42,15 @@ class CotizacionController extends Controller
 
     // ── COT ANCLADA A OT ──────────────────────────────────────────────────────
 
+    // Estados en los que ya no tiene sentido cotizar (OT entregada o cerrada
+    // en negativo). En cualquier otro estado se permite una cotización adicional.
+    private const NO_COTIZABLES = ['ENTREGADO', 'ORDEN_ANULADA', 'NO_AUTORIZADO', 'PERDIDA_TOTAL'];
+
     public function create(OrdenTrabajo $orden)
     {
-        if (!in_array($orden->estado_proceso, ['PTE_COTIZACION', 'PTE_AUTORIZACION'])) {
+        if (in_array($orden->estado_proceso, self::NO_COTIZABLES)) {
             return redirect()->route('ordenes.show', $orden)
-                ->with('error', 'Esta OT no está en estado de cotización.');
+                ->with('error', 'Esta OT está cerrada; no admite nuevas cotizaciones.');
         }
 
         $orden->load(['vehiculo.marca', 'vehiculo.modelo', 'empresaCliente',
@@ -94,18 +98,19 @@ class CotizacionController extends Controller
 
     /**
      * Una cotización en BORRADOR la edita cualquiera con acceso al módulo.
-     * Ya autorizada (o rechazada) solo la puede editar un administrador.
+     * Ya autorizada (o rechazada) solo la pueden editar el administrador o el
+     * coordinador, en cualquier estado de la OT.
      */
     private function puedeEditar(Cotizacion $cotizacion): bool
     {
         return $cotizacion->estado === 'BORRADOR'
-            || (bool) Auth::user()?->hasRole('ADMIN');
+            || (bool) Auth::user()?->hasAnyRole(['ADMIN', 'COORDINADOR']);
     }
 
     public function edit(Cotizacion $cotizacion)
     {
         abort_if(!$this->puedeEditar($cotizacion), 403,
-            'Una cotización ya autorizada solo la puede editar un administrador.');
+            'Una cotización ya autorizada solo la pueden editar el administrador o el coordinador.');
 
         $cotizacion->load([
             'ot.vehiculo.marca', 'ot.vehiculo.modelo', 'ot.empresaCliente',
@@ -124,7 +129,7 @@ class CotizacionController extends Controller
     public function update(Request $request, Cotizacion $cotizacion)
     {
         abort_if(!$this->puedeEditar($cotizacion), 403,
-            'Una cotización ya autorizada solo la puede editar un administrador.');
+            'Una cotización ya autorizada solo la pueden editar el administrador o el coordinador.');
 
         $request->validate([
             'numero_cot'                       => "nullable|integer|min:1|unique:cotizaciones,numero_cot,{$cotizacion->id}",
@@ -188,11 +193,48 @@ class CotizacionController extends Controller
                     'comentario'      => "Cotización #{$numeroCot} eliminada",
                     'fecha_evento'    => now()->toDateString(),
                 ]);
+                // Quedan otras cotizaciones: recalcular el total acumulado de la OT.
+                $this->service->recalcularOTDesdeCotizaciones($ot);
             }
         });
 
         $redirect = $ot ? route('ordenes.show', $ot) : route('cotizaciones.index');
         return redirect($redirect)->with('success', 'Cotización eliminada.');
+    }
+
+    /**
+     * Autoriza una cotización individual (para adicionales creadas cuando la OT
+     * ya pasó la etapa de autorización). Solo cambia el estado de la cotización
+     * y deja constancia en el historial; NO mueve el estado de la OT.
+     */
+    public function autorizar(Cotizacion $cotizacion)
+    {
+        abort_unless(Auth::user()?->hasAnyRole(['ADMIN', 'COORDINADOR']), 403,
+            'Solo el administrador o el coordinador pueden autorizar cotizaciones.');
+
+        abort_if($cotizacion->es_previa || !$cotizacion->id_ot, 422,
+            'Solo se puede autorizar una cotización vinculada a una OT.');
+        abort_if($cotizacion->estado !== 'BORRADOR', 422,
+            'Esta cotización no está en Borrador.');
+
+        $ot = $cotizacion->ot;
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($cotizacion, $ot) {
+            $cotizacion->update(['estado' => 'AUTORIZADA']);
+
+            HistorialOt::create([
+                'id_ot'           => $ot->id,
+                'id_user'         => Auth::id(),
+                'estado_anterior' => $ot->estado_proceso,
+                'estado_nuevo'    => $ot->estado_proceso,
+                'comentario'      => "Cotización #{$cotizacion->numero_cot} autorizada por " . Auth::user()->name,
+                'fecha_evento'    => now()->toDateString(),
+            ]);
+
+            $this->service->recalcularOTDesdeCotizaciones($ot);
+        });
+
+        return back()->with('success', "Cotización #{$cotizacion->numero_cot} autorizada.");
     }
 
     public function pdf(Cotizacion $cotizacion)

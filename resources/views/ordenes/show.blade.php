@@ -23,12 +23,14 @@
     @endif
     @endif
 
-    @if(in_array($orden->estado_proceso, ['PTE_COTIZACION','PTE_AUTORIZACION']))
-    @if(in_array('ADMIN',$rAcc) || in_array('COTIZADOR',$rAcc) || in_array('COORDINADOR',$rAcc))
+    {{-- Se puede cotizar en cualquier estado salvo OT entregada o cerrada en negativo.
+         Pasada la autorización, es una cotización adicional que no regresa el flujo. --}}
+    @php $cotizable = !in_array($orden->estado_proceso, ['ENTREGADO','ORDEN_ANULADA','NO_AUTORIZADO','PERDIDA_TOTAL']); @endphp
+    @if($cotizable && (in_array('ADMIN',$rAcc) || in_array('COTIZADOR',$rAcc) || in_array('COORDINADOR',$rAcc)))
+    @php $esAdicional = !in_array($orden->estado_proceso, ['PTE_COTIZACION','PTE_AUTORIZACION']); @endphp
     <a href="{{ route('cotizaciones.create', $orden) }}" class="btn btn-primary btn-sm">
-        + Nueva Cotización
+        + {{ $esAdicional ? 'Cotización adicional' : 'Nueva Cotización' }}
     </a>
-    @endif
     @endif
 
     <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Volver</a>
@@ -991,6 +993,16 @@
                                            class="btn btn-xs btn-outline-primary">Ver</a>
                                         <a href="{{ route('cotizaciones.pdf', $cot) }}"
                                            class="btn btn-xs btn-outline-secondary" target="_blank">PDF</a>
+                                        {{-- Autorizar cotización adicional (OT ya pasó la autorización) --}}
+                                        @if($cot->estado === 'BORRADOR'
+                                            && !in_array($orden->estado_proceso, ['PTE_COTIZACION','PTE_AUTORIZACION'])
+                                            && (in_array('ADMIN',$rCot) || in_array('COORDINADOR',$rCot)))
+                                        <form method="POST" action="{{ route('cotizaciones.autorizar', $cot) }}"
+                                              data-confirm="¿Autorizar la cotización #{{ $cot->numero_cot }}? Se sumará al valor de la OT.">
+                                            @csrf
+                                            <button class="btn btn-xs btn-success">Autorizar</button>
+                                        </form>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

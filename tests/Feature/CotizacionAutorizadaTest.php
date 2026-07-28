@@ -147,6 +147,74 @@ class CotizacionAutorizadaTest extends TestCase
             ->assertOk();
     }
 
+    /** El coordinador también puede editar una cotización autorizada. */
+    public function test_coordinador_edita_cotizacion_autorizada(): void
+    {
+        $coord = $this->usuario(['COORDINADOR']);
+        $ot    = $this->crearOT('EN_PROCESO');
+        $cot   = $this->crearCotizacion($ot, 'AUTORIZADA');
+
+        $this->actingAs($coord)
+            ->get(route('cotizaciones.edit', $cot))
+            ->assertOk();
+    }
+
+    /**
+     * Una cotización adicional en una OT ya avanzada NO regresa el flujo a
+     * autorización y SUMA su valor al total de la OT.
+     */
+    public function test_cotizacion_adicional_no_resetea_flujo_y_suma(): void
+    {
+        $admin = $this->usuario(['ADMIN']);
+        $ot    = $this->crearOT('EN_PROCESO');
+        $this->crearCotizacion($ot, 'AUTORIZADA'); // original: subtotal_mo 100.000
+
+        $resp = $this->actingAs($admin)->post(route('cotizaciones.store', $ot), [
+            'fecha_cotizacion' => now()->toDateString(),
+            'items_mo'         => [['descripcion' => 'Trabajo extra', 'precio' => 400000]],
+        ]);
+
+        $resp->assertSessionHasNoErrors();
+
+        $ot->refresh();
+        $this->assertSame('EN_PROCESO', $ot->estado_proceso, 'La OT no debe regresar a autorización');
+        $this->assertEquals(500000, (float) $ot->valor_mo, 'El valor MO debe sumar original + adicional');
+
+        $adicional = $ot->cotizaciones()->where('estado', 'BORRADOR')->latest('id')->first();
+        $this->assertNotNull($adicional);
+        $this->assertEquals(400000, (float) $adicional->subtotal_mo);
+    }
+
+    /** El coordinador autoriza una cotización adicional sin mover el estado de la OT. */
+    public function test_autorizar_cotizacion_adicional(): void
+    {
+        $coord = $this->usuario(['COORDINADOR']);
+        $ot    = $this->crearOT('EN_PROCESO');
+        $cot   = $this->crearCotizacion($ot, 'BORRADOR');
+
+        $resp = $this->actingAs($coord)
+            ->from(route('cotizaciones.show', $cot))
+            ->post(route('cotizaciones.autorizar', $cot));
+
+        $resp->assertSessionHasNoErrors();
+        $this->assertSame('AUTORIZADA', $cot->fresh()->estado);
+        $this->assertSame('EN_PROCESO', $ot->fresh()->estado_proceso);
+    }
+
+    /** Un cotizador NO puede autorizar cotizaciones. */
+    public function test_cotizador_no_autoriza(): void
+    {
+        $cotizador = $this->usuario(['COTIZADOR']);
+        $ot        = $this->crearOT('EN_PROCESO');
+        $cot       = $this->crearCotizacion($ot, 'BORRADOR');
+
+        $this->actingAs($cotizador)
+            ->post(route('cotizaciones.autorizar', $cot))
+            ->assertForbidden();
+
+        $this->assertSame('BORRADOR', $cot->fresh()->estado);
+    }
+
     /** La fecha de una cotización previa se guarda y se puede poner hacia atrás. */
     public function test_previa_guarda_fecha_y_kilometraje(): void
     {
