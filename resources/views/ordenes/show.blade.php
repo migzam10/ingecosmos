@@ -554,7 +554,15 @@
                                 @php
                                 $nombresEspShow = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor','MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'];
                                 @endphp
-                                <td class="fw-medium">{{ $trabajo->tecnico->nombre }}</td>
+                                <td class="fw-medium">
+                                    {{ $trabajo->tecnico->nombre }}
+                                    <div class="text-muted" style="font-size:.72rem">
+                                        Asignó: {{ $trabajo->asignadoPor?->name ?? '—' }}
+                                        @if($trabajo->fecha_asignacion)
+                                        · {{ $trabajo->fecha_asignacion->format('d/m/Y') }}
+                                        @endif
+                                    </div>
+                                </td>
                                 <td class="small">{{ $nombresEspShow[$trabajo->especialidad] ?? $trabajo->especialidad }}</td>
                                 <td>
                                     @if($trabajo->estado === 'FINALIZADO')

@@ -9,7 +9,7 @@ class TrabajoTecnico extends Model
     protected $table = 'trabajo_tecnico';
 
     protected $fillable = [
-        'id_ot', 'id_tecnico', 'especialidad', 'fecha_asignacion', 'estado',
+        'id_ot', 'id_tecnico', 'especialidad', 'fecha_asignacion', 'asignado_por', 'estado',
         'inicio_en', 'fin_en', 'valor_liquidar', 'liquidado', 'comentarios',
     ];
 
@@ -33,6 +33,11 @@ class TrabajoTecnico extends Model
     public function tecnico()
     {
         return $this->belongsTo(Tecnico::class, 'id_tecnico');
+    }
+
+    public function asignadoPor()
+    {
+        return $this->belongsTo(User::class, 'asignado_por');
     }
 
     public function historialComentarios()

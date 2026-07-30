@@ -105,6 +105,26 @@ class CotizacionAutorizadaTest extends TestCase
         $this->assertSame(1, $ot->trabajosTecnico()->count());
     }
 
+    /** Al asignar un técnico se registra qué usuario lo hizo. */
+    public function test_asignacion_registra_usuario(): void
+    {
+        $coord = $this->usuario(['COORDINADOR']);
+        $ot    = $this->crearOT('EN_PROCESO');
+
+        $this->actingAs($coord)
+            ->from(route('ordenes.show', $ot))
+            ->post(route('ordenes.tecnicos.store', $ot), [
+                'id_tecnico'       => Tecnico::value('id'),
+                'especialidad'     => 'MEC',
+                'fecha_asignacion' => now()->toDateString(),
+            ])
+            ->assertSessionHasNoErrors();
+
+        $trabajo = $ot->trabajosTecnico()->first();
+        $this->assertSame($coord->id, $trabajo->asignado_por);
+        $this->assertSame($coord->name, $trabajo->asignadoPor->name);
+    }
+
     /** Una OT que ya pasó la autorización no queda bloqueada. */
     public function test_ot_en_proceso_permite_asignar(): void
     {

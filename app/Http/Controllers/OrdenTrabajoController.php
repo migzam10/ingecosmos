@@ -287,6 +287,7 @@ class OrdenTrabajoController extends Controller
             'empresaCliente', 'inventario', 'fotos.subidaPor', 'historial.user',
             'tecnicoLat', 'tecnicoPrep', 'tecnicoPint', 'tecnicoMec', 'tecnicoElec',
             'trabajosTecnico.tecnico',
+            'trabajosTecnico.asignadoPor',
             'trabajosTecnico.historialComentarios.tecnico',
             'trabajosTecnico.fotos',
             'trabajosTecnico.pausas',

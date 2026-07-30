@@ -30,6 +30,7 @@ class AsignarTecnicoController extends Controller
             [
                 'estado'           => 'PENDIENTE',
                 'fecha_asignacion' => $request->fecha_asignacion,
+                'asignado_por'     => $request->user()->id,
             ]
         );
 
