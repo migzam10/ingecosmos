@@ -154,9 +154,9 @@ class OrdenTrabajoController extends Controller
     {
         abort_unless(Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']), 403, 'No tienes permiso para realizar esta acción.');
         abort_if(
-            $orden->estado_proceso !== 'PTE_COTIZACION',
+            $orden->estado_proceso === 'ENTREGADO',
             403,
-            'Solo se puede editar una OT en estado Pendiente de Cotización.'
+            'No se puede editar una OT ya entregada.'
         );
 
         $marcas   = MarcaVehiculo::orderBy('nombre')->get();
@@ -171,9 +171,9 @@ class OrdenTrabajoController extends Controller
     {
         abort_unless(Auth::user()->hasAnyRole(['ADMIN', 'COORDINADOR', 'RECEPCION']), 403, 'No tienes permiso para realizar esta acción.');
         abort_if(
-            $orden->estado_proceso !== 'PTE_COTIZACION',
+            $orden->estado_proceso === 'ENTREGADO',
             403,
-            'Solo se puede editar una OT en estado Pendiente de Cotización.'
+            'No se puede editar una OT ya entregada.'
         );
 
         $data = $request->validate([

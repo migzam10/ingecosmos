@@ -8,19 +8,21 @@
 @php $rAcc = Auth::user()->roles ?: []; $esGestor = in_array('ADMIN',$rAcc) || in_array('COORDINADOR',$rAcc) || in_array('RECEPCION',$rAcc); @endphp
 <div class="d-flex gap-2 flex-wrap">
 
-    @if($orden->estado_proceso === 'PTE_COTIZACION' && $esGestor)
-    {{-- Editar OT --}}
+    {{-- Editar OT: en cualquier estado salvo una OT ya entregada --}}
+    @if($orden->estado_proceso !== 'ENTREGADO' && $esGestor)
     <a href="{{ route('ordenes.edit', $orden) }}" class="btn btn-outline-warning btn-sm">
         Editar OT
     </a>
-    {{-- Eliminar OT (solo si no tiene cotizaciones ni trabajos) --}}
-    @if(!$orden->cotizaciones()->exists() && !$orden->trabajosTecnico()->exists())
+    @endif
+
+    {{-- Eliminar OT: solo en PTE_COTIZACION y si no tiene cotizaciones ni trabajos --}}
+    @if($orden->estado_proceso === 'PTE_COTIZACION' && $esGestor
+        && !$orden->cotizaciones()->exists() && !$orden->trabajosTecnico()->exists())
     <form method="POST" action="{{ route('ordenes.destroy', $orden) }}"
           data-confirm="¿Eliminar la OT #{{ $orden->numero_ot }}? Esta acción no se puede deshacer.">
         @csrf @method('DELETE')
         <button class="btn btn-outline-danger btn-sm">Eliminar OT</button>
     </form>
-    @endif
     @endif
 
     {{-- Se puede cotizar en cualquier estado salvo OT entregada o cerrada en negativo.
