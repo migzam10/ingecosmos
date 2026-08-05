@@ -62,6 +62,7 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION,COTIZADOR'])->group
 // AJAX endpoints
 Route::middleware(['auth'])->group(function () {
     Route::get('/api/placa',               [OrdenTrabajoController::class,      'buscarPlaca'])->name('api.placa');
+    Route::get('/api/cliente',             [OrdenTrabajoController::class,      'buscarCliente'])->name('api.cliente');
     Route::get('/api/modelos',             [OrdenTrabajoController::class,      'modelosPorMarca'])->name('api.modelos');
     Route::get('/api/catalogo-mo',         [CatalogoMoController::class,        'porVehiculo'])->name('api.catalogo-mo');
     Route::get('/api/catalogo-repuestos',  [CatalogoRepuestosController::class, 'porVehiculo'])->name('api.catalogo-repuestos');

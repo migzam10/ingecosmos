@@ -75,6 +75,18 @@
             <div class="card-header"><h3 class="card-title">Propietario / Cliente</h3></div>
             <div class="card-body">
                 <div class="row g-2">
+                    <div class="col-12 col-md-3">
+                        <label class="form-label">Cédula / NIT</label>
+                        <div class="input-group">
+                            <input type="text" name="cedula_cliente" id="input-cedula"
+                                   class="form-control" value="{{ old('cedula_cliente') }}"
+                                   placeholder="Ej: 900123456" autocomplete="off">
+                            <button type="button" id="btn-buscar-cedula" class="btn btn-outline-secondary">
+                                Buscar
+                            </button>
+                        </div>
+                        <div id="msg-cedula" class="form-text"></div>
+                    </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label">Nombre completo <span class="text-danger">*</span></label>
                         <input type="text" name="nombre_cliente" id="input-nombre"
@@ -82,11 +94,7 @@
                                value="{{ old('nombre_cliente') }}" required>
                         @error('nombre_cliente')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-12 col-md-3">
-                        <label class="form-label">Cédula / NIT</label>
-                        <input type="text" name="cedula_cliente" id="input-cedula"
-                               class="form-control" value="{{ old('cedula_cliente') }}">
-                    </div>
+                    
                     <div class="col-12 col-md-3">
                         <label class="form-label">Teléfono</label>
                         <input type="text" name="telefono_cliente" id="input-telefono"
@@ -364,6 +372,7 @@
 <script>
 const MODELOS_URL = '{{ route("api.modelos") }}';
 const PLACA_URL   = '{{ route("api.placa") }}';
+const CLIENTE_URL = '{{ route("api.cliente") }}';
 
 // Cargar modelos al cambiar la marca
 document.getElementById('select-marca').addEventListener('change', function () {
@@ -439,6 +448,44 @@ function buscarPlaca() {
         })
         .catch(() => {
             msg.textContent = 'Error al buscar la placa';
+            msg.className   = 'form-text text-danger';
+        });
+}
+
+// Búsqueda por Cédula / NIT
+document.getElementById('btn-buscar-cedula').addEventListener('click', buscarCliente);
+document.getElementById('input-cedula').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); buscarCliente(); }
+});
+
+function buscarCliente() {
+    const cedula = document.getElementById('input-cedula').value.trim();
+    const msg    = document.getElementById('msg-cedula');
+
+    if (!cedula) return;
+
+    msg.textContent = 'Buscando...';
+    msg.className   = 'form-text text-muted';
+
+    fetch(`${CLIENTE_URL}?cedula=${encodeURIComponent(cedula)}`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.encontrado) {
+                msg.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-inline"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M5 12l5 5l10 -10"/></svg> Cliente encontrado — datos precargados';
+                msg.className   = 'form-text text-success';
+
+                setValue('input-nombre',      data.nombre_cliente);
+                setValue('input-telefono',    data.telefono_cliente);
+                setValue('input-email',       data.email_cliente);
+                setValue('input-direccion',   data.direccion_cliente);
+                setValue('input-cumpleanos',  data.fecha_cumpleanos_cliente);
+            } else {
+                msg.textContent = 'Cliente nuevo — complete los datos';
+                msg.className   = 'form-text text-info';
+            }
+        })
+        .catch(() => {
+            msg.textContent = 'Error al buscar el cliente';
             msg.className   = 'form-text text-danger';
         });
 }

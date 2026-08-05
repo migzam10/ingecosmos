@@ -330,6 +330,27 @@ class OrdenTrabajoController extends Controller
         ]);
     }
 
+    // AJAX: buscar cliente por Cédula / NIT
+    public function buscarCliente(Request $request)
+    {
+        $cedula  = trim($request->cedula);
+        $cliente = ClientePersona::where('cedula', $cedula)->first();
+
+        if (!$cliente) {
+            return response()->json(['encontrado' => false]);
+        }
+
+        return response()->json([
+            'encontrado'               => true,
+            'nombre_cliente'           => $cliente->nombre,
+            'cedula_cliente'           => $cliente->cedula,
+            'telefono_cliente'         => $cliente->telefono,
+            'email_cliente'            => $cliente->email,
+            'direccion_cliente'        => $cliente->direccion,
+            'fecha_cumpleanos_cliente' => $cliente->fecha_cumpleanos?->format('Y-m-d'),
+        ]);
+    }
+
     // AJAX: obtener modelos por marca
     public function modelosPorMarca(Request $request)
     {
