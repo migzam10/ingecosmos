@@ -269,7 +269,9 @@
     $subtotalNeto = $cotizacion->subtotal_mo + $cotizacion->subtotal_rto
                   + $cotizacion->subtotal_insumos + $cotizacion->subtotal_suministros
                   + $cotizacion->subtotal_terceros + $cotizacion->subtotal_op;
-    $ivaVal = $cotizacion->iva_valor ?? 0;
+    $descVal   = $cotizacion->descuento_valor ?? 0;
+    $baseIva   = max(0, $subtotalNeto - $descVal);
+    $ivaVal    = $cotizacion->iva_valor ?? 0;
 @endphp
 <div class="resumen-wrap">
     <div class="resumen">
@@ -293,6 +295,13 @@
             <tr><td>Otros</td><td class="text-right">$ {{ number_format($cotizacion->subtotal_op, 0, ',', '.') }}</td></tr>
             @endif
             <tr class="subtotal-neto"><td>Subtotal neto</td><td class="text-right">$ {{ number_format($subtotalNeto, 0, ',', '.') }}</td></tr>
+            @if($descVal > 0)
+            <tr class="iva-row">
+                <td>Descuento{{ $cotizacion->descuento_porcentaje > 0 ? ' ' . number_format($cotizacion->descuento_porcentaje, 0) . '%' : '' }}</td>
+                <td class="text-right">- $ {{ number_format($descVal, 0, ',', '.') }}</td>
+            </tr>
+            <tr class="subtotal-neto"><td>Base gravable</td><td class="text-right">$ {{ number_format($baseIva, 0, ',', '.') }}</td></tr>
+            @endif
             @if($ivaVal > 0)
             <tr class="iva-row">
                 <td>IVA{{ $cotizacion->iva_porcentaje > 0 ? ' ' . number_format($cotizacion->iva_porcentaje, 0) . '%' : '' }}</td>

@@ -261,7 +261,9 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
                 @php
                     $subtotalNeto = $cotizacion->subtotal_mo + $cotizacion->subtotal_rto
                                  + $cotizacion->subtotal_insumos + $cotizacion->subtotal_suministros;
-                    $ivaVal = $cotizacion->iva_valor ?? 0;
+                    $descVal = $cotizacion->descuento_valor ?? 0;
+                    $baseIva = max(0, $subtotalNeto - $descVal);
+                    $ivaVal  = $cotizacion->iva_valor ?? 0;
                 @endphp
                 <table class="table table-sm mb-0">
                     @if($cotizacion->subtotal_mo > 0)
@@ -286,6 +288,16 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
                         <td class="fw-bold small">Subtotal neto</td>
                         <td class="text-end fw-bold">$ {{ number_format($subtotalNeto, 0, ',', '.') }}</td>
                     </tr>
+                    @if($descVal > 0)
+                    <tr>
+                        <td class="text-muted">Descuento{{ $cotizacion->descuento_porcentaje > 0 ? ' ' . number_format($cotizacion->descuento_porcentaje, 0) . '%' : '' }}</td>
+                        <td class="text-end text-danger">− $ {{ number_format($descVal, 0, ',', '.') }}</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td class="fw-bold small">Base gravable</td>
+                        <td class="text-end fw-bold">$ {{ number_format($baseIva, 0, ',', '.') }}</td>
+                    </tr>
+                    @endif
                     @if($ivaVal > 0)
                     <tr>
                         <td class="text-muted">IVA{{ $cotizacion->iva_porcentaje > 0 ? ' ' . number_format($cotizacion->iva_porcentaje, 0) . '%' : '' }}</td>

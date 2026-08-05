@@ -12,6 +12,7 @@ class Cotizacion extends Model
         'numero_cot', 'id_ot', 'creada_por', 'estado', 'fecha_cotizacion',
         'subtotal_mo', 'subtotal_suministros', 'subtotal_rto', 'subtotal_insumos',
         'subtotal_terceros', 'subtotal_op',
+        'descuento_porcentaje', 'descuento_valor',
         'iva_porcentaje', 'iva_valor', 'total', 'observaciones',
         // Previa (sin OT)
         'es_previa', 'placa_previa', 'km_previa', 'id_cliente_previa',
@@ -23,8 +24,10 @@ class Cotizacion extends Model
         return [
             'es_previa'        => 'boolean',
             'fecha_cotizacion' => 'date',
-            'iva_porcentaje'   => 'decimal:2',
-            'iva_valor'        => 'decimal:2',
+            'iva_porcentaje'      => 'decimal:2',
+            'iva_valor'           => 'decimal:2',
+            'descuento_porcentaje'=> 'decimal:2',
+            'descuento_valor'     => 'decimal:2',
         ];
     }
 

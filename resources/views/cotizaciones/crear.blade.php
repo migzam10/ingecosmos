@@ -198,6 +198,23 @@
                     </tr>
                     <tr>
                         <td class="small">
+                            Descuento
+                            <input type="number" id="inp-desc-pct" step="0.01" min="0" max="100"
+                                   class="form-control form-control-sm d-inline-block text-end"
+                                   style="width:60px" value="0">
+                            %
+                        </td>
+                        <td class="text-end">
+                            <input type="number" name="descuento_valor" id="inp-desc-val" step="1" min="0"
+                                   class="form-control form-control-sm text-end" value="0" style="width:110px; margin-left:auto">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted small">Base gravable</td>
+                        <td class="text-end" id="res-base-iva">$ 0</td>
+                    </tr>
+                    <tr>
+                        <td class="small">
                             IVA
                             <input type="number" id="inp-iva-pct" step="0.01" min="0" max="100"
                                    class="form-control form-control-sm d-inline-block text-end"
@@ -299,12 +316,14 @@ $_insEdit = $cotizacion->itemsInsumo->map(fn($i) => ['descripcion' => $i->descri
 const ITEMS_MO_EDIT  = @json($_moEdit);
 const ITEMS_RTO_EDIT = @json($_rtoEdit);
 const ITEMS_INS_EDIT = @json($_insEdit);
-const IVA_EDIT = {{ (float)($cotizacion->iva_valor ?? 0) }};
+const IVA_EDIT  = {{ (float)($cotizacion->iva_valor ?? 0) }};
+const DESC_EDIT = {{ (float)($cotizacion->descuento_valor ?? 0) }};
 @else
 const ITEMS_MO_EDIT  = [];
 const ITEMS_RTO_EDIT = [];
 const ITEMS_INS_EDIT = [];
-const IVA_EDIT = null;
+const IVA_EDIT  = null;
+const DESC_EDIT = 0;
 @endif
 
 let cMo = 0, cRto = 0, cIns = 0;
@@ -324,8 +343,10 @@ function sumCol(bodyId, cls) {
     return t;
 }
 
-// ── RECALCULAR ────────────────────────────────────────────────────────────────
-function recalcular() {
+// ── CASCADA: neto → descuento → base gravable → IVA → total ────────────────────
+// `source` indica qué campo tocó el usuario para respetar su entrada y calcular
+// el complementario (% ↔ valor), tanto en descuento como en IVA.
+function recalcular(source) {
     const mo  = sumCol('body-mo',  'inp-precio-mo');
     const rto = sumCol('body-rto', 'inp-total-rto');
     const ins = sumCol('body-ins', 'inp-total-ins');
@@ -340,14 +361,38 @@ function recalcular() {
     const subtotal = mo + rto + ins;
     document.getElementById('res-subtotal').textContent = cop(subtotal);
 
-    const ivaPct = parseFloat(document.getElementById('inp-iva-pct').value) || 0;
-    const ivaVal = Math.round(subtotal * ivaPct / 100);
-    document.getElementById('inp-iva-val').value = ivaVal;
+    // ── Descuento (antes del IVA) ──
+    const descPctEl = document.getElementById('inp-desc-pct');
+    const descValEl = document.getElementById('inp-desc-val');
+    let descVal;
+    if (source === 'desc-val') {
+        descVal = Math.min(Math.max(0, parseFloat(descValEl.value) || 0), subtotal);
+        descPctEl.value = subtotal > 0 ? +(descVal / subtotal * 100).toFixed(2) : 0;
+    } else {
+        const descPct = Math.min(100, Math.max(0, parseFloat(descPctEl.value) || 0));
+        descVal = Math.round(subtotal * descPct / 100);
+        descValEl.value = descVal;
+    }
 
-    const total = subtotal + ivaVal;
+    const baseIva = Math.max(0, subtotal - descVal);
+    document.getElementById('res-base-iva').textContent = cop(baseIva);
+
+    // ── IVA (sobre la base gravable) ──
+    const ivaPctEl = document.getElementById('inp-iva-pct');
+    const ivaValEl = document.getElementById('inp-iva-val');
+    let ivaVal;
+    if (source === 'iva-val') {
+        ivaVal = Math.max(0, parseFloat(ivaValEl.value) || 0);
+    } else {
+        const ivaPct = parseFloat(ivaPctEl.value) || 0;
+        ivaVal = Math.round(baseIva * ivaPct / 100);
+        ivaValEl.value = ivaVal;
+    }
+
+    const total = baseIva + ivaVal;
     document.getElementById('res-total').textContent = cop(total);
 
-    // HA / DR / TG
+    // HA / DR / TG — sobre el valor BRUTO (el descuento no cambia las horas)
     const totalParaHA = mo + (TIPO_CLIENTE === 'A' ? rto : 0) + ins;
     const ha = TARIFA_HORA > 0 ? totalParaHA / TARIFA_HORA : 0;
     const dr = ha > 0 ? Math.ceil(ha / 8 * 1.5) : 0;
@@ -361,27 +406,11 @@ function recalcular() {
         ? 'Salida se recalcula al guardar' : '';
 }
 
-// ── IVA INTERACTIVO ───────────────────────────────────────────────────────────
-document.getElementById('inp-iva-pct').addEventListener('input', function () {
-    const mo       = sumCol('body-mo',  'inp-precio-mo');
-    const rto      = sumCol('body-rto', 'inp-total-rto');
-    const ins      = sumCol('body-ins', 'inp-total-ins');
-    const subtotal = mo + rto + ins;
-    const ivaPct   = parseFloat(this.value) || 0;
-    const ivaVal   = Math.round(subtotal * ivaPct / 100);
-    document.getElementById('inp-iva-val').value = ivaVal;
-    document.getElementById('res-total').textContent = cop(subtotal + ivaVal);
-});
-
-document.getElementById('inp-iva-val').addEventListener('input', function () {
-    const mo       = sumCol('body-mo',  'inp-precio-mo');
-    const rto      = sumCol('body-rto', 'inp-total-rto');
-    const ins      = sumCol('body-ins', 'inp-total-ins');
-    const subtotal = mo + rto + ins;
-    const ivaVal   = Math.max(0, parseFloat(this.value) || 0);
-    const total    = Math.max(subtotal, subtotal + ivaVal);
-    document.getElementById('res-total').textContent = cop(total);
-});
+// ── DESCUENTO / IVA INTERACTIVOS ──────────────────────────────────────────────
+document.getElementById('inp-desc-pct').addEventListener('input', () => recalcular('desc-pct'));
+document.getElementById('inp-desc-val').addEventListener('input', () => recalcular('desc-val'));
+document.getElementById('inp-iva-pct').addEventListener('input',  () => recalcular('iva-pct'));
+document.getElementById('inp-iva-val').addEventListener('input',  () => recalcular('iva-val'));
 
 // ── BÚSQUEDA MO ───────────────────────────────────────────────────────────────
 document.getElementById('buscar-mo').addEventListener('input', function () {
@@ -638,11 +667,14 @@ document.addEventListener('DOMContentLoaded', function () {
     ITEMS_INS_EDIT.forEach(it => agregarInsumo(it.id_insumo, it.descripcion, it.cantidad, it.precio_venta, it.unidad_medida));
 
     if (IVA_EDIT !== null) {
+        // Edición: restaurar descuento e IVA tal como se guardaron (por valor).
+        document.getElementById('inp-desc-val').value = DESC_EDIT;
+        recalcular('desc-val');                     // fija el % de descuento
         document.getElementById('inp-iva-val').value = IVA_EDIT;
-        document.getElementById('inp-iva-pct').value = 0;
+        recalcular('iva-val');                       // preserva el IVA guardado
+    } else {
+        recalcular();
     }
-
-    recalcular();
 });
 </script>
 @endpush

@@ -42,8 +42,9 @@ class CotizacionService
         return DB::transaction(function () use ($ot, $data) {
             $numeroCot = $this->siguiente(!empty($data['numero_cot']) ? (int) $data['numero_cot'] : null);
 
-            [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] = $this->calcularTotales($data);
-            $ivaPct = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal);
+            [$subtotalMo, $subtotalRto, $subtotalInsumos, $descVal, $ivaVal, $total] = $this->calcularTotales($data);
+            $descPct = $this->calcularDescPct($subtotalMo, $subtotalRto, $subtotalInsumos, $descVal);
+            $ivaPct  = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $descVal, $ivaVal);
 
             $cot = Cotizacion::create([
                 'numero_cot'          => $numeroCot,
@@ -54,6 +55,8 @@ class CotizacionService
                 'subtotal_mo'         => $subtotalMo,
                 'subtotal_rto'        => $subtotalRto,
                 'subtotal_insumos'    => $subtotalInsumos,
+                'descuento_porcentaje'=> $descPct,
+                'descuento_valor'     => $descVal,
                 'iva_porcentaje'      => $ivaPct,
                 'iva_valor'           => $ivaVal,
                 'total'               => $total,
@@ -100,8 +103,9 @@ class CotizacionService
         return DB::transaction(function () use ($data) {
             $numeroCot = $this->siguiente(!empty($data['numero_cot']) ? (int) $data['numero_cot'] : null);
 
-            [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] = $this->calcularTotales($data);
-            $ivaPct    = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal);
+            [$subtotalMo, $subtotalRto, $subtotalInsumos, $descVal, $ivaVal, $total] = $this->calcularTotales($data);
+            $descPct   = $this->calcularDescPct($subtotalMo, $subtotalRto, $subtotalInsumos, $descVal);
+            $ivaPct    = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $descVal, $ivaVal);
             $idCliente = $this->buscarOCrearCliente($data);
 
             $cot = Cotizacion::create([
@@ -120,6 +124,8 @@ class CotizacionService
                 'subtotal_mo'         => $subtotalMo,
                 'subtotal_rto'        => $subtotalRto,
                 'subtotal_insumos'    => $subtotalInsumos,
+                'descuento_porcentaje'=> $descPct,
+                'descuento_valor'     => $descVal,
                 'iva_porcentaje'      => $ivaPct,
                 'iva_valor'           => $ivaVal,
                 'total'               => $total,
@@ -155,8 +161,9 @@ class CotizacionService
     public function actualizar(Cotizacion $cot, array $data): Cotizacion
     {
         return DB::transaction(function () use ($cot, $data) {
-            [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] = $this->calcularTotales($data);
-            $ivaPct = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal);
+            [$subtotalMo, $subtotalRto, $subtotalInsumos, $descVal, $ivaVal, $total] = $this->calcularTotales($data);
+            $descPct = $this->calcularDescPct($subtotalMo, $subtotalRto, $subtotalInsumos, $descVal);
+            $ivaPct  = $this->calcularIvaPct($subtotalMo, $subtotalRto, $subtotalInsumos, $descVal, $ivaVal);
 
             $cot->itemsMo()->delete();
             $cot->itemsRepuesto()->delete();
@@ -164,13 +171,15 @@ class CotizacionService
             $this->upsertItemsInsumo($cot, $data);
 
             $updateCot = [
-                'subtotal_mo'      => $subtotalMo,
-                'subtotal_rto'     => $subtotalRto,
-                'subtotal_insumos' => $subtotalInsumos,
-                'iva_porcentaje'   => $ivaPct,
-                'iva_valor'        => $ivaVal,
-                'total'            => $total,
-                'observaciones'    => $data['observaciones'] ?? $cot->observaciones,
+                'subtotal_mo'          => $subtotalMo,
+                'subtotal_rto'         => $subtotalRto,
+                'subtotal_insumos'     => $subtotalInsumos,
+                'descuento_porcentaje' => $descPct,
+                'descuento_valor'      => $descVal,
+                'iva_porcentaje'       => $ivaPct,
+                'iva_valor'            => $ivaVal,
+                'total'                => $total,
+                'observaciones'        => $data['observaciones'] ?? $cot->observaciones,
             ];
 
             if (!empty($data['fecha_cotizacion'])) {
@@ -214,7 +223,7 @@ class CotizacionService
 
     // ── HELPERS PRIVADOS ──────────────────────────────────────────────────────
 
-    /** Returns [$subtotalMo, $subtotalRto, $subtotalInsumos, $ivaVal, $total] */
+    /** Returns [$subtotalMo, $subtotalRto, $subtotalInsumos, $descVal, $ivaVal, $total] */
     private function calcularTotales(array $data): array
     {
         $subtotalMo      = collect($data['items_mo']       ?? [])->sum('precio');
@@ -223,18 +232,33 @@ class CotizacionService
 
         $subtotalNeto = $subtotalMo + $subtotalRto + $subtotalInsumos;
 
+        // Descuento comercial: se aplica ANTES del IVA. No puede superar el neto.
+        $descVal = isset($data['descuento_valor']) && $data['descuento_valor'] !== ''
+            ? max(0, (float) $data['descuento_valor'])
+            : 0;
+        $descVal = min($descVal, $subtotalNeto);
+
+        $baseIva = $subtotalNeto - $descVal;
+
         $ivaVal = isset($data['iva_valor']) && $data['iva_valor'] !== ''
             ? max(0, (float) $data['iva_valor'])
-            : round($subtotalNeto * 0.19);
+            : round($baseIva * 0.19);
 
-        $total = max($subtotalNeto, $subtotalNeto + $ivaVal);
+        $total = max($baseIva, $baseIva + $ivaVal);
 
-        return [(float)$subtotalMo, (float)$subtotalRto, (float)$subtotalInsumos, (float)$ivaVal, (float)$total];
+        return [(float)$subtotalMo, (float)$subtotalRto, (float)$subtotalInsumos, (float)$descVal, (float)$ivaVal, (float)$total];
     }
 
-    private function calcularIvaPct(float $mo, float $rto, float $ins, float $ivaVal): float
+    /** % de descuento respecto al subtotal neto (solo informativo). */
+    private function calcularDescPct(float $mo, float $rto, float $ins, float $descVal): float
     {
         $base = $mo + $rto + $ins;
+        return $base > 0 ? round($descVal / $base * 100, 2) : 0;
+    }
+
+    private function calcularIvaPct(float $mo, float $rto, float $ins, float $descVal, float $ivaVal): float
+    {
+        $base = $mo + $rto + $ins - $descVal;
         return $base > 0 ? round($ivaVal / $base * 100, 2) : 19;
     }
 
@@ -346,9 +370,12 @@ class CotizacionService
         $subtotalMo      = (float) $cots->sum('subtotal_mo');
         $subtotalRto     = (float) $cots->sum('subtotal_rto');
         $subtotalInsumos = (float) $cots->sum('subtotal_insumos');
+        $descuentoTotal  = (float) $cots->sum('descuento_valor');
 
         $empresa = $ot->empresaCliente;
 
+        // HA/DR/TG se calculan sobre el valor BRUTO (horas de trabajo, no precio):
+        // el descuento comercial no cambia el tiempo estimado de reparación.
         $baseHA = $subtotalMo + ($empresa->tipo === 'A' ? $subtotalRto : 0) + $subtotalInsumos;
 
         $ha = $empresa->tarifa_hora > 0 ? round($baseHA / $empresa->tarifa_hora, 2) : 0;
@@ -360,7 +387,8 @@ class CotizacionService
             $salida = $this->otService->workday(Carbon::parse($ot->fecha_inicio_proceso), $dr);
         }
 
-        $totalOT = $subtotalMo + ($empresa->tipo === 'A' ? $subtotalRto : 0) + $subtotalInsumos;
+        // El total facturado SÍ descuenta (sin IVA, que vive solo en la cotización).
+        $totalOT = max(0, $baseHA - $descuentoTotal);
 
         $ot->update([
             'valor_mo'           => $subtotalMo,

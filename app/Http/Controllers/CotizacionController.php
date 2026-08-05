@@ -76,6 +76,7 @@ class CotizacionController extends Controller
             'items_insumo.*.descripcion'           => 'required_with:items_insumo.*.cantidad|string|max:200',
             'items_insumo.*.cantidad'              => 'nullable|numeric|min:0.01',
             'items_insumo.*.precio_venta'          => 'nullable|numeric|min:0',
+            'descuento_valor'                      => 'nullable|numeric|min:0',
             'iva_valor'                            => 'nullable|numeric|min:0',
         ]);
 
@@ -153,6 +154,7 @@ class CotizacionController extends Controller
             'items_insumo.*.descripcion'       => 'required_with:items_insumo.*.cantidad|string|max:200',
             'items_insumo.*.cantidad'          => 'nullable|numeric|min:0.01',
             'items_insumo.*.precio_venta'      => 'nullable|numeric|min:0',
+            'descuento_valor'                  => 'nullable|numeric|min:0',
             'iva_valor'                        => 'nullable|numeric|min:0',
         ]);
 
@@ -284,6 +286,7 @@ class CotizacionController extends Controller
             'items_repuesto.*.descripcion'     => 'string|max:200',
             'items_repuesto.*.unidades'        => 'nullable|numeric|min:0.01',
             'items_repuesto.*.precio_unitario' => 'nullable|numeric|min:0',
+            'descuento_valor'                  => 'nullable|numeric|min:0',
             'iva_valor'                        => 'nullable|numeric|min:0',
         ]);
 
