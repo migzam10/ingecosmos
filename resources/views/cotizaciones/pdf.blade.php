@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial, sans-serif; font-size: 11px; color: #222; padding: 0 42px; }
-    /* dompdf ignora el margen superior/inferior de @page cuando hay <table>
-       en el documento; se usa un div con altura fija (no margin/padding)
-       para el espacio vertical, que sí respeta el flujo normal. */
-    .v-spacer { height: 34px; }
+    /* OJO: el reset NO debe incluir `margin:0`, porque en dompdf el `*`
+       también alcanza a html/body y anularía el margen de @page. Con solo
+       padding/box-sizing, @page aplica margen en las 4 caras y en todas las páginas. */
+    * { padding: 0; box-sizing: border-box; }
+    @page { margin: 40px 42px 46px 42px; }
+    body { font-family: Arial, sans-serif; font-size: 11px; color: #222; }
 
     .info-grid { display: table; width: 100%; margin-bottom: 16px; }
     .info-col { display: table-cell; width: 50%; vertical-align: top; padding-right: 14px; }
@@ -56,7 +56,6 @@
 </head>
 <body>
 
-<div class="v-spacer"></div>
 
 @php
     $titulo = $cotizacion->es_previa ? 'COTIZACIÓN PREVIA' : 'COTIZACIÓN';
@@ -351,7 +350,6 @@
 
 @include('pdf._footer', ['config' => $config])
 
-<div class="v-spacer"></div>
 
 </body>
 </html>
