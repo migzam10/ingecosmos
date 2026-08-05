@@ -287,7 +287,7 @@ $nombreMes = $mes !== 'todos' ? $mesesLabelsShort[(int)$mes - 1] : null;
                 <tr>
                     <td>{{ $fila->nombre }}</td>
                     <td class="text-center text-muted">{{ $fila->total_ots }}</td>
-                    <td class="text-end fw-medium">{{ formatCOPView((float)$fila->facturado_total) }}</td>
+                    <td class="text-end fw-medium">$ {{ number_format((float)$fila->facturado_total, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
             </tbody>
@@ -295,7 +295,7 @@ $nombreMes = $mes !== 'todos' ? $mesesLabelsShort[(int)$mes - 1] : null;
                 <tr>
                     <td>TOTAL</td>
                     <td class="text-center">{{ $tablaTop10->sum('total_ots') }}</td>
-                    <td class="text-end text-primary">{{ formatCOPView((float)$tablaTop10->sum('facturado_total')) }}</td>
+                    <td class="text-end text-primary">$ {{ number_format((float)$tablaTop10->sum('facturado_total'), 0, ',', '.') }}</td>
                 </tr>
             </tfoot>
         </table>
