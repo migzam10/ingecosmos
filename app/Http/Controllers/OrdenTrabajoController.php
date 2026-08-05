@@ -293,6 +293,7 @@ class OrdenTrabajoController extends Controller
             'trabajosTecnico.pausas',
             'cotizaciones.creadaPor',
             'entregasParciales',
+            'anexos.subidoPor',
         ]);
 
         $tecnicos = Tecnico::where('activo', true)->orderBy('nombre')->get();

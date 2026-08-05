@@ -24,6 +24,7 @@ use App\Http\Controllers\SalidaAlmacenController;
 use App\Http\Controllers\LiquidacionController;
 use App\Http\Controllers\ProduccionController;
 use App\Http\Controllers\MisTareasController;
+use App\Http\Controllers\AnexoOtController;
 use App\Http\Controllers\FotoOtController;
 use App\Http\Controllers\InventarioController;
 use App\Http\Controllers\TorreController;
@@ -55,6 +56,9 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION,COTIZADOR'])->group
     // Fotos de OT
     Route::post('/ordenes/{orden}/fotos', [FotoOtController::class, 'store'])->name('fotos.store');
     Route::delete('/fotos/{foto}', [FotoOtController::class, 'destroy'])->name('fotos.destroy');
+    // Anexos PDF de OT (solo ADMIN/COORDINADOR — se valida en el controller)
+    Route::post('/ordenes/{orden}/anexos', [AnexoOtController::class, 'store'])->name('anexos.store');
+    Route::delete('/anexos/{anexo}', [AnexoOtController::class, 'destroy'])->name('anexos.destroy');
     // Inventario B/R/G
     Route::put('/ordenes/{orden}/inventario', [InventarioController::class, 'update'])->name('inventario.update');
 });

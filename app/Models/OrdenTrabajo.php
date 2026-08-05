@@ -104,6 +104,11 @@ class OrdenTrabajo extends Model
         return $this->hasMany(Cotizacion::class, 'id_ot');
     }
 
+    public function anexos()
+    {
+        return $this->hasMany(AnexoOt::class, 'id_ot');
+    }
+
     public function historial()
     {
         return $this->hasMany(HistorialOt::class, 'id_ot')->orderBy('created_at', 'desc');

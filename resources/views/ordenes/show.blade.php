@@ -1026,6 +1026,86 @@
     @endif
     @endif
 
+    {{-- Anexos (PDF) — solo ADMIN y COORDINADOR --}}
+    @php $rAnx = Auth::user()->roles ?: []; $puedeAnexos = in_array('ADMIN', $rAnx) || in_array('COORDINADOR', $rAnx); @endphp
+    @if($puedeAnexos)
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Anexos</h3>
+                <span class="card-subtitle ms-2 text-muted">{{ $orden->anexos->count() }} archivo(s)</span>
+            </div>
+            <div class="card-body">
+                {{-- Subir anexo --}}
+                <form method="POST" action="{{ route('anexos.store', $orden) }}" enctype="multipart/form-data"
+                      class="row g-2 align-items-end mb-3">
+                    @csrf
+                    <div class="col-12 col-md-5">
+                        <label class="form-label">Título <span class="text-danger">*</span></label>
+                        <input type="text" name="titulo" class="form-control @error('titulo') is-invalid @enderror"
+                               maxlength="150" placeholder="Ej: Autorización..." required>
+                        @error('titulo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-12 col-md-5">
+                        <label class="form-label">Archivo PDF <span class="text-danger">*</span></label>
+                        <input type="file" name="archivo" accept="application/pdf"
+                               class="form-control @error('archivo') is-invalid @enderror" required>
+                        @error('archivo')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-12 col-md-2">
+                        <button type="submit" class="btn btn-primary w-100">Subir</button>
+                    </div>
+                </form>
+
+                {{-- Listado --}}
+                @if($orden->anexos->count() > 0)
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Título</th>
+                                <th class="d-none d-md-table-cell">Subido</th>
+                                <th class="text-end" style="width:140px">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($orden->anexos->sortByDesc('created_at') as $anexo)
+                            <tr>
+                                <td>
+                                    <span class="fw-medium">{{ $anexo->titulo }}</span>
+                                    @if($anexo->nombre_original)
+                                    <div class="text-muted" style="font-size:.72rem">{{ $anexo->nombre_original }}</div>
+                                    @endif
+                                </td>
+                                <td class="d-none d-md-table-cell small text-muted">
+                                    {{ $anexo->created_at->format('d/m/Y H:i') }}
+                                    @if($anexo->subidoPor) · {{ $anexo->subidoPor->name }} @endif
+                                </td>
+                                <td class="text-end">
+                                    <a href="{{ asset('storage/' . $anexo->ruta) }}" target="_blank"
+                                       class="btn btn-outline-secondary btn-sm">Ver</a>
+                                    <form method="POST" action="{{ route('anexos.destroy', $anexo) }}"
+                                          class="d-inline"
+                                          data-confirm="¿Eliminar el anexo «{{ $anexo->titulo }}»?">
+                                        @csrf @method('DELETE')
+                                        <button class="btn btn-outline-danger btn-sm" title="Eliminar">
+                                            <x-icon name="trash" />
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @else
+                <p class="text-muted mb-0">Aún no hay anexos.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- Historial --}}
     @php $puedeVerCot = in_array('ADMIN', Auth::user()->roles ?: []) || in_array('COORDINADOR', Auth::user()->roles ?: []) || in_array('COTIZADOR', Auth::user()->roles ?: []); @endphp
     <div class="col-12">
