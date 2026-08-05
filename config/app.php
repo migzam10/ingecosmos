@@ -65,7 +65,10 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    // Zona horaria del taller (Colombia). Se deja como default para que NO
+    // dependa del .env: si el hosting no define APP_TIMEZONE, igual usa Bogotá
+    // y las fechas/horas (now(), created_at, etc.) salen en hora local.
+    'timezone' => env('APP_TIMEZONE', 'America/Bogota'),
 
     /*
     |--------------------------------------------------------------------------
