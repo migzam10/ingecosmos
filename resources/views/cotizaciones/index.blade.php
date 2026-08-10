@@ -16,7 +16,7 @@
     <div class="card-header">
         <form method="GET" class="d-flex gap-2">
             <input type="text" name="buscar" class="form-control form-control-sm"
-                   placeholder="# COT o placa..." value="{{ request('buscar') }}" style="max-width:220px">
+                   placeholder="# COT, # OT o placa..." value="{{ request('buscar') }}" style="max-width:220px">
             <button class="btn btn-sm btn-secondary">Buscar</button>
             <a href="{{ route('cotizaciones.index') }}" class="btn btn-sm btn-outline-secondary"><x-icon name="x" /></a>
         </form>

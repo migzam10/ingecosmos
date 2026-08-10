@@ -47,12 +47,22 @@ class OrdenTrabajoController extends Controller
             $query->where('area', $request->area);
         }
 
+        if ($request->filled('empresa')) {
+            $query->where('id_empresa_cliente', $request->empresa);
+        }
+
+        if ($request->filled('fecha')) {
+            $query->whereDate('fecha_ingreso', $request->fecha);
+        }
+
         $ordenes = $query->orderBy('fecha_ingreso', 'desc')->paginate(25)->withQueryString();
+
+        $empresas = EmpresaCliente::orderBy('nombre')->get();
 
         $totalActivas    = OrdenTrabajo::whereNotIn('estado_proceso', $cerrados)->count();
         $totalHistoricas = OrdenTrabajo::whereIn('estado_proceso', $cerrados)->count();
 
-        return view('ordenes.index', compact('ordenes', 'verHistoricas', 'totalActivas', 'totalHistoricas'));
+        return view('ordenes.index', compact('ordenes', 'verHistoricas', 'totalActivas', 'totalHistoricas', 'empresas'));
     }
 
     public function create()

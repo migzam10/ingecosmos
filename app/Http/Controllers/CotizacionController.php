@@ -27,6 +27,7 @@ class CotizacionController extends Controller
             $query->where(function ($q) use ($b) {
                 $q->where('numero_cot', 'like', "%$b%")
                   ->orWhere('placa_previa', 'like', "%$b%")
+                  ->orWhereHas('ot', fn($q2) => $q2->where('numero_ot', 'like', "%$b%"))
                   ->orWhereHas('ot.vehiculo', fn($q2) => $q2->where('placa', 'like', "%$b%"));
             });
         }

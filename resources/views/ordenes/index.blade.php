@@ -40,12 +40,24 @@
             @if($verHistoricas)
             <input type="hidden" name="historicas" value="1">
             @endif
-            <div class="col-12 col-md-4">
+            <div class="col-12 col-md-3">
                 <input type="text" name="buscar" class="form-control"
                        placeholder="Buscar por placa o # OT..."
                        value="{{ request('buscar') }}">
             </div>
             <div class="col-6 col-md-3">
+                <select name="empresa" class="form-select">
+                    <option value="">Todas las empresas</option>
+                    @foreach($empresas as $emp)
+                    <option value="{{ $emp->id }}" {{ request('empresa') == $emp->id ? 'selected' : '' }}>{{ $emp->nombre }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="col-6 col-md-2">
+                <input type="date" name="fecha" class="form-control"
+                       value="{{ request('fecha') }}" title="Fecha de ingreso">
+            </div>
+            <div class="col-6 col-md-2">
                 <select name="estado" class="form-select">
                     <option value="">Todos los estados</option>
                     @if(!$verHistoricas)
