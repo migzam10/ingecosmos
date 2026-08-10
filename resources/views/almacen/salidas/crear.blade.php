@@ -18,7 +18,7 @@
 <form method="POST" action="{{ route('almacen.salidas.store') }}" id="form-salida">
 @csrf
 <input type="hidden" name="tipo" id="inp-tipo" value="{{ $tipo }}">
-<input type="hidden" name="id_cotizacion" id="inp-id-cot" value="{{ $cotizacion?->id ?? '' }}">
+<input type="hidden" name="id_ot" id="inp-id-ot" value="{{ $ot?->id ?? '' }}">
 
 <div class="row g-3">
     <div class="col-12 col-xl-8">
@@ -110,6 +110,9 @@
                             <input type="hidden" name="items[{{ $loop->index }}][precio_venta]" value="{{ $item->precio_venta }}">
                             <td>
                                 {{ $item->descripcion }}
+                                @if($item->cotizacion)
+                                <span class="badge bg-blue-lt ms-1">COT #{{ $item->cotizacion->numero_cot }}</span>
+                                @endif
                                 <div class="small text-muted">
                                     Solicitado: {{ number_format($item->cantidad_solicitada, 2) }}
                                     | Entregado: {{ number_format($item->cantidad_entregada, 2) }}
@@ -179,7 +182,7 @@ document.querySelectorAll('input[name="tipo_ui"]').forEach(r => {
         document.getElementById('bloque-busqueda-directa').classList.toggle('d-none', esCot);
         document.getElementById('btn-agregar').style.display = esCot ? 'none' : '';
         if (!esCot) {
-            document.getElementById('inp-id-cot').value = '';
+            document.getElementById('inp-id-ot').value = '';
             document.getElementById('body-items').innerHTML = '';
             document.getElementById('msg-vacio').style.display = '';
         }

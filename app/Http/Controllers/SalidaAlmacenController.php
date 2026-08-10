@@ -29,28 +29,21 @@ class SalidaAlmacenController extends Controller
         $tipo         = $request->tipo ?? 'DIRECTA';
         $insumos      = CatalogoInsumo::where('activo', true)->orderBy('nombre')->get();
         $pendientes   = collect();
-        $cotizacion   = null;
         $ot           = null;
 
         if ($tipo === 'COTIZACION' && $request->filled('numero_ot')) {
             $ot = OrdenTrabajo::where('numero_ot', $request->numero_ot)
-                ->with(['vehiculo.marca', 'cotizaciones'])
+                ->with(['vehiculo.marca', 'vehiculo.modelo'])
                 ->first();
 
             if ($ot) {
-                $cot = $ot->cotizaciones()
-                    ->whereIn('estado', ['BORRADOR', 'AUTORIZADA'])
-                    ->latest()
-                    ->first();
-
-                if ($cot) {
-                    $cotizacion = $cot;
-                    $pendientes = $this->service->getPendientesCotizacion($cot);
-                }
+                // Todos los insumos pendientes de la OT sumando sus cotizaciones
+                // AUTORIZADAS (las no autorizadas no interfieren en almacén).
+                $pendientes = $this->service->getPendientesOT($ot);
             }
         }
 
-        return view('almacen.salidas.crear', compact('tipo', 'insumos', 'pendientes', 'cotizacion', 'ot'));
+        return view('almacen.salidas.crear', compact('tipo', 'insumos', 'pendientes', 'ot'));
     }
 
     public function store(Request $request)
@@ -67,15 +60,18 @@ class SalidaAlmacenController extends Controller
         ]);
 
         if ($request->tipo === 'COTIZACION') {
-            $request->validate(['id_cotizacion' => 'required|exists:cotizaciones,id']);
+            $request->validate(['id_ot' => 'required|exists:ordenes_trabajo,id']);
         }
 
         try {
             $data = $request->all();
 
-            if ($request->tipo === 'COTIZACION' && $request->filled('id_cotizacion')) {
-                $cot = Cotizacion::find($request->id_cotizacion);
-                $data['id_ot'] = $cot?->id_ot;
+            if ($request->tipo === 'COTIZACION') {
+                // La salida se ata a la OT; puede abarcar varias cotizaciones, así
+                // que no lleva un id_cotizacion único (el vínculo real es por ítem,
+                // vía id_item_cotizacion_insumo en cada renglón).
+                $data['id_ot']         = $request->id_ot;
+                $data['id_cotizacion'] = null;
             }
 
             $salida = $this->service->registrarSalida($data);

@@ -233,11 +233,26 @@ class AlmacenService
             ->filter(fn($item) => $item->cantidad_pendiente > 0);
     }
 
+    /**
+     * Insumos pendientes de una OT, agregando TODAS sus cotizaciones AUTORIZADAS.
+     * Así una salida puede cubrir varias cotizaciones (o entregarse por partes en
+     * distintos días). Las cotizaciones no autorizadas (BORRADOR) NO participan.
+     */
+    public function getPendientesOT(OrdenTrabajo $ot): Collection
+    {
+        return ItemCotizacionInsumo::with(['insumo', 'salidasItems', 'cotizacion'])
+            ->whereHas('cotizacion', fn($q) => $q->where('id_ot', $ot->id)->where('estado', 'AUTORIZADA'))
+            ->get()
+            ->map(fn($item) => $item->append(['cantidad_entregada', 'cantidad_pendiente']))
+            ->filter(fn($item) => $item->cantidad_pendiente > 0)
+            ->values();
+    }
+
     /** Todos los insumos pendientes agrupados por OT */
     public function getPendientesPorOT(): Collection
     {
         return ItemCotizacionInsumo::with(['insumo', 'cotizacion.ot.vehiculo.marca', 'salidasItems'])
-            ->whereHas('cotizacion', fn($q) => $q->whereNotIn('estado', ['RECHAZADA']))
+            ->whereHas('cotizacion', fn($q) => $q->where('estado', 'AUTORIZADA'))
             ->get()
             ->map(fn($item) => $item->append(['cantidad_entregada', 'cantidad_pendiente']))
             ->filter(fn($item) => $item->cantidad_pendiente > 0)
@@ -257,7 +272,7 @@ class AlmacenService
     public function getAlertasDemanda(): Collection
     {
         return ItemCotizacionInsumo::with(['insumo', 'cotizacion', 'salidasItems'])
-            ->whereHas('cotizacion', fn($q) => $q->whereNotIn('estado', ['RECHAZADA']))
+            ->whereHas('cotizacion', fn($q) => $q->where('estado', 'AUTORIZADA'))
             ->get()
             ->map(fn($item) => $item->append(['cantidad_entregada', 'cantidad_pendiente']))
             ->filter(fn($item) => $item->cantidad_pendiente > 0)
