@@ -501,5 +501,58 @@ document.addEventListener('DOMContentLoaded', function () {
     const idModelo = '{{ old("id_modelo") }}';
     if (idMarca) cargarModelos(idMarca, idModelo);
 });
+
+// ── VALIDACIÓN DE LONGITUD (cliente) ───────────────────────────────────────────
+// Avisa y BLOQUEA el envío si algún campo supera su límite de caracteres, sin
+// borrar nada de lo ya escrito. Evita el viaje al servidor y el "no guarda y ya".
+const LIMITES_LONGITUD = {
+    placa: 10, color: 50, nombre_cliente: 150, cedula_cliente: 20,
+    telefono_cliente: 25, email_cliente: 100, direccion_cliente: 200,
+    referencia_forc: 50, observaciones: 1000,
+};
+const formOT = document.getElementById('form-ot');
+
+function marcarLongitud(el, msg) {
+    el.classList.add('is-invalid');
+    let fb = el.closest('div').querySelector('.invalid-feedback.js-len');
+    if (!fb) {
+        fb = document.createElement('div');
+        fb.className = 'invalid-feedback d-block js-len';
+        el.closest('div').appendChild(fb);
+    }
+    fb.textContent = msg;
+}
+function limpiarLongitud(el) {
+    el.classList.remove('is-invalid');
+    const fb = el.closest('div').querySelector('.invalid-feedback.js-len');
+    if (fb) fb.remove();
+}
+
+// Aviso en vivo: al bajar del límite se quita el error
+Object.keys(LIMITES_LONGITUD).forEach(name => {
+    const el = formOT.querySelector(`[name="${name}"]`);
+    if (el) el.addEventListener('input', () => {
+        if ((el.value || '').length <= LIMITES_LONGITUD[name]) limpiarLongitud(el);
+    });
+});
+
+formOT.addEventListener('submit', function (e) {
+    let primero = null;
+    for (const [name, max] of Object.entries(LIMITES_LONGITUD)) {
+        const el = formOT.querySelector(`[name="${name}"]`);
+        if (!el) continue;
+        limpiarLongitud(el);
+        const len = (el.value || '').length;
+        if (len > max) {
+            marcarLongitud(el, `Máximo ${max} caracteres (tienes ${len}).`);
+            if (!primero) primero = el;
+        }
+    }
+    if (primero) {
+        e.preventDefault();
+        primero.focus();
+        primero.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    }
+});
 </script>
 @endpush

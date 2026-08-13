@@ -217,7 +217,7 @@ class OrdenTrabajoController extends Controller
             'anio'                     => 'nullable|integer|min:1980|max:' . (date('Y') + 1),
             'nombre_cliente'           => 'required|string|max:150',
             'cedula_cliente'           => 'nullable|string|max:20',
-            'telefono_cliente'         => 'nullable|string|max:20',
+            'telefono_cliente'         => 'nullable|string|max:25',
             'email_cliente'            => 'nullable|email|max:100',
             'direccion_cliente'        => 'nullable|string|max:200',
             'fecha_cumpleanos_cliente' => 'nullable|date',
