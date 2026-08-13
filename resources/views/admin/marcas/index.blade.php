@@ -6,6 +6,8 @@
 
 @section('content')
 
+<x-errores />
+
 <div class="row g-3">
 
     {{-- Columna izquierda: tabla de marcas --}}

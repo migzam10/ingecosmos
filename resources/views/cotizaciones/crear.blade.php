@@ -22,6 +22,8 @@
 @csrf
 @endif
 
+<x-errores />
+
 <div class="row g-3">
 
     {{-- ========== COLUMNA PRINCIPAL ========== --}}

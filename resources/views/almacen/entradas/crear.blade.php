@@ -9,6 +9,7 @@
 @section('content')
 <form method="POST" action="{{ route('almacen.entradas.store') }}" id="form-entrada">
 @csrf
+<x-errores />
 <div class="row g-3">
     <div class="col-12 col-xl-8">
         <div class="card mb-3">

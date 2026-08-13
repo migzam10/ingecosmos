@@ -12,6 +12,7 @@
       action="{{ isset($catalogoRepuesto) ? route('catalogo-repuestos.update', $catalogoRepuesto) : route('catalogo-repuestos.store') }}">
     @csrf
     @if(isset($catalogoRepuesto)) @method('PUT') @endif
+    <x-errores />
 
     <div class="card">
         <div class="card-header">

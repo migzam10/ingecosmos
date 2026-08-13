@@ -7,6 +7,7 @@
 @section('content')
 <form method="POST" action="{{ route('ordenes.store') }}" id="form-ot">
 @csrf
+<x-errores />
 
 <div class="row g-3">
 

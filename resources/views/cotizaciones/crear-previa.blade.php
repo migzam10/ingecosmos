@@ -25,6 +25,8 @@
 @csrf
 @endif
 
+<x-errores />
+
 <div class="row g-3">
     <div class="col-12 col-xl-8">
 

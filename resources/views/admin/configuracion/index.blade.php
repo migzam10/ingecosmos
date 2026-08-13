@@ -21,6 +21,7 @@
               enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            <x-errores />
 
             <div class="card mb-3">
                 <div class="card-header">

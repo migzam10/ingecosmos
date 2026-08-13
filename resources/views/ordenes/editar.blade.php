@@ -7,6 +7,7 @@
 @section('content')
 <form method="POST" action="{{ route('ordenes.update', $orden) }}" id="form-editar-ot">
 @csrf
+<x-errores />
 @method('PUT')
 
 <div class="row g-3">

@@ -107,6 +107,7 @@
             <div class="card-body">
                 <form method="POST" action="{{ route('admin.festivos.store') }}">
                     @csrf
+                    <x-errores />
                     <div class="mb-2">
                         <label class="form-label small">Fecha</label>
                         <input type="date" name="fecha"

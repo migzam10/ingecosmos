@@ -7,6 +7,7 @@
 <div class="col-12 col-lg-7">
 <form method="POST" action="{{ isset($usuario) ? route('admin.usuarios.update', $usuario) : route('admin.usuarios.store') }}">
     @csrf @if(isset($usuario)) @method('PUT') @endif
+    <x-errores />
     <div class="card">
         <div class="card-body">
 

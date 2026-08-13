@@ -17,6 +17,7 @@
 
 <form method="POST" action="{{ route('almacen.entradas.update', $entrada) }}">
 @csrf @method('PUT')
+<x-errores />
 
 <div class="row g-3">
     <div class="col-12 col-xl-8">

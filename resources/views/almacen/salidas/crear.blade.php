@@ -17,6 +17,7 @@
 
 <form method="POST" action="{{ route('almacen.salidas.store') }}" id="form-salida">
 @csrf
+<x-errores />
 <input type="hidden" name="tipo" id="inp-tipo" value="{{ $tipo }}">
 <input type="hidden" name="id_ot" id="inp-id-ot" value="{{ $ot?->id ?? '' }}">
 
