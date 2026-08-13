@@ -51,18 +51,41 @@ class OrdenTrabajoController extends Controller
             $query->where('id_empresa_cliente', $request->empresa);
         }
 
-        if ($request->filled('fecha')) {
-            $query->whereDate('fecha_ingreso', $request->fecha);
+        // Filtro de fecha tipo Excel: llegan días exactos (Y-m-d) seleccionados
+        // en el árbol Año → Mes → Día. La columna es DATE, así que whereIn calza.
+        if ($request->filled('fechas')) {
+            $query->whereIn('fecha_ingreso', (array) $request->fechas);
         }
 
         $ordenes = $query->orderBy('fecha_ingreso', 'desc')->paginate(25)->withQueryString();
 
         $empresas = EmpresaCliente::orderBy('nombre')->get();
 
+        // Árbol de fechas disponibles (Año → Mes → Día) para el desplegable de
+        // filtro. Se arma sobre el mismo alcance (activas/históricas), sin depender
+        // de los demás filtros, como el autofiltro de una hoja de cálculo.
+        $baseFechas = OrdenTrabajo::query();
+        if (!$verHistoricas) {
+            $baseFechas->whereNotIn('estado_proceso', $cerrados);
+        }
+        $arbolFechas = [];
+        $baseFechas->whereNotNull('fecha_ingreso')
+            ->distinct()
+            ->pluck('fecha_ingreso')
+            ->each(function ($f) use (&$arbolFechas) {
+                $arbolFechas[$f->format('Y')][$f->format('m')][] = $f->format('Y-m-d');
+            });
+        krsort($arbolFechas); // años: más reciente primero
+        foreach ($arbolFechas as &$meses) {
+            ksort($meses);                       // meses ascendente (01..12)
+            foreach ($meses as &$dias) { sort($dias); } // días ascendente
+        }
+        unset($meses, $dias);
+
         $totalActivas    = OrdenTrabajo::whereNotIn('estado_proceso', $cerrados)->count();
         $totalHistoricas = OrdenTrabajo::whereIn('estado_proceso', $cerrados)->count();
 
-        return view('ordenes.index', compact('ordenes', 'verHistoricas', 'totalActivas', 'totalHistoricas', 'empresas'));
+        return view('ordenes.index', compact('ordenes', 'verHistoricas', 'totalActivas', 'totalHistoricas', 'empresas', 'arbolFechas'));
     }
 
     public function create()
