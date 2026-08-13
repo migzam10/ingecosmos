@@ -167,7 +167,7 @@
             <div class="card-body">
                 <label class="form-label">Observaciones</label>
                 <textarea name="observaciones" class="form-control" rows="2"
-                          placeholder="Notas para la CIA o el cliente...">{{ isset($cotizacion) ? $cotizacion->observaciones : '' }}</textarea>
+                          placeholder="Notas para la CIA o el cliente...">{{ old('observaciones', isset($cotizacion) ? $cotizacion->observaciones : '') }}</textarea>
             </div>
         </div>
 
@@ -258,9 +258,9 @@
                     <div class="col-6">
                         <label class="form-label small fw-bold">Fecha <span class="text-danger">*</span></label>
                         <input type="date" name="fecha_cotizacion" class="form-control form-control-sm"
-                               value="{{ isset($cotizacion)
+                               value="{{ old('fecha_cotizacion', isset($cotizacion)
                                         ? ($cotizacion->fecha_cotizacion ?? $cotizacion->ot?->fecha_cotizacion)?->format('Y-m-d')
-                                        : now()->toDateString() }}"
+                                        : now()->toDateString()) }}"
                                max="{{ now()->toDateString() }}" required>
                     </div>
                 </div>
@@ -309,24 +309,46 @@ const URL_RTO      = '{{ route("api.catalogo-repuestos") }}';
 const URL_INSUMOS  = '{{ route("api.catalogo-insumos") }}';
 const FECHA_INICIO = '{{ $orden->fecha_inicio_proceso ?? "" }}';
 
-@if(isset($cotizacion))
 @php
-$_moEdit  = $cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo])->values()->toArray();
-$_rtoEdit = $cotizacion->itemsRepuesto->map(fn($i) => ['descripcion' => $i->descripcion, 'unidades' => (float)$i->unidades, 'precio_unitario' => (float)$i->precio_unitario, 'precio_total' => (float)$i->precio_total, 'id_catalogo_repuesto' => $i->id_catalogo_repuesto])->values()->toArray();
-$_insEdit = $cotizacion->itemsInsumo->map(fn($i) => ['descripcion' => $i->descripcion, 'cantidad' => (float)$i->cantidad_solicitada, 'precio_venta' => (float)$i->precio_venta, 'precio_total' => (float)$i->precio_total, 'id_insumo' => $i->id_insumo, 'unidad_medida' => $i->insumo?->unidad_medida ?? ''])->values()->toArray();
+    // Fuente de ítems para pintar al cargar:
+    //  1) old() si hubo un envío fallido (no se pierde lo escrito),
+    //  2) el modelo si es edición normal,
+    //  3) vacío si es una cotización nueva.
+    $_fallo = old('items_mo') !== null || old('items_repuesto') !== null
+           || old('items_insumo') !== null || old('iva_valor') !== null;
+
+    if ($_fallo) {
+        $_moInit = collect(old('items_mo', []))->map(fn($i) => [
+            'descripcion' => $i['descripcion'] ?? '', 'precio' => (float)($i['precio'] ?? 0),
+            'id_catalogo_mo' => $i['id_catalogo_mo'] ?? null,
+        ])->values()->toArray();
+        $_rtoInit = collect(old('items_repuesto', []))->map(fn($i) => [
+            'descripcion' => $i['descripcion'] ?? '', 'unidades' => (float)($i['unidades'] ?? 1),
+            'precio_unitario' => (float)($i['precio_unitario'] ?? 0), 'precio_total' => (float)($i['precio_total'] ?? 0),
+            'id_catalogo_repuesto' => $i['id_catalogo_repuesto'] ?? null,
+        ])->values()->toArray();
+        $_insInit = collect(old('items_insumo', []))->map(fn($i) => [
+            'descripcion' => $i['descripcion'] ?? '', 'cantidad' => (float)($i['cantidad'] ?? 1),
+            'precio_venta' => (float)($i['precio_venta'] ?? 0), 'precio_total' => (float)($i['precio_total'] ?? 0),
+            'id_insumo' => $i['id_insumo'] ?? null, 'unidad_medida' => $i['unidad_medida'] ?? '',
+        ])->values()->toArray();
+        $_ivaInit  = old('iva_valor') !== null ? (float) old('iva_valor') : null;
+        $_descInit = (float) old('descuento_valor', 0);
+    } elseif (isset($cotizacion)) {
+        $_moInit  = $cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo])->values()->toArray();
+        $_rtoInit = $cotizacion->itemsRepuesto->map(fn($i) => ['descripcion' => $i->descripcion, 'unidades' => (float)$i->unidades, 'precio_unitario' => (float)$i->precio_unitario, 'precio_total' => (float)$i->precio_total, 'id_catalogo_repuesto' => $i->id_catalogo_repuesto])->values()->toArray();
+        $_insInit = $cotizacion->itemsInsumo->map(fn($i) => ['descripcion' => $i->descripcion, 'cantidad' => (float)$i->cantidad_solicitada, 'precio_venta' => (float)$i->precio_venta, 'precio_total' => (float)$i->precio_total, 'id_insumo' => $i->id_insumo, 'unidad_medida' => $i->insumo?->unidad_medida ?? ''])->values()->toArray();
+        $_ivaInit  = (float)($cotizacion->iva_valor ?? 0);
+        $_descInit = (float)($cotizacion->descuento_valor ?? 0);
+    } else {
+        $_moInit = []; $_rtoInit = []; $_insInit = []; $_ivaInit = null; $_descInit = 0;
+    }
 @endphp
-const ITEMS_MO_EDIT  = @json($_moEdit);
-const ITEMS_RTO_EDIT = @json($_rtoEdit);
-const ITEMS_INS_EDIT = @json($_insEdit);
-const IVA_EDIT  = {{ (float)($cotizacion->iva_valor ?? 0) }};
-const DESC_EDIT = {{ (float)($cotizacion->descuento_valor ?? 0) }};
-@else
-const ITEMS_MO_EDIT  = [];
-const ITEMS_RTO_EDIT = [];
-const ITEMS_INS_EDIT = [];
-const IVA_EDIT  = null;
-const DESC_EDIT = 0;
-@endif
+const ITEMS_MO_EDIT  = @json($_moInit);
+const ITEMS_RTO_EDIT = @json($_rtoInit);
+const ITEMS_INS_EDIT = @json($_insInit);
+const IVA_EDIT  = @json($_ivaInit);
+const DESC_EDIT = @json($_descInit);
 
 let cMo = 0, cRto = 0, cIns = 0;
 let searchMoTimeout = null, searchRtoTimeout = null, searchInsTimeout = null;

@@ -140,5 +140,28 @@ function actualizarResumen() {
 }
 
 document.getElementById('btn-agregar').onclick = () => agregarItem(null);
+
+// ── REHIDRATAR ítems tras un envío fallido (no se pierde lo escrito) ────────────
+@php
+    $_itemsInit = collect(old('items', []))->filter(fn($i) => !empty($i['id_insumo']))->map(fn($i) => [
+        'id_insumo'     => (int) $i['id_insumo'],
+        'cantidad'      => (float) ($i['cantidad'] ?? 1),
+        'precio_compra' => $i['precio_compra'] ?? '',
+    ])->values()->toArray();
+@endphp
+const ITEMS_INIT   = @json($_itemsInit);
+const INSUMOS_MAP  = @json($insumos->keyBy('id')->map(fn($x) => ['nombre' => $x->nombre, 'unidad_medida' => $x->unidad_medida]));
+document.addEventListener('DOMContentLoaded', function () {
+    ITEMS_INIT.forEach(it => {
+        const info = INSUMOS_MAP[it.id_insumo] || { nombre: '', unidad_medida: '—' };
+        agregarItem({ id: it.id_insumo, nombre: info.nombre, unidad_medida: info.unidad_medida });
+        const filas = document.querySelectorAll('#body-items tr');
+        const tr = filas[filas.length - 1];
+        tr.querySelector('[name$="[cantidad]"]').value = it.cantidad;
+        const pc = tr.querySelector('[name$="[precio_compra]"]');
+        if (pc && it.precio_compra !== '') pc.value = it.precio_compra;
+    });
+    actualizarResumen();
+});
 </script>
 @endpush

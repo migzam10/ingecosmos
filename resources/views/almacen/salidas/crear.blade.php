@@ -103,6 +103,9 @@
                         </tr>
                     </thead>
                     <tbody id="body-items">
+                        {{-- Tras un envío fallido, las filas se reconstruyen desde old() por JS
+                             (más abajo), así que aquí solo se pintan en la carga normal. --}}
+                        @if(empty(old('items')))
                         @foreach($pendientes as $item)
                         <tr data-pendiente="{{ $item->cantidad_pendiente }}" data-stock="{{ $item->insumo?->stock_actual ?? 0 }}">
                             <input type="hidden" name="items[{{ $loop->index }}][id_insumo]" value="{{ $item->id_insumo }}">
@@ -135,6 +138,7 @@
                             <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()"><x-icon name="x" /></button></td>
                         </tr>
                         @endforeach
+                        @endif
                     </tbody>
                 </table>
                 <div id="msg-vacio" class="text-center text-muted py-3 small"
@@ -172,7 +176,7 @@
 @push('scripts')
 <script>
 const URL_INSUMOS = '{{ route("api.catalogo-insumos") }}';
-let cItem = {{ $pendientes->count() }}, tSearch = null;
+let cItem = {{ empty(old('items')) ? $pendientes->count() : 0 }}, tSearch = null;
 
 // Tipo de salida
 document.querySelectorAll('input[name="tipo_ui"]').forEach(r => {
@@ -266,5 +270,37 @@ document.getElementById('btn-agregar').onclick = () => {
         <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()"><x-icon name="x" /></button></td>`;
     document.getElementById('body-items').appendChild(tr);
 };
+
+// ── REHIDRATAR ítems tras un envío fallido (no se pierde lo escrito) ────────────
+@php
+    $_itemsSalida = collect(old('items', []))->filter(fn($i) => !empty($i['id_insumo']))->map(fn($i) => [
+        'id_insumo'                 => $i['id_insumo'],
+        'id_item_cotizacion_insumo' => $i['id_item_cotizacion_insumo'] ?? null,
+        'descripcion'               => $i['descripcion'] ?? '',
+        'precio_venta'              => $i['precio_venta'] ?? 0,
+        'cantidad'                  => $i['cantidad'] ?? 1,
+    ])->values();
+@endphp
+const ITEMS_SALIDA = @json($_itemsSalida);
+
+function agregarItemGuardado(it) {
+    const i = cItem++;
+    document.getElementById('msg-vacio').style.display = 'none';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+        <input type="hidden" name="items[${i}][id_insumo]" value="${it.id_insumo}">
+        ${it.id_item_cotizacion_insumo ? `<input type="hidden" name="items[${i}][id_item_cotizacion_insumo]" value="${it.id_item_cotizacion_insumo}">` : ''}
+        <input type="hidden" name="items[${i}][descripcion]" value="${it.descripcion}">
+        <input type="hidden" name="items[${i}][precio_venta]" value="${it.precio_venta}">
+        <td>${it.descripcion}</td>
+        <td><input type="number" name="items[${i}][cantidad]" class="form-control form-control-sm text-end" value="${it.cantidad}" min="0.01" step="0.01" required></td>
+        <td class="text-center text-muted small">—</td>
+        <td><button type="button" class="btn btn-sm btn-ghost-danger" onclick="this.closest('tr').remove()"><x-icon name="x" /></button></td>`;
+    document.getElementById('body-items').appendChild(tr);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    ITEMS_SALIDA.forEach(it => agregarItemGuardado(it));
+});
 </script>
 @endpush

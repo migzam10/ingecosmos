@@ -297,26 +297,45 @@ const URL_RTO     = '{{ route("api.catalogo-repuestos") }}';
 const URL_INSUMOS = '{{ route("api.catalogo-insumos") }}';
 const URL_MOD     = '{{ route("api.modelos") }}';
 
-@if(isset($cotizacion))
 @php
-$_moEdit  = $cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo])->values()->toArray();
-$_rtoEdit = $cotizacion->itemsRepuesto->map(fn($i) => ['descripcion' => $i->descripcion, 'unidades' => (float)$i->unidades, 'precio_unitario' => (float)$i->precio_unitario, 'precio_total' => (float)$i->precio_total, 'id_catalogo_repuesto' => $i->id_catalogo_repuesto])->values()->toArray();
-$_insEdit = $cotizacion->itemsInsumo->map(fn($i) => ['descripcion' => $i->descripcion, 'cantidad' => (float)$i->cantidad_solicitada, 'precio_venta' => (float)$i->precio_venta, 'precio_total' => (float)$i->precio_total, 'id_insumo' => $i->id_insumo, 'unidad_medida' => $i->insumo?->unidad_medida ?? ''])->values()->toArray();
+    // Ítems para pintar: old() si hubo envío fallido, el modelo si es edición,
+    // vacío si es nueva. Así no se pierde lo escrito al rebotar la validación.
+    $_fallo = old('items_mo') !== null || old('items_repuesto') !== null
+           || old('items_insumo') !== null || old('iva_valor') !== null;
+
+    if ($_fallo) {
+        $_moInit = collect(old('items_mo', []))->map(fn($i) => [
+            'descripcion' => $i['descripcion'] ?? '', 'precio' => (float)($i['precio'] ?? 0),
+            'id_catalogo_mo' => $i['id_catalogo_mo'] ?? null,
+        ])->values()->toArray();
+        $_rtoInit = collect(old('items_repuesto', []))->map(fn($i) => [
+            'descripcion' => $i['descripcion'] ?? '', 'unidades' => (float)($i['unidades'] ?? 1),
+            'precio_unitario' => (float)($i['precio_unitario'] ?? 0), 'precio_total' => (float)($i['precio_total'] ?? 0),
+            'id_catalogo_repuesto' => $i['id_catalogo_repuesto'] ?? null,
+        ])->values()->toArray();
+        $_insInit = collect(old('items_insumo', []))->map(fn($i) => [
+            'descripcion' => $i['descripcion'] ?? '', 'cantidad' => (float)($i['cantidad'] ?? 1),
+            'precio_venta' => (float)($i['precio_venta'] ?? 0), 'precio_total' => (float)($i['precio_total'] ?? 0),
+            'id_insumo' => $i['id_insumo'] ?? null, 'unidad_medida' => $i['unidad_medida'] ?? '',
+        ])->values()->toArray();
+        $_ivaInit = old('iva_valor') !== null ? (float) old('iva_valor') : null;
+    } elseif (isset($cotizacion)) {
+        $_moInit  = $cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo])->values()->toArray();
+        $_rtoInit = $cotizacion->itemsRepuesto->map(fn($i) => ['descripcion' => $i->descripcion, 'unidades' => (float)$i->unidades, 'precio_unitario' => (float)$i->precio_unitario, 'precio_total' => (float)$i->precio_total, 'id_catalogo_repuesto' => $i->id_catalogo_repuesto])->values()->toArray();
+        $_insInit = $cotizacion->itemsInsumo->map(fn($i) => ['descripcion' => $i->descripcion, 'cantidad' => (float)$i->cantidad_solicitada, 'precio_venta' => (float)$i->precio_venta, 'precio_total' => (float)$i->precio_total, 'id_insumo' => $i->id_insumo, 'unidad_medida' => $i->insumo?->unidad_medida ?? ''])->values()->toArray();
+        $_ivaInit = (float)($cotizacion->iva_valor ?? 0);
+    } else {
+        $_moInit = []; $_rtoInit = []; $_insInit = []; $_ivaInit = null;
+    }
+    $_marcaPrevia  = old('id_marca_previa',  isset($cotizacion) ? $cotizacion->id_marca_previa  : null);
+    $_modeloPrevia = old('id_modelo_previa', isset($cotizacion) ? $cotizacion->id_modelo_previa : null);
 @endphp
-const ITEMS_MO_EDIT  = @json($_moEdit);
-const ITEMS_RTO_EDIT = @json($_rtoEdit);
-const ITEMS_INS_EDIT = @json($_insEdit);
-const ID_MARCA_PREVIA = {{ $cotizacion->id_marca_previa ?? 'null' }};
-const ID_MODELO_PREVIA = {{ $cotizacion->id_modelo_previa ?? 'null' }};
-const IVA_EDIT = {{ (float)($cotizacion->iva_valor ?? 0) }};
-@else
-const ITEMS_MO_EDIT  = [];
-const ITEMS_RTO_EDIT = [];
-const ITEMS_INS_EDIT = [];
-const ID_MARCA_PREVIA = null;
-const ID_MODELO_PREVIA = null;
-const IVA_EDIT = null;
-@endif
+const ITEMS_MO_EDIT  = @json($_moInit);
+const ITEMS_RTO_EDIT = @json($_rtoInit);
+const ITEMS_INS_EDIT = @json($_insInit);
+const ID_MARCA_PREVIA  = @json($_marcaPrevia !== null && $_marcaPrevia !== '' ? (int) $_marcaPrevia : null);
+const ID_MODELO_PREVIA = @json($_modeloPrevia !== null && $_modeloPrevia !== '' ? (int) $_modeloPrevia : null);
+const IVA_EDIT = @json($_ivaInit);
 
 let cMo = 0, cRto = 0, cIns = 0;
 let tMo = null, tRto = null, tIns = null;
