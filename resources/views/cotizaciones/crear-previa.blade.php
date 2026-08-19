@@ -37,10 +37,12 @@
                 <div class="row g-2">
                     <div class="col-6 col-md-3">
                         <label class="form-label">Placa <span class="text-danger">*</span></label>
-                        <input type="text" name="placa_previa" class="form-control text-uppercase @error('placa_previa') is-invalid @enderror"
+                        <input type="text" name="placa_previa" id="inp-placa-previa"
+                               class="form-control text-uppercase @error('placa_previa') is-invalid @enderror"
                                value="{{ old('placa_previa', $cotizacion->placa_previa ?? '') }}" required maxlength="10"
-                               style="text-transform:uppercase">
+                               style="text-transform:uppercase" placeholder="Buscar...">
                         @error('placa_previa')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div class="form-hint small" id="placa-previa-hint"></div>
                     </div>
                     <div class="col-6 col-md-3">
                         <label class="form-label">Marca</label>
@@ -86,20 +88,22 @@
             <div class="card-header"><h3 class="card-title">Datos del Cliente</h3></div>
             <div class="card-body">
                 <div class="row g-2">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label">Cédula / NIT</label>
+                        <input type="text" name="cedula_cliente" id="inp-cedula-cli" class="form-control"
+                               value="{{ old('cedula_cliente', $cotizacion->clientePrevia->cedula ?? '') }}" placeholder="Buscar...">
+                        <div class="form-hint small" id="cedula-previa-hint"></div>
+                    </div>
                     <div class="col-12 col-md-5">
                         <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                        <input type="text" name="nombre_cliente" class="form-control @error('nombre_cliente') is-invalid @enderror"
+                        <input type="text" name="nombre_cliente" id="inp-nombre-cli"
+                               class="form-control @error('nombre_cliente') is-invalid @enderror"
                                value="{{ old('nombre_cliente', $cotizacion->clientePrevia->nombre ?? '') }}" required>
                         @error('nombre_cliente')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
-                    <div class="col-6 col-md-3">
-                        <label class="form-label">Cédula / NIT</label>
-                        <input type="text" name="cedula_cliente" class="form-control"
-                               value="{{ old('cedula_cliente', $cotizacion->clientePrevia->cedula ?? '') }}">
-                    </div>
                     <div class="col-6 col-md-4">
                         <label class="form-label">Teléfono</label>
-                        <input type="text" name="telefono_cliente" class="form-control"
+                        <input type="text" name="telefono_cliente" id="inp-telefono-cli" class="form-control"
                                value="{{ old('telefono_cliente', $cotizacion->clientePrevia->telefono ?? '') }}">
                     </div>
                 </div>
@@ -225,33 +229,7 @@
                 <h3 class="card-title text-dark">Cotización Previa</h3>
             </div>
             <div class="card-body">
-                <table class="table table-sm mb-0">
-                    <tr><td class="text-muted small">Mano de Obra</td><td class="text-end fw-bold" id="res-mo">$ 0</td></tr>
-                    <tr><td class="text-muted small">Repuestos</td><td class="text-end" id="res-rto">$ 0</td></tr>
-                    <tr><td class="text-muted small">Insumos</td><td class="text-end" id="res-ins">$ 0</td></tr>
-                    <tr class="table-light">
-                        <td class="fw-bold small">Subtotal neto</td>
-                        <td class="text-end fw-bold" id="res-subtotal">$ 0</td>
-                    </tr>
-                    <tr>
-                        <td class="small">IVA
-                            <input type="number" id="inp-iva-pct" step="0.01" min="0" max="100"
-                                   class="form-control form-control-sm d-inline-block text-end" style="width:60px" value="19"> %
-                        </td>
-                        <td class="text-end">
-                            <input type="number" name="iva_valor" id="inp-iva-val" step="1" min="0"
-                                   class="form-control form-control-sm text-end" value="0" style="width:110px; margin-left:auto">
-                        </td>
-                    </tr>
-                    <tr class="table-active">
-                        <td class="fw-bold">TOTAL</td>
-                        <td class="text-end fw-bold fs-5" id="res-total">$ 0</td>
-                    </tr>
-                </table>
-
-                <hr>
-
-                <div class="row g-2">
+                <div class="row g-2 mb-3">
                     @if(!isset($cotizacion))
                     <div class="col-6">
                         <label class="form-label small fw-bold"># COT <small class="text-muted">(editable)</small></label>
@@ -278,6 +256,44 @@
                         @error('fecha_cotizacion')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                 </div>
+
+                <table class="table table-sm mb-0">
+                    <tr><td class="text-muted small">Mano de Obra</td><td class="text-end fw-bold" id="res-mo">$ 0</td></tr>
+                    <tr><td class="text-muted small">Repuestos</td><td class="text-end" id="res-rto">$ 0</td></tr>
+                    <tr><td class="text-muted small">Insumos</td><td class="text-end" id="res-ins">$ 0</td></tr>
+                    <tr class="table-light">
+                        <td class="fw-bold small">Subtotal neto</td>
+                        <td class="text-end fw-bold" id="res-subtotal">$ 0</td>
+                    </tr>
+                    <tr>
+                        <td class="small">Descuento
+                            <input type="number" id="inp-desc-pct" step="0.01" min="0" max="100"
+                                   class="form-control form-control-sm d-inline-block text-end" style="width:60px" value="0"> %
+                        </td>
+                        <td class="text-end">
+                            <input type="number" name="descuento_valor" id="inp-desc-val" step="1" min="0"
+                                   class="form-control form-control-sm text-end" value="0" style="width:110px; margin-left:auto">
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="fw-bold small">Base gravable</td>
+                        <td class="text-end fw-bold" id="res-base">$ 0</td>
+                    </tr>
+                    <tr>
+                        <td class="small">IVA
+                            <input type="number" id="inp-iva-pct" step="0.01" min="0" max="100"
+                                   class="form-control form-control-sm d-inline-block text-end" style="width:60px" value="19"> %
+                        </td>
+                        <td class="text-end">
+                            <input type="number" name="iva_valor" id="inp-iva-val" step="1" min="0"
+                                   class="form-control form-control-sm text-end" value="0" style="width:110px; margin-left:auto">
+                        </td>
+                    </tr>
+                    <tr class="table-active">
+                        <td class="fw-bold">TOTAL</td>
+                        <td class="text-end fw-bold fs-5" id="res-total">$ 0</td>
+                    </tr>
+                </table>
             </div>
             <div class="card-footer">
                 <button type="submit" class="btn btn-warning w-100 btn-lg" data-confirm="¿Guardar cotización previa?">
@@ -296,6 +312,8 @@ const URL_MO      = '{{ route("api.catalogo-mo") }}';
 const URL_RTO     = '{{ route("api.catalogo-repuestos") }}';
 const URL_INSUMOS = '{{ route("api.catalogo-insumos") }}';
 const URL_MOD     = '{{ route("api.modelos") }}';
+const URL_PLACA   = '{{ route("api.placa") }}';
+const URL_CLIENTE = '{{ route("api.cliente") }}';
 
 @php
     // Ítems para pintar: old() si hubo envío fallido, el modelo si es edición,
@@ -319,13 +337,15 @@ const URL_MOD     = '{{ route("api.modelos") }}';
             'id_insumo' => $i['id_insumo'] ?? null, 'unidad_medida' => $i['unidad_medida'] ?? '',
         ])->values()->toArray();
         $_ivaInit = old('iva_valor') !== null ? (float) old('iva_valor') : null;
+        $_descInit = (float) old('descuento_valor', 0);
     } elseif (isset($cotizacion)) {
         $_moInit  = $cotizacion->itemsMo->map(fn($i) => ['descripcion' => $i->descripcion, 'precio' => (float)$i->precio, 'id_catalogo_mo' => $i->id_catalogo_mo])->values()->toArray();
         $_rtoInit = $cotizacion->itemsRepuesto->map(fn($i) => ['descripcion' => $i->descripcion, 'unidades' => (float)$i->unidades, 'precio_unitario' => (float)$i->precio_unitario, 'precio_total' => (float)$i->precio_total, 'id_catalogo_repuesto' => $i->id_catalogo_repuesto])->values()->toArray();
         $_insInit = $cotizacion->itemsInsumo->map(fn($i) => ['descripcion' => $i->descripcion, 'cantidad' => (float)$i->cantidad_solicitada, 'precio_venta' => (float)$i->precio_venta, 'precio_total' => (float)$i->precio_total, 'id_insumo' => $i->id_insumo, 'unidad_medida' => $i->insumo?->unidad_medida ?? ''])->values()->toArray();
         $_ivaInit = (float)($cotizacion->iva_valor ?? 0);
+        $_descInit = (float)($cotizacion->descuento_valor ?? 0);
     } else {
-        $_moInit = []; $_rtoInit = []; $_insInit = []; $_ivaInit = null;
+        $_moInit = []; $_rtoInit = []; $_insInit = []; $_ivaInit = null; $_descInit = 0;
     }
     $_marcaPrevia  = old('id_marca_previa',  isset($cotizacion) ? $cotizacion->id_marca_previa  : null);
     $_modeloPrevia = old('id_modelo_previa', isset($cotizacion) ? $cotizacion->id_modelo_previa : null);
@@ -336,6 +356,7 @@ const ITEMS_INS_EDIT = @json($_insInit);
 const ID_MARCA_PREVIA  = @json($_marcaPrevia !== null && $_marcaPrevia !== '' ? (int) $_marcaPrevia : null);
 const ID_MODELO_PREVIA = @json($_modeloPrevia !== null && $_modeloPrevia !== '' ? (int) $_modeloPrevia : null);
 const IVA_EDIT = @json($_ivaInit);
+const DESC_EDIT = @json((float) $_descInit);
 
 let cMo = 0, cRto = 0, cIns = 0;
 let tMo = null, tRto = null, tIns = null;
@@ -348,7 +369,9 @@ function sumCol(bodyId, cls) {
     document.querySelectorAll(`#${bodyId} .${cls}`).forEach(i => t += parseFloat(i.value)||0);
     return t;
 }
-function recalcular() {
+// Cascada: neto → descuento → base gravable → IVA → total.
+// `source` indica qué editó el usuario para respetar el complementario (% ↔ valor).
+function recalcular(source) {
     const mo  = sumCol('body-mo',  'inp-precio-mo');
     const rto = sumCol('body-rto', 'inp-total-rto');
     const ins = sumCol('body-ins', 'inp-total-ins');
@@ -358,23 +381,44 @@ function recalcular() {
     document.getElementById('res-mo').textContent  = cop(mo);
     document.getElementById('res-rto').textContent = cop(rto);
     document.getElementById('res-ins').textContent = cop(ins);
+
     const subtotal = mo + rto + ins;
     document.getElementById('res-subtotal').textContent = cop(subtotal);
-    const ivaPct = parseFloat(document.getElementById('inp-iva-pct').value)||0;
-    const ivaVal = Math.round(subtotal * ivaPct / 100);
-    document.getElementById('inp-iva-val').value = ivaVal;
-    document.getElementById('res-total').textContent = cop(subtotal + ivaVal);
+
+    // ── Descuento (antes del IVA) ──
+    const descPctEl = document.getElementById('inp-desc-pct');
+    const descValEl = document.getElementById('inp-desc-val');
+    let descVal;
+    if (source === 'desc-val') {
+        descVal = Math.min(Math.max(0, parseFloat(descValEl.value)||0), subtotal);
+        descPctEl.value = subtotal > 0 ? +(descVal / subtotal * 100).toFixed(2) : 0;
+    } else {
+        const descPct = Math.min(100, Math.max(0, parseFloat(descPctEl.value)||0));
+        descVal = Math.round(subtotal * descPct / 100);
+        descValEl.value = descVal;
+    }
+
+    const baseIva = Math.max(0, subtotal - descVal);
+    document.getElementById('res-base').textContent = cop(baseIva);
+
+    // ── IVA (sobre la base gravable) ──
+    const ivaPctEl = document.getElementById('inp-iva-pct');
+    const ivaValEl = document.getElementById('inp-iva-val');
+    let ivaVal;
+    if (source === 'iva-val') {
+        ivaVal = Math.max(0, parseFloat(ivaValEl.value)||0);
+    } else {
+        const ivaPct = parseFloat(ivaPctEl.value)||0;
+        ivaVal = Math.round(baseIva * ivaPct / 100);
+        ivaValEl.value = ivaVal;
+    }
+
+    document.getElementById('res-total').textContent = cop(baseIva + ivaVal);
 }
-document.getElementById('inp-iva-pct').addEventListener('input', function () {
-    const subtotal = sumCol('body-mo','inp-precio-mo') + sumCol('body-rto','inp-total-rto') + sumCol('body-ins','inp-total-ins');
-    const ivaVal = Math.round(subtotal * (parseFloat(this.value)||0) / 100);
-    document.getElementById('inp-iva-val').value = ivaVal;
-    document.getElementById('res-total').textContent = cop(subtotal + ivaVal);
-});
-document.getElementById('inp-iva-val').addEventListener('input', function () {
-    const subtotal = sumCol('body-mo','inp-precio-mo') + sumCol('body-rto','inp-total-rto') + sumCol('body-ins','inp-total-ins');
-    document.getElementById('res-total').textContent = cop(subtotal + Math.max(0, parseFloat(this.value)||0));
-});
+document.getElementById('inp-desc-pct').addEventListener('input', () => recalcular('desc-pct'));
+document.getElementById('inp-desc-val').addEventListener('input', () => recalcular('desc-val'));
+document.getElementById('inp-iva-pct').addEventListener('input', () => recalcular('iva-pct'));
+document.getElementById('inp-iva-val').addEventListener('input', () => recalcular('iva-val'));
 
 // Búsqueda MO
 document.getElementById('buscar-mo').addEventListener('input', function () {
@@ -502,6 +546,60 @@ document.getElementById('sel-marca').addEventListener('change', function () {
         });
 });
 
+// Cargar modelos de una marca y dejar seleccionado uno (usado por el buscador de placa)
+function cargarModelosSel(idMarca, idModeloSel = null) {
+    const sel = document.getElementById('sel-modelo');
+    sel.innerHTML = '<option value="">Cargando...</option>';
+    if (!idMarca) { sel.innerHTML = '<option value="">Seleccionar...</option>'; return; }
+    fetch(`${URL_MOD}?id_marca=${idMarca}`)
+        .then(r => r.json()).then(mods => {
+            sel.innerHTML = '<option value="">Seleccionar...</option>';
+            mods.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m.id; opt.textContent = m.nombre;
+                if (idModeloSel && m.id == idModeloSel) opt.selected = true;
+                sel.appendChild(opt);
+            });
+        });
+}
+
+// Buscar PLACA → autollenar vehículo y cliente si ya existe
+let tPlacaPrev = null, tCedPrev = null;
+document.getElementById('inp-placa-previa').addEventListener('input', function () {
+    clearTimeout(tPlacaPrev);
+    const placa = this.value.trim().toUpperCase();
+    const hint = document.getElementById('placa-previa-hint');
+    if (placa.length < 3) { hint.textContent = ''; return; }
+    tPlacaPrev = setTimeout(() => {
+        fetch(`${URL_PLACA}?placa=${encodeURIComponent(placa)}`)
+            .then(r => r.json()).then(d => {
+                if (!d.encontrado) { hint.textContent = 'Placa nueva'; hint.className = 'form-hint small text-muted'; return; }
+                hint.textContent = '✓ Vehículo encontrado'; hint.className = 'form-hint small text-success';
+                if (d.id_marca) { document.getElementById('sel-marca').value = d.id_marca; cargarModelosSel(d.id_marca, d.id_modelo); }
+                if (d.nombre_cliente)   document.getElementById('inp-nombre-cli').value = d.nombre_cliente;
+                if (d.cedula_cliente)   document.getElementById('inp-cedula-cli').value = d.cedula_cliente;
+                if (d.telefono_cliente) document.getElementById('inp-telefono-cli').value = d.telefono_cliente;
+            });
+    }, 350);
+});
+
+// Buscar CÉDULA / NIT → autollenar datos del cliente si ya existe
+document.getElementById('inp-cedula-cli').addEventListener('input', function () {
+    clearTimeout(tCedPrev);
+    const ced = this.value.trim();
+    const hint = document.getElementById('cedula-previa-hint');
+    if (ced.length < 3) { hint.textContent = ''; return; }
+    tCedPrev = setTimeout(() => {
+        fetch(`${URL_CLIENTE}?cedula=${encodeURIComponent(ced)}`)
+            .then(r => r.json()).then(d => {
+                if (!d.encontrado) { hint.textContent = 'Cliente nuevo'; hint.className = 'form-hint small text-muted'; return; }
+                hint.textContent = '✓ Cliente encontrado'; hint.className = 'form-hint small text-success';
+                if (d.nombre_cliente)   document.getElementById('inp-nombre-cli').value = d.nombre_cliente;
+                if (d.telefono_cliente) document.getElementById('inp-telefono-cli').value = d.telefono_cliente;
+            });
+    }, 350);
+});
+
 document.addEventListener('DOMContentLoaded', function () {
     ITEMS_MO_EDIT.forEach(it  => agregarMO(it.descripcion, it.precio, it.id_catalogo_mo));
     ITEMS_RTO_EDIT.forEach(it => agregarRTO(it.descripcion, it.unidades, it.precio_unitario, it.id_catalogo_repuesto));
@@ -521,11 +619,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             });
     }
+    // Restaurar descuento e IVA tal como se guardaron (por valor)
+    if (DESC_EDIT) {
+        document.getElementById('inp-desc-val').value = DESC_EDIT;
+        recalcular('desc-val');          // fija el % de descuento
+    }
     if (IVA_EDIT !== null) {
         document.getElementById('inp-iva-val').value = IVA_EDIT;
         document.getElementById('inp-iva-pct').value = 0;
+        recalcular('iva-val');           // respeta el IVA guardado por valor
+    } else {
+        recalcular();
     }
-    recalcular();
 });
 </script>
 @endpush

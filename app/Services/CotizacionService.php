@@ -264,13 +264,15 @@ class CotizacionService
 
     private function guardarItems(Cotizacion $cot, array $data, bool $skipInsumos = false): void
     {
+        // Un ítem se guarda si tiene descripción, aunque su valor sea 0
+        // (aparece en la cotización en 0 y simplemente no suma).
         foreach ($data['items_mo'] ?? [] as $item) {
-            if (empty($item['descripcion']) || ($item['precio'] ?? 0) <= 0) continue;
+            if (empty($item['descripcion'])) continue;
             ItemCotizacionMo::create([
                 'id_cotizacion'  => $cot->id,
                 'id_catalogo_mo' => $item['id_catalogo_mo'] ?? null,
                 'descripcion'    => $item['descripcion'],
-                'precio'         => (float) $item['precio'],
+                'precio'         => max(0, (float) ($item['precio'] ?? 0)),
             ]);
         }
 
@@ -278,8 +280,7 @@ class CotizacionService
             if (empty($item['descripcion'])) continue;
             $unidades = max(0.01, (float)($item['unidades']        ?? 1));
             $unitario = max(0,    (float)($item['precio_unitario'] ?? 0));
-            $pTotal   = (float)($item['precio_total'] ?? round($unidades * $unitario));
-            if ($pTotal <= 0) continue;
+            $pTotal   = max(0, (float)($item['precio_total'] ?? round($unidades * $unitario)));
             ItemCotizacionRepuesto::create([
                 'id_cotizacion'        => $cot->id,
                 'id_catalogo_repuesto' => $item['id_catalogo_repuesto'] ?? null,
@@ -295,8 +296,7 @@ class CotizacionService
                 if (empty($item['descripcion'])) continue;
                 $cantidad = max(0.01, (float)($item['cantidad']     ?? 1));
                 $pventa   = max(0,    (float)($item['precio_venta'] ?? 0));
-                $pTotal   = (float)($item['precio_total'] ?? round($cantidad * $pventa));
-                if ($cantidad <= 0) continue;
+                $pTotal   = max(0, (float)($item['precio_total'] ?? round($cantidad * $pventa)));
                 ItemCotizacionInsumo::create([
                     'id_cotizacion'       => $cot->id,
                     'id_insumo'           => $item['id_insumo'] ?? null,
