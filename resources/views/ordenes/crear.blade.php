@@ -555,5 +555,18 @@ formOT.addEventListener('submit', function (e) {
         primero.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
 });
+
+// Inventario B/R/M: permitir DESELECCIONAR un radio ya marcado (clic de nuevo lo desmarca)
+document.querySelectorAll('input.btn-check[name^="inv_"]').forEach(function (radio) {
+    const label = document.querySelector('label[for="' + radio.id + '"]');
+    if (!label) return;
+    label.addEventListener('click', function (e) {
+        if (radio.checked) {
+            e.preventDefault();      // evita que el label lo vuelva a marcar
+            radio.checked = false;
+            radio.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
+});
 </script>
 @endpush
