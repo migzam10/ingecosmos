@@ -96,3 +96,9 @@
 .toggle-ico.collapsed {
     transform: rotate(-90deg);
 }
+
+/* Colores por área del taller en las tarjetas de tareas del técnico.
+   LYP = morado, MECÁNICA = verde azulado. Solo se ve el borde izquierdo
+   porque las tarjetas usan `border-start border-4`. */
+.border-lyp      { border-color: var(--tblr-purple) !important; }
+.border-mecanica { border-color: var(--tblr-teal) !important; }

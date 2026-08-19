@@ -70,10 +70,22 @@
 $ot = $trabajo->ot;
 $enProceso = $trabajo->estado === 'EN_PROCESO';
 $pausado   = $trabajo->estado === 'PAUSADO';
+// Color por área del taller para diferenciar LYP de MECÁNICA
+$areaBadge = match($ot->area) {
+    'LYP'      => 'bg-purple-lt',
+    'MECANICA' => 'bg-teal-lt',
+    default    => 'bg-secondary-lt',
+};
+$areaBorde = match($ot->area) {
+    'LYP'      => 'border-lyp',
+    'MECANICA' => 'border-mecanica',
+    default    => 'border-secondary',
+};
+// En proceso: recuadro naranja. Detenido: rojo. Pendiente: color del área.
 $bordeClase = match($trabajo->estado) {
     'EN_PROCESO' => 'border-warning',
     'PAUSADO'    => 'border-danger',
-    default      => 'border-secondary',
+    default      => $areaBorde,
 };
 $estadoTexto = match($trabajo->estado) {
     'EN_PROCESO' => 'En proceso',
@@ -97,7 +109,7 @@ $pausaAbierta = $trabajo->pausas->firstWhere('retomado_en', null);
                 <div class="d-flex flex-wrap gap-2 align-items-center">
                     <span class="fw-bold text-primary fs-5"># {{ $ot->numero_ot }}</span>
                     <span class="badge bg-blue-lt fw-bold">{{ $ot->vehiculo->placa }}</span>
-                    <span class="badge bg-secondary-lt">{{ $ot->area }}</span>
+                    <span class="badge {{ $areaBadge }}">{{ $ot->area }}</span>
                     <span class="badge {{ $estadoBadge }}">
                         {{ $nombresEsp2[$trabajo->especialidad] ?? $trabajo->especialidad }}
                         — {{ $estadoTexto }}

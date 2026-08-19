@@ -146,12 +146,26 @@
 @if($tareasActivas->count() > 0)
 <h3 class="mb-2">Tareas asignadas ahora</h3>
 @foreach($tareasActivas as $trabajo)
-@php $ot = $trabajo->ot; @endphp
-<div class="card mb-2 border-start border-4 {{ $trabajo->estado === 'EN_PROCESO' ? 'border-warning' : 'border-secondary' }}">
+@php
+$ot = $trabajo->ot;
+$areaBadge = match($ot->area) {
+    'LYP'      => 'bg-purple-lt',
+    'MECANICA' => 'bg-teal-lt',
+    default    => 'bg-secondary-lt',
+};
+$areaBorde = match($ot->area) {
+    'LYP'      => 'border-lyp',
+    'MECANICA' => 'border-mecanica',
+    default    => 'border-secondary',
+};
+$bordeClase = $trabajo->estado === 'EN_PROCESO' ? 'border-warning' : $areaBorde;
+@endphp
+<div class="card mb-2 border-start border-4 {{ $bordeClase }}">
     <div class="card-body py-2">
         <div class="d-flex flex-wrap align-items-center gap-2">
             <span class="fw-bold text-primary"># {{ $ot->numero_ot }}</span>
             <span class="badge bg-blue-lt">{{ $ot->vehiculo->placa }}</span>
+            <span class="badge {{ $areaBadge }}">{{ $ot->area }}</span>
             <span class="badge {{ $trabajo->estado === 'EN_PROCESO' ? 'bg-warning text-dark' : 'bg-secondary-lt' }}">
                 {{ $trabajo->estado === 'EN_PROCESO' ? 'En proceso' : 'Pendiente' }}
             </span>
