@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
 use App\Http\Controllers\OrdenCompraController;
+use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CorreccionTrabajoController;
 use App\Http\Controllers\Admin\EmpresaClienteController;
@@ -74,6 +75,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/catalogo-insumos',    [CatalogoInsumosController::class,   'buscar'])->name('api.catalogo-insumos');
     Route::get('/api/salidas/pendientes/{cotizacion}', [SalidaAlmacenController::class, 'pendientesCotizacion'])->name('api.salidas.pendientes');
     Route::get('/api/proveedor',           [OrdenCompraController::class,       'buscarProveedor'])->name('api.proveedor');
+});
+
+// Proveedores (ADMIN, COORDINADOR, ALMACEN, RECEPCION)
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR,ALMACEN,RECEPCION'])->group(function () {
+    Route::get('/proveedores',                     [ProveedorController::class, 'index'])->name('proveedores.index');
+    Route::get('/proveedores/crear',               [ProveedorController::class, 'create'])->name('proveedores.create');
+    Route::post('/proveedores',                    [ProveedorController::class, 'store'])->name('proveedores.store');
+    Route::get('/proveedores/{proveedor}/editar',  [ProveedorController::class, 'edit'])->name('proveedores.edit');
+    Route::put('/proveedores/{proveedor}',         [ProveedorController::class, 'update'])->name('proveedores.update');
+});
+// Eliminar proveedor — solo ADMIN
+Route::middleware(['auth', 'role:ADMIN'])->group(function () {
+    Route::delete('/proveedores/{proveedor}',      [ProveedorController::class, 'destroy'])->name('proveedores.destroy');
 });
 
 // Órdenes de Compra (ADMIN, COORDINADOR, ALMACEN, RECEPCION)

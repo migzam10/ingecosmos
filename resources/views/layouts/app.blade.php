@@ -275,6 +275,9 @@
                             <a href="{{ route('admin.empresas.index') }}" class="dropdown-item {{ request()->routeIs('admin.empresas.*') ? 'active' : '' }}">
                                 Empresas / CIAs
                             </a>
+                            <a href="{{ route('proveedores.index') }}" class="dropdown-item {{ request()->routeIs('proveedores.*') ? 'active' : '' }}">
+                                Proveedores
+                            </a>
                             <a href="{{ route('admin.marcas.index') }}" class="dropdown-item {{ request()->routeIs('admin.marcas.*') ? 'active' : '' }}">
                                 Marcas y Modelos
                             </a>
