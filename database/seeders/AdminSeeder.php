@@ -23,7 +23,8 @@ class AdminSeeder extends Seeder
         );
 
         // Secuencias iniciales (continúan del Excel real)
-        Secuencia::firstOrCreate(['tipo' => 'OT'],         ['ultimo_numero' => 49631]);
-        Secuencia::firstOrCreate(['tipo' => 'COTIZACION'], ['ultimo_numero' => 137125]);
+        Secuencia::firstOrCreate(['tipo' => 'OT'],           ['ultimo_numero' => 49631]);
+        Secuencia::firstOrCreate(['tipo' => 'COTIZACION'],   ['ultimo_numero' => 137125]);
+        Secuencia::firstOrCreate(['tipo' => 'ORDEN_COMPRA'], ['ultimo_numero' => 0]); // primera OC = 1
     }
 }

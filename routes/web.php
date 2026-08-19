@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\OrdenTrabajoController;
+use App\Http\Controllers\OrdenCompraController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\CorreccionTrabajoController;
 use App\Http\Controllers\Admin\EmpresaClienteController;
@@ -72,6 +73,23 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/catalogo-repuestos',  [CatalogoRepuestosController::class, 'porVehiculo'])->name('api.catalogo-repuestos');
     Route::get('/api/catalogo-insumos',    [CatalogoInsumosController::class,   'buscar'])->name('api.catalogo-insumos');
     Route::get('/api/salidas/pendientes/{cotizacion}', [SalidaAlmacenController::class, 'pendientesCotizacion'])->name('api.salidas.pendientes');
+    Route::get('/api/proveedor',           [OrdenCompraController::class,       'buscarProveedor'])->name('api.proveedor');
+});
+
+// Órdenes de Compra (ADMIN, COORDINADOR, ALMACEN, RECEPCION)
+Route::middleware(['auth', 'role:ADMIN,COORDINADOR,ALMACEN,RECEPCION'])->group(function () {
+    Route::get('/ordenes-compra',                       [OrdenCompraController::class, 'index'])->name('ordenes-compra.index');
+    Route::get('/ordenes-compra/crear',                 [OrdenCompraController::class, 'create'])->name('ordenes-compra.create');
+    Route::post('/ordenes-compra',                      [OrdenCompraController::class, 'store'])->name('ordenes-compra.store');
+    Route::get('/ordenes-compra/{ordenCompra}',         [OrdenCompraController::class, 'show'])->name('ordenes-compra.show');
+    Route::get('/ordenes-compra/{ordenCompra}/pdf',     [OrdenCompraController::class, 'pdf'])->name('ordenes-compra.pdf');
+    Route::get('/ordenes-compra/{ordenCompra}/editar',  [OrdenCompraController::class, 'edit'])->name('ordenes-compra.edit');
+    Route::put('/ordenes-compra/{ordenCompra}',         [OrdenCompraController::class, 'update'])->name('ordenes-compra.update');
+});
+
+// Eliminar orden de compra — solo ADMIN
+Route::middleware(['auth', 'role:ADMIN'])->group(function () {
+    Route::delete('/ordenes-compra/{ordenCompra}',      [OrdenCompraController::class, 'destroy'])->name('ordenes-compra.destroy');
 });
 
 // Transiciones de estado OT (Coordinador/Admin)
