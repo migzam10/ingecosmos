@@ -68,7 +68,7 @@
     <span class="etiqueta">Tipo</span>
     <span class="valor">
         @if($pago->tipo === 'ABONO')
-            <span class="badge badge-abono">Abono</span>
+            <span class="badge badge-abono">Abono inicial</span>
         @elseif($pago->tipo === 'ANTICIPO')
             <span class="badge badge-anticipo">Anticipo</span>
         @else
@@ -83,9 +83,35 @@
 </div>
 @endif
 
+@php $totalDed = $pago->totalDeducciones(); $neto = (float) $pago->monto - $totalDed; @endphp
+
+<div class="linea"></div>
+
+{{-- Detalle: lo que se paga y lo que se descuenta --}}
+<div class="fila">
+    <span class="etiqueta">Pago bruto</span>
+    <span class="valor">$ {{ number_format($pago->monto, 0, ',', '.') }}</span>
+</div>
+
+@if($totalDed > 0)
+<div style="font-size:10px; color:#555; margin:5px 0 2px;">Deducciones</div>
+@foreach(\App\Models\PagoTecnico::DEDUCCIONES as $col => $label)
+@if($pago->$col > 0)
+<div class="fila" style="font-size:10px; padding-left:10px; margin-bottom:3px;">
+    <span class="etiqueta">{{ $label }}</span>
+    <span style="text-align:right; color:#b91c1c; font-weight:bold;">- $ {{ number_format($pago->$col, 0, ',', '.') }}</span>
+</div>
+@endif
+@endforeach
+<div class="fila" style="font-size:10px; border-top:1px solid #e5e7eb; padding-top:3px;">
+    <span class="etiqueta">Total deducciones</span>
+    <span class="valor" style="color:#b91c1c;">- $ {{ number_format($totalDed, 0, ',', '.') }}</span>
+</div>
+@endif
+
 <div class="total-box">
-    <div style="font-size:10px;color:#555;margin-bottom:3px;">VALOR PAGADO</div>
-    <div class="total-monto">$ {{ number_format($pago->monto, 0, ',', '.') }}</div>
+    <div style="font-size:10px;color:#555;margin-bottom:3px;">{{ $totalDed > 0 ? 'NETO ENTREGADO AL TÉCNICO' : 'VALOR PAGADO' }}</div>
+    <div class="total-monto">$ {{ number_format($neto, 0, ',', '.') }}</div>
 </div>
 
 <div class="linea"></div>

@@ -128,7 +128,7 @@
         <tr>
             <td>{{ ['ABONO'=>'Abono','ANTICIPO'=>'Anticipo','PAGO_FINAL'=>'Pago final'][$pago->tipo] ?? $pago->tipo }}</td>
             <td>{{ $pago->concepto ?? '—' }}</td>
-            <td>{{ $pago->created_at->format('d/m/Y') }}</td>
+            <td>{{ ($pago->fecha_pago ?? $pago->created_at)->format('d/m/Y') }}</td>
             <td class="text-right">$ {{ number_format($pago->monto, 0, ',', '.') }}</td>
         </tr>
         @endforeach
@@ -145,9 +145,23 @@
                 <td class="text-right">$ {{ number_format($data['total_ganado'], 0, ',', '.') }}</td>
             </tr>
             <tr>
-                <td>Avances pagados</td>
+                <td>Pagos (bruto)</td>
                 <td class="text-right">- $ {{ number_format($data['total_avances'], 0, ',', '.') }}</td>
             </tr>
+            @if($data['total_deducciones'] > 0)
+            @foreach($data['deducciones'] as $col => $monto)
+            @if($monto > 0)
+            <tr>
+                <td style="color:#6b7280; padding-left:22px;">{{ \App\Models\PagoTecnico::DEDUCCIONES[$col] }}</td>
+                <td class="text-right" style="color:#6b7280;">- $ {{ number_format($monto, 0, ',', '.') }}</td>
+            </tr>
+            @endif
+            @endforeach
+            <tr>
+                <td style="padding-left:22px; font-style:italic;">Neto entregado al técnico</td>
+                <td class="text-right" style="font-style:italic;">$ {{ number_format($data['total_neto'], 0, ',', '.') }}</td>
+            </tr>
+            @endif
             <tr class="total-final {{ $data['saldo'] <= 0 ? 'saldo-verde' : 'saldo-rojo' }}">
                 <td>Saldo a pagar</td>
                 <td class="text-right">$ {{ number_format($data['saldo'], 0, ',', '.') }}</td>

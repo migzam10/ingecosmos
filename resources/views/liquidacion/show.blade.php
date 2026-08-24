@@ -149,7 +149,10 @@
         <div class="card mb-3">
             <div class="card-header"><h3 class="card-title">Registrar Pago / Avance</h3></div>
             <div class="card-body">
-                <form method="POST" action="{{ route('liquidacion.avance', $data['tecnico']) }}">
+                @error('deducciones')
+                <div class="alert alert-danger py-2 small mb-2">{{ $message }}</div>
+                @enderror
+                <form method="POST" action="{{ route('liquidacion.avance', $data['tecnico']) }}" id="form-avance">
                     @csrf
                     <input type="hidden" name="mes"  value="{{ $mes }}">
                     <input type="hidden" name="anio" value="{{ $anio }}">
@@ -157,33 +160,95 @@
                     <div class="mb-2">
                         <label class="form-label small">Tipo de pago</label>
                         <select name="tipo" class="form-select form-select-sm">
-                            <option value="ABONO">Abono</option>
-                            <option value="ANTICIPO">Anticipo</option>
-                            <option value="PAGO_FINAL">Pago final</option>
+                            <option value="ABONO" {{ old('tipo') === 'ABONO' ? 'selected' : '' }}>Abono inicial</option>
+                            <option value="PAGO_FINAL" {{ old('tipo') === 'PAGO_FINAL' ? 'selected' : '' }}>Pago final</option>
                         </select>
                     </div>
                     <div class="mb-2">
                         <label class="form-label small">Fecha del pago</label>
                         <input type="date" name="fecha_pago" class="form-control form-control-sm"
-                               value="{{ now()->toDateString() }}"
+                               value="{{ old('fecha_pago', now()->toDateString()) }}"
                                max="{{ now()->toDateString() }}" required>
                     </div>
                     <div class="mb-2">
                         <label class="form-label small">Monto</label>
                         <div class="input-group input-group-sm">
                             <span class="input-group-text">$</span>
-                            <input type="number" name="monto" class="form-control"
-                                   min="1" max="{{ max(1, (int)$data['saldo']) }}"
-                                   step="1" value="1" required>
+                            <input type="number" name="monto" id="inp-monto" class="form-control"
+                                   min="1" step="1"
+                                   value="{{ old('monto', $data['saldo'] > 0 ? (int) $data['saldo'] : '') }}"
+                                   placeholder="Monto a pagar" required>
                         </div>
                     </div>
+
+                    {{-- Deducciones (se restan del valor de liquidación) --}}
+                    <div class="border rounded p-2 mb-3 bg-light-subtle">
+                        <div class="small text-muted mb-2">Estos valores se deben restar del valor de liquidación</div>
+                        @foreach(\App\Models\PagoTecnico::DEDUCCIONES as $col => $label)
+                        <div class="row g-1 align-items-center mb-1">
+                            <label class="col-6 form-label small mb-0">{{ $label }}</label>
+                            <div class="col-6">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" name="{{ $col }}" class="form-control text-end inp-ded"
+                                           min="0" step="1" value="{{ old($col, 0) }}">
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                        <div class="d-flex justify-content-between small mt-2 pt-1 border-top">
+                            <span class="text-muted">Total deducciones</span>
+                            <span class="fw-bold" id="res-ded">$ 0</span>
+                        </div>
+                        <div class="small text-danger mt-1" id="msg-ded" style="display:none">
+                            La suma de deducciones no puede superar el monto.
+                        </div>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label small">Concepto (opcional)</label>
                         <input type="text" name="concepto" class="form-control form-control-sm"
-                               placeholder="Ej: Quincena mayo...">
+                               value="{{ old('concepto') }}" placeholder="Ej: Quincena mayo...">
                     </div>
-                    <button class="btn btn-success w-100 btn-sm">Registrar pago</button>
+                    <button class="btn btn-success w-100 btn-sm" id="btn-avance">Registrar pago</button>
                 </form>
+            </div>
+        </div>
+
+        {{-- Resumen de liquidación (con deducciones) --}}
+        <div class="card mb-3">
+            <div class="card-header"><h3 class="card-title">Resumen del mes</h3></div>
+            <div class="card-body p-0">
+                <table class="table table-sm mb-0">
+                    <tr>
+                        <td class="text-muted">Total mano de obra</td>
+                        <td class="text-end fw-bold">$ {{ number_format($data['total_ganado'], 0, ',', '.') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Pagos (bruto)</td>
+                        <td class="text-end">- $ {{ number_format($data['total_avances'], 0, ',', '.') }}</td>
+                    </tr>
+                    @if($data['total_deducciones'] > 0)
+                    @foreach($data['deducciones'] as $col => $monto)
+                    @if($monto > 0)
+                    <tr>
+                        <td class="text-muted small ps-4">{{ \App\Models\PagoTecnico::DEDUCCIONES[$col] }}</td>
+                        <td class="text-end small text-muted">- $ {{ number_format($monto, 0, ',', '.') }}</td>
+                    </tr>
+                    @endif
+                    @endforeach
+                    <tr>
+                        <td class="small ps-4 fst-italic">Neto entregado al técnico</td>
+                        <td class="text-end small fst-italic">$ {{ number_format($data['total_neto'], 0, ',', '.') }}</td>
+                    </tr>
+                    @endif
+                    <tr class="table-active">
+                        <td class="fw-bold">Saldo a pagar</td>
+                        <td class="text-end fw-bold {{ $data['saldo'] > 0 ? 'text-danger' : 'text-success' }}">
+                            $ {{ number_format($data['saldo'], 0, ',', '.') }}
+                        </td>
+                    </tr>
+                </table>
             </div>
         </div>
 
@@ -231,3 +296,45 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+// Deducciones: sumar en vivo, autocalcular Ahorro 1 (10% del monto) y no permitir que superen el pago.
+(function () {
+    const monto = document.getElementById('inp-monto');
+    const deds  = document.querySelectorAll('.inp-ded');
+    const resEl = document.getElementById('res-ded');
+    const msgEl = document.getElementById('msg-ded');
+    const btn   = document.getElementById('btn-avance');
+    const ahorro1 = document.querySelector('[name="ded_ahorro_1"]');
+    if (!monto || !btn) return;
+
+    // Ahorro 1 se autocalcula (10% del monto) mientras el usuario no lo edite.
+    // En un reenvío fallido se respeta lo que ya venía escrito.
+    let ahorro1Auto = {{ old('monto') === null ? 'true' : 'false' }};
+    if (ahorro1) ahorro1.addEventListener('input', () => { ahorro1Auto = false; });
+
+    function aplicarAhorro10() {
+        if (!ahorro1Auto || !ahorro1) return;
+        ahorro1.value = Math.round((parseFloat(monto.value) || 0) * 0.10);
+    }
+
+    const cop = n => new Intl.NumberFormat('es-CO', {style:'currency',currency:'COP',minimumFractionDigits:0,maximumFractionDigits:0}).format(n||0);
+
+    function recalc() {
+        let total = 0;
+        deds.forEach(i => total += parseFloat(i.value) || 0);
+        resEl.textContent = cop(total);
+        const m = parseFloat(monto.value) || 0;
+        const excede = total > m;
+        msgEl.style.display = excede ? '' : 'none';
+        btn.disabled = excede;
+    }
+    deds.forEach(i => i.addEventListener('input', recalc));
+    monto.addEventListener('input', () => { aplicarAhorro10(); recalc(); });
+
+    aplicarAhorro10(); // 10% inicial sobre el monto precargado
+    recalc();
+})();
+</script>
+@endpush

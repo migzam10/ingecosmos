@@ -143,6 +143,9 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
 // Liquidación de técnicos
 Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/liquidacion',                           [LiquidacionController::class, 'index'])->name('liquidacion.index');
+    // Planilla mensual de contratistas (antes del wildcard {tecnico})
+    Route::get('/liquidacion/planilla',                  [LiquidacionController::class, 'planilla'])->name('liquidacion.planilla');
+    Route::get('/liquidacion/planilla/pdf',              [LiquidacionController::class, 'planillaPdf'])->name('liquidacion.planilla.pdf');
     Route::get('/liquidacion/{tecnico}',                 [LiquidacionController::class, 'show'])->name('liquidacion.show');
     Route::post('/liquidacion/{tecnico}/avance',         [LiquidacionController::class, 'registrarAvance'])->name('liquidacion.avance');
     Route::get('/liquidacion/{tecnico}/pdf',             [LiquidacionController::class, 'pdf'])->name('liquidacion.pdf');

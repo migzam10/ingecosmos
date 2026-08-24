@@ -3,6 +3,12 @@
 @section('page_title','Liquidación de Técnicos')
 @section('breadcrumb','Administración')
 
+@section('page_actions')
+<a href="{{ route('liquidacion.planilla', ['mes' => $mes, 'anio' => $anio]) }}" class="btn btn-primary btn-sm">
+    Planilla del mes
+</a>
+@endsection
+
 @section('content')
 
 {{-- Selector de mes --}}
