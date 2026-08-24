@@ -93,6 +93,21 @@ class OrdenCompraController extends Controller
         return $pdf->stream("orden-compra-{$ordenCompra->numero}.pdf");
     }
 
+    /** Lista de proveedores por nombre o NIT (autocompletar del formulario). */
+    public function buscarProveedores(Request $request)
+    {
+        $q = trim($request->get('q', ''));
+
+        $proveedores = Proveedor::when($q !== '', function ($qq) use ($q) {
+                $qq->where('nombre', 'like', "%$q%")->orWhere('nit', 'like', "%$q%");
+            })
+            ->orderBy('nombre')
+            ->limit(15)
+            ->get(['id', 'nombre', 'nit', 'telefono']);
+
+        return response()->json($proveedores);
+    }
+
     /** Autollenado del proveedor por Cédula / NIT (igual que el buscador de cédula del cliente). */
     public function buscarProveedor(Request $request)
     {

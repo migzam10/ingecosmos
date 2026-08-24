@@ -75,6 +75,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/api/catalogo-insumos',    [CatalogoInsumosController::class,   'buscar'])->name('api.catalogo-insumos');
     Route::get('/api/salidas/pendientes/{cotizacion}', [SalidaAlmacenController::class, 'pendientesCotizacion'])->name('api.salidas.pendientes');
     Route::get('/api/proveedor',           [OrdenCompraController::class,       'buscarProveedor'])->name('api.proveedor');
+    Route::get('/api/proveedores',         [OrdenCompraController::class,       'buscarProveedores'])->name('api.proveedores');
 });
 
 // Proveedores (ADMIN, COORDINADOR, ALMACEN, RECEPCION)

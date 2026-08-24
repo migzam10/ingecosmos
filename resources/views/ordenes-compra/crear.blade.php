@@ -69,6 +69,17 @@
             <div class="card-header"><h3 class="card-title">Datos del Proveedor</h3></div>
             <div class="card-body">
                 <div class="row g-2">
+                    <div class="col-12 col-md-6 position-relative">
+                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
+                        <input type="text" name="proveedor_nombre" id="inp-prov-nombre" autocomplete="off"
+                               class="form-control @error('proveedor_nombre') is-invalid @enderror"
+                               value="{{ old('proveedor_nombre', $orden->proveedor->nombre ?? '') }}" maxlength="150"
+                               required placeholder="Escribe para buscar...">
+                        @error('proveedor_nombre')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        <div id="prov-resultados" class="list-group position-absolute w-100 shadow-sm"
+                             style="display:none; z-index:20; max-height:220px; overflow-y:auto;"></div>
+                        <div class="form-hint small" id="prov-hint"></div>
+                    </div>
                     <div class="col-6 col-md-3">
                         <label class="form-label">Cédula / NIT</label>
                         <input type="text" name="proveedor_nit" id="inp-nit"
@@ -76,13 +87,6 @@
                                value="{{ old('proveedor_nit', $orden->proveedor->nit ?? '') }}" maxlength="30" placeholder="Buscar...">
                         @error('proveedor_nit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         <div class="form-hint small" id="nit-hint"></div>
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label">Nombre <span class="text-danger">*</span></label>
-                        <input type="text" name="proveedor_nombre" id="inp-prov-nombre"
-                               class="form-control @error('proveedor_nombre') is-invalid @enderror"
-                               value="{{ old('proveedor_nombre', $orden->proveedor->nombre ?? '') }}" maxlength="150" required>
-                        @error('proveedor_nombre')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-6 col-md-3">
                         <label class="form-label">Teléfono</label>
@@ -225,6 +229,7 @@
 const URL_PLACA = '{{ route("api.placa") }}';
 const URL_MOD   = '{{ route("api.modelos") }}';
 const URL_PROV  = '{{ route("api.proveedor") }}';
+const URL_PROV_LIST = '{{ route("api.proveedores") }}';
 
 @php
     // Ítems a pintar: old() si rebotó la validación; el modelo si es edición; vacío si es nuevo.
@@ -376,6 +381,47 @@ document.getElementById('inp-nit').addEventListener('input', function () {
                 document.getElementById('inp-prov-tel').value = d.proveedor_telefono ?? '';
             });
     }, 350);
+});
+
+// Buscar proveedor por NOMBRE (lista tipo autocompletar) → al seleccionar trae NIT y teléfono
+let tProvNom = null;
+const inpProvNombre = document.getElementById('inp-prov-nombre');
+const boxProvRes    = document.getElementById('prov-resultados');
+
+inpProvNombre.addEventListener('input', function () {
+    clearTimeout(tProvNom);
+    const q = this.value.trim();
+    document.getElementById('prov-hint').textContent = '';
+    if (q.length < 2) { boxProvRes.style.display = 'none'; return; }
+    tProvNom = setTimeout(() => {
+        fetch(`${URL_PROV_LIST}?q=${encodeURIComponent(q)}`)
+            .then(r => r.json()).then(items => {
+                boxProvRes.innerHTML = '';
+                if (!items.length) { boxProvRes.style.display = 'none'; return; }
+                items.forEach(p => {
+                    const a = document.createElement('button');
+                    a.type = 'button';
+                    a.className = 'list-group-item list-group-item-action py-1 px-2 small';
+                    a.innerHTML = `<strong>${p.nombre}</strong>` + (p.nit ? ` <span class="text-muted">· NIT ${p.nit}</span>` : '');
+                    a.onclick = () => {
+                        inpProvNombre.value = p.nombre || '';
+                        document.getElementById('inp-nit').value = p.nit || '';
+                        document.getElementById('inp-prov-tel').value = p.telefono || '';
+                        boxProvRes.style.display = 'none';
+                        document.getElementById('prov-hint').textContent = '✓ Proveedor seleccionado';
+                        document.getElementById('prov-hint').className = 'form-hint small text-success';
+                    };
+                    boxProvRes.appendChild(a);
+                });
+                boxProvRes.style.display = 'block';
+            });
+    }, 250);
+});
+// Cerrar la lista al hacer clic fuera
+document.addEventListener('click', e => {
+    if (!e.target.closest('#inp-prov-nombre') && !e.target.closest('#prov-resultados')) {
+        boxProvRes.style.display = 'none';
+    }
 });
 
 function cargarModelos(idMarca, idModeloSel = null) {
