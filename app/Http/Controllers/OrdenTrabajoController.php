@@ -334,6 +334,40 @@ class OrdenTrabajoController extends Controller
         return view('ordenes.show', compact('orden', 'tecnicos'));
     }
 
+    /**
+     * PDF de recepción: solo datos del vehículo, propietario, inventario,
+     * fotos y observaciones. No muestra valores, cotizaciones ni técnicos.
+     */
+    public function pdfRecepcion(OrdenTrabajo $orden)
+    {
+        $orden->load([
+            'vehiculo.marca', 'vehiculo.modelo', 'clientePersona',
+            'inventario', 'fotos', 'creadoPor',
+        ]);
+
+        $config = \App\Models\ConfiguracionEmpresa::getActual();
+
+        $invSimples = [
+            'retrovisores' => 'Retrovisores', 'retrovisor_interno' => 'Retrovisor Interno',
+            'radio' => 'Radio', 'encendedor' => 'Encendedor', 'pito' => 'Pito',
+            'tapizado' => 'Tapizado', 'luz_techo' => 'Luz techo', 'tapa_gasolina' => 'Tapa gasolina',
+            'llave_pernos' => 'Llave Pernos', 'herramientas' => 'Herramientas',
+            'kit_carretera' => 'Kit de Carretera', 'gato' => 'Gato', 'extintor' => 'Extintor',
+            'sensores' => 'Sensores', 'camara_reversa' => 'Cámara reversa',
+            'control_alarma' => 'Control alarma', 'bateria' => 'Batería', 'comando_ptas' => 'Comando ptas',
+        ];
+        $invCantidad = [
+            'panoramicos' => 'Panorámicos', 'parlantes' => 'Parlantes', 'rejillas_aa' => 'Rejillas A/A',
+            'plumillas' => 'Plumillas', 'cinturones' => 'Cinturones', 'manijas' => 'Manijas',
+            'tapa_soles' => 'Tapa soles', 'tapetes' => 'Tapetes',
+        ];
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('ordenes.pdf-recepcion', compact('orden', 'config', 'invSimples', 'invCantidad'))
+            ->setPaper('letter', 'portrait');
+
+        return $pdf->stream("OT-{$orden->numero_ot}-recepcion.pdf");
+    }
+
     // AJAX: buscar vehículo por placa
     public function buscarPlaca(Request $request)
     {

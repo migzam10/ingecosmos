@@ -63,6 +63,8 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR,RECEPCION,COTIZADOR'])->group
     Route::delete('/anexos/{anexo}', [AnexoOtController::class, 'destroy'])->name('anexos.destroy');
     // Inventario B/R/G
     Route::put('/ordenes/{orden}/inventario', [InventarioController::class, 'update'])->name('inventario.update');
+    // PDF de recepción (vehículo, propietario, inventario, fotos y observaciones)
+    Route::get('/ordenes/{orden}/pdf-recepcion', [OrdenTrabajoController::class, 'pdfRecepcion'])->name('ordenes.pdf-recepcion');
 });
 
 // AJAX endpoints

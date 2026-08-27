@@ -35,6 +35,11 @@
     </a>
     @endif
 
+    {{-- PDF: solo vehículo, propietario, inventario, fotos y observaciones --}}
+    <a href="{{ route('ordenes.pdf-recepcion', $orden) }}" target="_blank" class="btn btn-outline-primary btn-sm">
+        <x-icon name="download" /> PDF
+    </a>
+
     <a href="{{ route('ordenes.index') }}" class="btn btn-outline-secondary btn-sm"><x-icon name="arrow-left" /> Volver</a>
 </div>
 @endsection
