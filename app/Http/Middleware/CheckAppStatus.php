@@ -19,7 +19,7 @@ class CheckAppStatus
             return $next($request);
         }
 
-        $habilitada = Cache::remember('remote_app_status', 3600, function () {
+        $habilitada = Cache::remember('remote_app_status', 300, function () {
             $url = config('services.killswitch.url');
             $key = config('services.killswitch.key');
 

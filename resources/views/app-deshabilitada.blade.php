@@ -75,7 +75,7 @@
     <hr class="divider">
     <p class="contacto">
       ¿Tiene preguntas? Contáctenos en
-      <a href="mailto:miguel@migzam.uk">miguel@migzam.uk</a>
+      <a href="mailto:miguel@migzam.com">miguel@migzam.com</a>
     </p>
   </div>
 </body>
