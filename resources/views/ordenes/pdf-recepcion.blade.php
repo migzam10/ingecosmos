@@ -174,8 +174,8 @@
 <div class="terminos">
     <div class="bloque-tit">Términos y condiciones</div>
     <p>
-        <span class="num">1.</span> Autorizo al taller a realizar pruebas de rutas requeridas fuera del taller, traslados.
-        <span class="num">2.</span> Realización de diagnósticos requeridos en lo solicitado en la orden.
+        <span class="num">1.</span> Pruebas de ruta y traslados requeridos fuera del taller.
+        <span class="num">2.</span> Realizar diagnósticos requeridos en lo solicitado en la orden.
         <span class="num">3.</span> El taller se compromete a no realizar trabajos adicionales sin previa autorización.
         <span class="num">4.</span> Para la entrega del vehículo se requiere el pago total de las reparaciones autorizadas y realizadas.
         <span class="num">5.</span> Las pertenencias deben ser retiradas en el momento del inventario. No nos hacemos responsables de objetos personales no reportados.
