@@ -38,6 +38,10 @@ class LiquidacionController extends Controller
     // Guardar valor a liquidar por OT (lo asigna el coordinador)
     public function guardarValorOT(Request $request, TrabajoTecnico $trabajo)
     {
+        if ($trabajo->liquidado) {
+            return back()->with('error', 'No se puede modificar el valor: este trabajo ya fue liquidado.');
+        }
+
         $request->validate([
             'valor_liquidar' => 'required|numeric|min:0',
         ]);
@@ -88,7 +92,13 @@ class LiquidacionController extends Controller
             $datos[$col] = (float) $request->input($col, 0);
         }
 
-        PagoTecnico::create($datos);
+        $pago = PagoTecnico::create($datos);
+
+        if ($request->tipo === 'PAGO_FINAL') {
+            $resumen = $this->service->resumenTecnico($tecnico, (int) $request->mes, (int) $request->anio);
+            TrabajoTecnico::whereIn('id', $resumen['trabajos']->pluck('id'))
+                ->update(['liquidado' => true]);
+        }
 
         return back()->with('success', 'Pago registrado correctamente.');
     }
@@ -120,8 +130,22 @@ class LiquidacionController extends Controller
         $tecnico = $pago->tecnico;
         $mes     = $pago->mes;
         $anio    = $pago->anio;
+        $tipo    = $pago->tipo;
 
         $pago->delete();
+
+        if ($tipo === 'PAGO_FINAL') {
+            $hayOtroFinal = PagoTecnico::where('id_tecnico', $tecnico->id)
+                ->where('mes', $mes)
+                ->where('anio', $anio)
+                ->where('tipo', 'PAGO_FINAL')
+                ->exists();
+            if (!$hayOtroFinal) {
+                $resumen = $this->service->resumenTecnico($tecnico, $mes, $anio);
+                TrabajoTecnico::whereIn('id', $resumen['trabajos']->pluck('id'))
+                    ->update(['liquidado' => false]);
+            }
+        }
 
         return redirect()->route('liquidacion.show', [$tecnico, 'mes' => $mes, 'anio' => $anio])
             ->with('success', 'Pago eliminado correctamente.');
@@ -139,7 +163,7 @@ class LiquidacionController extends Controller
 
         $config = ConfiguracionEmpresa::getActual();
 
-        $pdf = Pdf::loadView('liquidacion.pdf', compact('data', 'meses', 'config'))
+        $pdf = Pdf::loadView('liquidacion.pdf', compact('data', 'meses', 'config', 'mes', 'anio'))
             ->setPaper('letter', 'portrait');
 
         return $pdf->stream("liquidacion-{$tecnico->nombre}-{$meses[$mes]}-{$anio}.pdf");

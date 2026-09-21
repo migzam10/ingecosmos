@@ -17,12 +17,13 @@ class PagoTecnico extends Model
         'ded_ahorro_1'          => 'Ahorro 1 (10%)',
         'ded_ahorro_2'          => 'Ahorro 2',
         'ded_prestamo'          => 'Prestamo',
+        'ded_uniformes'         => 'Uniformes',
     ];
 
     protected $fillable = [
         'id_tecnico', 'id_user', 'id_ot', 'anio', 'mes', 'monto', 'tipo', 'concepto', 'fecha_pago',
         'ded_materiales', 'ded_seguro_vida', 'ded_seguridad_social',
-        'ded_recordar', 'ded_ahorro_1', 'ded_ahorro_2', 'ded_prestamo',
+        'ded_recordar', 'ded_ahorro_1', 'ded_ahorro_2', 'ded_prestamo', 'ded_uniformes',
     ];
 
     protected function casts(): array
@@ -36,6 +37,7 @@ class PagoTecnico extends Model
             'ded_ahorro_1'         => 'decimal:2',
             'ded_ahorro_2'         => 'decimal:2',
             'ded_prestamo'         => 'decimal:2',
+            'ded_uniformes'        => 'decimal:2',
         ];
     }
 

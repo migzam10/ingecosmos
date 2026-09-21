@@ -46,7 +46,10 @@
 </style>
 </head>
 <body>
-
+@php
+$mes  = $mes  ?? ($data['mes']  ?? now()->month);
+$anio = $anio ?? ($data['anio'] ?? now()->year);
+@endphp
 
 @include('pdf._header', [
     'config' => $config,
@@ -85,6 +88,7 @@
             <th>Placa</th>
             <th>Vehículo</th>
             <th>Función</th>
+            <th style="width:75px">{{ ($anio < 2026 || ($anio == 2026 && $mes < 9)) ? 'Fecha asig.' : 'Fecha fin' }}</th>
             <th>Estado</th>
             <th class="text-right" style="width:110px">Valor</th>
         </tr>
@@ -96,8 +100,11 @@
             <td>{{ $t->ot->vehiculo->placa }}</td>
             <td>{{ $t->ot->vehiculo->marca->nombre }}</td>
             <td>{{ $nombresEsp[$t->especialidad] ?? $t->especialidad }}</td>
+            <td>{{ $t->fin_en ? $t->fin_en->format('d/m/Y') : ($t->fecha_asignacion ? $t->fecha_asignacion->format('d/m/Y') : '—') }}</td>
             <td>
-                @if($t->estado === 'FINALIZADO')
+                @if($t->liquidado)
+                <span class="badge-fin" style="background:#f3e8ff; color:#6b21a8;">Liquidado</span>
+                @elseif($t->estado === 'FINALIZADO')
                 <span class="badge-fin">Finalizado</span>
                 @else
                 <span class="badge-proc">En proceso</span>
@@ -106,7 +113,7 @@
             <td class="text-right">$ {{ number_format($t->valor_liquidar, 0, ',', '.') }}</td>
         </tr>
         @empty
-        <tr><td colspan="6" style="text-align:center; color:#999;">Sin órdenes en este período.</td></tr>
+        <tr><td colspan="7" style="text-align:center; color:#999;">Sin órdenes en este período.</td></tr>
         @endforelse
     </tbody>
 </table>
@@ -158,12 +165,12 @@
             @endif
             @endforeach
             <tr>
-                <td style="padding-left:22px; font-style:italic;">Neto entregado al técnico</td>
+                <td style="padding-left:22px; font-style:italic;">Valor pagado</td>
                 <td class="text-right" style="font-style:italic;">$ {{ number_format($data['total_neto'], 0, ',', '.') }}</td>
             </tr>
             @endif
             <tr class="total-final {{ $data['saldo'] <= 0 ? 'saldo-verde' : 'saldo-rojo' }}">
-                <td>Saldo a pagar</td>
+                <td>Saldo pendiente</td>
                 <td class="text-right">$ {{ number_format($data['saldo'], 0, ',', '.') }}</td>
             </tr>
         </table>

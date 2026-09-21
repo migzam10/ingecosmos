@@ -81,9 +81,13 @@
                 <table class="table table-sm table-vcenter mb-0">
                     <thead>
                         <tr>
+                            <th style="width:36px" class="text-center">
+                                <input type="checkbox" id="chk-sel-todas" class="form-check-input" title="Seleccionar todas las OTs">
+                            </th>
                             <th># Orden</th>
                             <th>Placa / Vehículo</th>
                             <th>Función</th>
+                            <th>{{ ($anio < 2026 || ($anio == 2026 && $mes < 9)) ? 'Asignado el' : 'Terminado el' }}</th>
                             <th>Estado trabajo</th>
                             <th class="text-end">Valor a liquidar</th>
                             <th style="width:130px"></th>
@@ -96,14 +100,24 @@
                         @endphp
                         @forelse($data['trabajos'] as $trabajo)
                         <tr>
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input chk-ot"
+                                       value="{{ $trabajo->ot->numero_ot }}"
+                                       title="Seleccionar OT {{ $trabajo->ot->numero_ot }}">
+                            </td>
                             <td class="fw-bold">{{ $trabajo->ot->numero_ot }}</td>
                             <td class="small">
                                 <span class="badge bg-blue-lt">{{ $trabajo->ot->vehiculo->placa }}</span>
                                 <span class="text-muted ms-1">{{ $trabajo->ot->vehiculo->marca->nombre }}</span>
                             </td>
                             <td class="small">{{ $nombresEsp[$trabajo->especialidad] ?? $trabajo->especialidad }}</td>
+                            <td class="small text-muted">
+                                {{ $trabajo->fin_en ? $trabajo->fin_en->format('d/m/Y') : ($trabajo->fecha_asignacion ? $trabajo->fecha_asignacion->format('d/m/Y') : '—') }}
+                            </td>
                             <td>
-                                @if($trabajo->estado === 'FINALIZADO')
+                                @if($trabajo->liquidado)
+                                <span class="badge bg-purple-lt">Liquidado</span>
+                                @elseif($trabajo->estado === 'FINALIZADO')
                                 <span class="badge bg-success-lt">Finalizado</span>
                                 @elseif($trabajo->estado === 'EN_PROCESO')
                                 <span class="badge bg-warning-lt">En proceso</span>
@@ -115,6 +129,9 @@
                                 $ {{ number_format($trabajo->valor_liquidar, 0, ',', '.') }}
                             </td>
                             <td>
+                                @if($trabajo->liquidado)
+                                <span class="text-muted small fst-italic">Cerrado</span>
+                                @else
                                 <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}"
                                       class="d-flex gap-1">
                                     @csrf
@@ -127,11 +144,12 @@
                                     </div>
                                     <button class="btn btn-sm btn-outline-secondary"><x-icon name="check" /></button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-3">
+                            <td colspan="8" class="text-center text-muted py-3">
                                 Sin órdenes registradas para este período.
                             </td>
                         </tr>
@@ -196,19 +214,30 @@
                             </div>
                         </div>
                         @endforeach
-                        <div class="d-flex justify-content-between small mt-2 pt-1 border-top">
-                            <span class="text-muted">Total deducciones</span>
-                            <span class="fw-bold" id="res-ded">$ 0</span>
+                        <div class="border-top mt-2 pt-2">
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Monto del pago:</span>
+                                <span class="fw-medium" id="res-monto">$ 0</span>
+                            </div>
+                            <div class="d-flex justify-content-between small mb-1">
+                                <span class="text-muted">Valor deducciones:</span>
+                                <span class="text-danger fw-medium" id="res-ded">$ 0</span>
+                            </div>
+                            <div class="d-flex justify-content-between small pt-1 border-top">
+                                <span class="fw-bold text-dark">Recibe el técnico en sí:</span>
+                                <span class="fw-bold text-success fs-5" id="res-neto">$ 0</span>
+                            </div>
                         </div>
-                        <div class="small text-danger mt-1" id="msg-ded" style="display:none">
+                        <div class="small text-danger mt-2 alert alert-danger py-1 px-2 mb-0" id="msg-ded" style="display:none">
                             La suma de deducciones no puede superar el monto.
                         </div>
                     </div>
 
                     <div class="mb-3">
                         <label class="form-label small">Concepto (opcional)</label>
-                        <input type="text" name="concepto" class="form-control form-control-sm"
-                               value="{{ old('concepto') }}" placeholder="Ej: Quincena mayo...">
+                        <input type="text" name="concepto" id="inp-concepto" class="form-control form-control-sm"
+                               value="{{ old('concepto') }}" placeholder="Ej: Quincena mayo o selecciona OTs...">
+                        <div class="form-text small text-muted">Puedes escribir texto libre o marcar las casillas de las OTs en la tabla.</div>
                     </div>
                     <button class="btn btn-success w-100 btn-sm" id="btn-avance">Registrar pago</button>
                 </form>
@@ -238,12 +267,12 @@
                     @endif
                     @endforeach
                     <tr>
-                        <td class="small ps-4 fst-italic">Neto entregado al técnico</td>
+                        <td class="small ps-4 fst-italic">Total pagado</td>
                         <td class="text-end small fst-italic">$ {{ number_format($data['total_neto'], 0, ',', '.') }}</td>
                     </tr>
                     @endif
                     <tr class="table-active">
-                        <td class="fw-bold">Saldo a pagar</td>
+                        <td class="fw-bold">Saldo pendiente</td>
                         <td class="text-end fw-bold {{ $data['saldo'] > 0 ? 'text-danger' : 'text-success' }}">
                             $ {{ number_format($data['saldo'], 0, ',', '.') }}
                         </td>
@@ -299,18 +328,22 @@
 
 @push('scripts')
 <script>
-// Deducciones: sumar en vivo, autocalcular Ahorro 1 (10% del monto) y no permitir que superen el pago.
 (function () {
-    const monto = document.getElementById('inp-monto');
-    const deds  = document.querySelectorAll('.inp-ded');
-    const resEl = document.getElementById('res-ded');
-    const msgEl = document.getElementById('msg-ded');
-    const btn   = document.getElementById('btn-avance');
-    const ahorro1 = document.querySelector('[name="ded_ahorro_1"]');
+    const monto    = document.getElementById('inp-monto');
+    const deds     = document.querySelectorAll('.inp-ded');
+    const resMonto = document.getElementById('res-monto');
+    const resDed   = document.getElementById('res-ded');
+    const resNeto  = document.getElementById('res-neto');
+    const msgEl    = document.getElementById('msg-ded');
+    const btn      = document.getElementById('btn-avance');
+    const ahorro1  = document.querySelector('[name="ded_ahorro_1"]');
+    const concepto = document.getElementById('inp-concepto');
+    const chkOts   = document.querySelectorAll('.chk-ot');
+    const chkTodas = document.getElementById('chk-sel-todas');
+
     if (!monto || !btn) return;
 
-    // Ahorro 1 se autocalcula (10% del monto) mientras el usuario no lo edite.
-    // En un reenvío fallido se respeta lo que ya venía escrito.
+    // Ahorro 1 se autocalcula (10% del monto) mientras el usuario no lo edite manualmente
     let ahorro1Auto = {{ old('monto') === null ? 'true' : 'false' }};
     if (ahorro1) ahorro1.addEventListener('input', () => { ahorro1Auto = false; });
 
@@ -322,19 +355,67 @@
     const cop = n => new Intl.NumberFormat('es-CO', {style:'currency',currency:'COP',minimumFractionDigits:0,maximumFractionDigits:0}).format(n||0);
 
     function recalc() {
-        let total = 0;
-        deds.forEach(i => total += parseFloat(i.value) || 0);
-        resEl.textContent = cop(total);
+        let totalDed = 0;
+        deds.forEach(i => totalDed += parseFloat(i.value) || 0);
         const m = parseFloat(monto.value) || 0;
-        const excede = total > m;
-        msgEl.style.display = excede ? '' : 'none';
+        const neto = Math.max(0, m - totalDed);
+
+        if (resMonto) resMonto.textContent = cop(m);
+        if (resDed)   resDed.textContent   = '- ' + cop(totalDed);
+        if (resNeto)  resNeto.textContent  = cop(neto);
+
+        const excede = totalDed > m;
+        if (msgEl) msgEl.style.display = excede ? '' : 'none';
         btn.disabled = excede;
     }
+
     deds.forEach(i => i.addEventListener('input', recalc));
     monto.addEventListener('input', () => { aplicarAhorro10(); recalc(); });
 
-    aplicarAhorro10(); // 10% inicial sobre el monto precargado
+    aplicarAhorro10();
     recalc();
+
+    // ── Selección de OTs para el campo Concepto ──
+    let lastOtString = '';
+
+    function actualizarConceptoDesdeOts() {
+        if (!concepto) return;
+        const seleccionadas = Array.from(chkOts)
+            .filter(c => c.checked)
+            .map(c => c.value);
+
+        const nuevaCadenaOts = seleccionadas.join(' - ');
+
+        let actual = concepto.value;
+        if (lastOtString && actual.includes(lastOtString)) {
+            // Reemplazar la cadena de OTs anterior manteniendo cualquier texto extra escrito por el usuario
+            concepto.value = actual.replace(lastOtString, nuevaCadenaOts).trim();
+            if (concepto.value === '-') concepto.value = '';
+        } else if (nuevaCadenaOts) {
+            if (!actual.trim()) {
+                concepto.value = nuevaCadenaOts;
+            } else {
+                concepto.value = actual.trim() + ' - ' + nuevaCadenaOts;
+            }
+        }
+
+        lastOtString = nuevaCadenaOts;
+
+        // Actualizar estado de "seleccionar todas"
+        if (chkTodas) {
+            chkTodas.checked = chkOts.length > 0 && seleccionadas.length === chkOts.length;
+            chkTodas.indeterminate = seleccionadas.length > 0 && seleccionadas.length < chkOts.length;
+        }
+    }
+
+    chkOts.forEach(c => c.addEventListener('change', actualizarConceptoDesdeOts));
+
+    if (chkTodas) {
+        chkTodas.addEventListener('change', function () {
+            chkOts.forEach(c => c.checked = chkTodas.checked);
+            actualizarConceptoDesdeOts();
+        });
+    }
 })();
 </script>
 @endpush

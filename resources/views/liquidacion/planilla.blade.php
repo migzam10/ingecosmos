@@ -44,7 +44,7 @@
                     <th rowspan="2" class="align-middle">Empleado</th>
                     <th rowspan="2" class="align-middle text-end">Devengado</th>
                     <th colspan="{{ count($deducciones) }}" class="text-center">Deducciones</th>
-                    <th rowspan="2" class="align-middle text-end">Neto entregado</th>
+                    <th rowspan="2" class="align-middle text-end">Valor pagado</th>
                     <th rowspan="2" class="align-middle text-end">Saldo</th>
                 </tr>
                 <tr>

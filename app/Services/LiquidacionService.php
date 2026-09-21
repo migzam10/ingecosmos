@@ -9,22 +9,56 @@ use Illuminate\Support\Collection;
 
 class LiquidacionService
 {
+    public const CORTE_MES_NUEVA_LOGICA = 9;
+    public const CORTE_ANIO_NUEVA_LOGICA = 2026;
+
     // Resumen de un técnico en un mes/año
     public function resumenTecnico(Tecnico $tecnico, int $mes, int $anio): array
     {
-        // Trabajos del técnico en OTs activas/entregadas, del período indicado.
-        // El período se define ÚNICAMENTE por la fecha de asignación del trabajo:
-        // así un mismo trabajo nunca cae en dos meses (evita duplicar el pago).
-        $trabajos = TrabajoTecnico::with(['ot.empresaCliente', 'ot.vehiculo.marca'])
-            ->where('id_tecnico', $tecnico->id)
-            ->whereHas('ot', function ($q) {
-                $q->whereIn('estado_proceso', [
-                    'EN_PROCESO', 'PROGRAMADO_ENTREGA', 'ENTREGADO',
-                ]);
-            })
-            ->whereMonth('fecha_asignacion', $mes)
-            ->whereYear('fecha_asignacion', $anio)
-            ->get();
+        $esHistorico = ($anio < self::CORTE_ANIO_NUEVA_LOGICA)
+            || ($anio === self::CORTE_ANIO_NUEVA_LOGICA && $mes < self::CORTE_MES_NUEVA_LOGICA);
+
+        if ($esHistorico) {
+            // Períodos históricos cerrados (anteriores a septiembre 2026):
+            // Se calcula por fecha de asignación para preservar exactamente los pagos y saldos ya registrados.
+            $trabajos = TrabajoTecnico::with(['ot.empresaCliente', 'ot.vehiculo.marca'])
+                ->where('id_tecnico', $tecnico->id)
+                ->whereHas('ot', function ($q) {
+                    $q->whereIn('estado_proceso', [
+                        'EN_PROCESO', 'PROGRAMADO_ENTREGA', 'ENTREGADO',
+                    ]);
+                })
+                ->whereMonth('fecha_asignacion', $mes)
+                ->whereYear('fecha_asignacion', $anio)
+                ->orderBy('fecha_asignacion', 'DESC')
+                ->get();
+        } else {
+            // Período activo y futuro (desde septiembre 2026 en adelante):
+            // Rige la fecha en que el técnico finalizó la tarea (fin_en).
+            // Se excluyen trabajos ya liquidados en períodos anteriores.
+            $trabajos = TrabajoTecnico::with(['ot.empresaCliente', 'ot.vehiculo.marca'])
+                ->where('id_tecnico', $tecnico->id)
+                ->whereHas('ot', function ($q) {
+                    $q->whereIn('estado_proceso', [
+                        'EN_PROCESO', 'PROGRAMADO_ENTREGA', 'ENTREGADO',
+                    ]);
+                })
+                ->where('liquidado', false)
+                ->where(function ($q) use ($mes, $anio) {
+                    $q->where(function ($q2) use ($mes, $anio) {
+                        $q2->whereNotNull('fin_en')
+                           ->whereMonth('fin_en', $mes)
+                           ->whereYear('fin_en', $anio);
+                    })->orWhere(function ($q2) use ($mes, $anio) {
+                        $q2->whereNull('fin_en')
+                           ->where('estado', 'FINALIZADO')
+                           ->whereMonth('fecha_asignacion', $mes)
+                           ->whereYear('fecha_asignacion', $anio);
+                    });
+                })
+                ->orderByRaw('COALESCE(fin_en, fecha_asignacion) DESC')
+                ->get();
+        }
 
         $totalGanado = $trabajos->sum('valor_liquidar');
 
