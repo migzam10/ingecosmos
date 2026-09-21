@@ -5,7 +5,7 @@
         </h2>
 
         <p class="mt-1 text-sm text-gray-600">
-            {{ __('Actualice el nombre y el correo electrónico de su cuenta.') }}
+            {{ __('Actualice el nombre, correo electrónico y teléfono de su cuenta.') }}
         </p>
     </header>
 
@@ -45,6 +45,12 @@
                     @endif
                 </div>
             @endif
+        </div>
+
+        <div>
+            <x-input-label for="telefono" :value="__('Teléfono (máx. 10 caracteres)')" />
+            <x-text-input id="telefono" name="telefono" type="text" maxlength="10" class="mt-1 block w-full" :value="old('telefono', $user->telefono)" placeholder="Ej: 3001234567" />
+            <x-input-error class="mt-2" :messages="$errors->get('telefono')" />
         </div>
 
         <div class="flex items-center gap-4">

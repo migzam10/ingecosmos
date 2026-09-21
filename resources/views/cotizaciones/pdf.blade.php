@@ -47,7 +47,7 @@
     .observaciones { clear: both; margin-top: 16px; padding: 9px 12px; background: #f8f9fa;
                      border-left: 3px solid #040065; border-radius: 3px; font-size: 10px; color: #374151; }
 
-    .generado { clear: both; margin-top: 18px; font-size: 9px; color: #9ca3af; }
+    .generado { clear: both; margin-top: 18px; font-size: 9.5px; font-weight: bold; color: #111827; }
 
     .badge-leve   { background:#d1fae5; color:#065f46; padding:2px 7px; border-radius:10px; }
     .badge-medio  { background:#fef3c7; color:#92400e; padding:2px 7px; border-radius:10px; }
@@ -354,7 +354,7 @@
 @endif
 
 <div class="generado">
-    Cotización generada por {{ $cotizacion->creadaPor->name }} el {{ $cotizacion->created_at->format('d/m/Y H:i') }}
+    <strong>Cotización generada por {{ $cotizacion->creadaPor?->name ?? '—' }}{{ !empty($cotizacion->creadaPor?->telefono) ? ' - ' . $cotizacion->creadaPor->telefono : '' }} el {{ $cotizacion->created_at->format('d/m/Y H:i') }}</strong>
 </div>
 
 @include('pdf._footer', ['config' => $config])

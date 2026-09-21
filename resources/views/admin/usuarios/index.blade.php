@@ -10,13 +10,14 @@
     <div class="table-responsive">
         <table class="table table-vcenter table-hover card-table">
             <thead>
-                <tr><th>Nombre</th><th>Email</th><th>Roles</th><th>Estado</th><th></th></tr>
+                <tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Roles</th><th>Estado</th><th></th></tr>
             </thead>
             <tbody>
                 @forelse($usuarios as $usuario)
                 <tr class="{{ !$usuario->activo ? 'opacity-50' : '' }}">
                     <td class="fw-medium">{{ $usuario->name }}</td>
                     <td class="text-muted small">{{ $usuario->email }}</td>
+                    <td class="text-muted small">{{ $usuario->telefono ?: '—' }}</td>
                     <td>
                         @foreach($usuario->roles ?: [] as $rol)
                         <span class="badge bg-blue-lt me-1">{{ $rol }}</span>

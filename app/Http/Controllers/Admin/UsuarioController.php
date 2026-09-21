@@ -37,6 +37,7 @@ class UsuarioController extends Controller
         User::create([
             'name'     => $data['name'],
             'email'    => $data['email'],
+            'telefono' => $data['telefono'] ?? null,
             'password' => Hash::make($data['password']),
             'roles'    => $roles,
             'activo'   => true,
@@ -66,10 +67,11 @@ class UsuarioController extends Controller
         }
 
         $update = [
-            'name'   => $data['name'],
-            'email'  => $data['email'],
-            'roles'  => $roles,
-            'activo' => $request->boolean('activo', true),
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'telefono' => $data['telefono'] ?? null,
+            'roles'    => $roles,
+            'activo'   => $request->boolean('activo', true),
         ];
 
         if (!empty($data['password'])) {
@@ -96,6 +98,7 @@ class UsuarioController extends Controller
         $rules = [
             'name'     => 'required|string|max:150',
             'email'    => $emailRule,
+            'telefono' => 'nullable|string|max:10',
             'roles'    => 'nullable|array',
             'roles.*'  => 'in:' . implode(',', self::ROLES_DISPONIBLES),
             'password' => $usuario
@@ -107,6 +110,7 @@ class UsuarioController extends Controller
             'name.required'     => 'El nombre es obligatorio.',
             'email.required'    => 'El correo es obligatorio.',
             'email.unique'      => 'Este correo ya está registrado.',
+            'telefono.max'      => 'El teléfono no puede superar los 10 caracteres.',
             'password.required' => 'La contraseña es obligatoria.',
             'password.min'      => 'La contraseña debe tener al menos 8 caracteres.',
         ]);

@@ -26,6 +26,13 @@
             </div>
 
             <div class="mb-3">
+                <label class="form-label">Teléfono <small class="text-muted">(máx. 10 caracteres)</small></label>
+                <input type="text" name="telefono" maxlength="10" class="form-control @error('telefono') is-invalid @enderror"
+                       value="{{ old('telefono', $usuario->telefono ?? '') }}" placeholder="Ej: 3001234567">
+                @error('telefono')<div class="invalid-feedback">{{ $message }}</div>@enderror
+            </div>
+
+            <div class="mb-3">
                 <label class="form-label">
                     Contraseña
                     @if(isset($usuario))<small class="text-muted">(dejar vacío para no cambiar)</small>@else<span class="text-danger">*</span>@endif
