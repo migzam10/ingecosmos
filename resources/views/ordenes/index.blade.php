@@ -123,25 +123,32 @@
             <div class="col-6 col-md-2">
                 <select name="estado" class="form-select">
                     <option value="">Todos los estados</option>
-                    @if(!$verHistoricas)
-                    <option value="PTE_COTIZACION"     {{ request('estado')=='PTE_COTIZACION'     ? 'selected' : '' }}>Pte. cotización</option>
-                    <option value="PTE_AUTORIZACION"   {{ request('estado')=='PTE_AUTORIZACION'   ? 'selected' : '' }}>Pte. autorización</option>
-                    <option value="PTE_ORDEN"          {{ request('estado')=='PTE_ORDEN'          ? 'selected' : '' }}>Solicitud de repuesto</option>
-                    <option value="RTO_INSTALADO"      {{ request('estado')=='RTO_INSTALADO'      ? 'selected' : '' }}>Llegada de repuesto</option>
-                    <option value="EN_PROCESO"         {{ request('estado')=='EN_PROCESO'         ? 'selected' : '' }}>En proceso</option>
-                    <option value="PROGRAMADO_ENTREGA" {{ request('estado')=='PROGRAMADO_ENTREGA' ? 'selected' : '' }}>Programado entrega</option>
-                    <option value="REPUESTOS_INSTALADOS" {{ request('estado')=='REPUESTOS_INSTALADOS' ? 'selected' : '' }}>Repuestos instalados</option>
-                    <option value="GARANTIA"           {{ request('estado')=='GARANTIA'           ? 'selected' : '' }}>Garantía</option>
-                    <option value="ENTREGA_PARCIAL"    {{ request('estado')=='ENTREGA_PARCIAL'    ? 'selected' : '' }}>Entrega parcial</option>
-                    @else
-                    <option value="ENTREGADO"          {{ request('estado')=='ENTREGADO'          ? 'selected' : '' }}>Entregado</option>
-                    <option value="NO_AUTORIZADO"      {{ request('estado')=='NO_AUTORIZADO'      ? 'selected' : '' }}>No autorizado</option>
-                    <option value="ORDEN_ANULADA"      {{ request('estado')=='ORDEN_ANULADA'      ? 'selected' : '' }}>Orden anulada</option>
-                    <option value="PERDIDA_TOTAL"      {{ request('estado')=='PERDIDA_TOTAL'      ? 'selected' : '' }}>Pérdida total</option>
-                    <option value="GARANTIA"           {{ request('estado')=='GARANTIA'           ? 'selected' : '' }}>Garantía</option>
-                    <option value="ARREGLO_DIRECTO"    {{ request('estado')=='ARREGLO_DIRECTO'    ? 'selected' : '' }}>Arreglo directo</option>
-                    <option value="VFT"                {{ request('estado')=='VFT'                ? 'selected' : '' }}>Vehículo fuera taller</option>
-                    @endif
+                    <optgroup label="Facturación">
+                        <option value="FACTURADO"    {{ request('estado')=='FACTURADO'    ? 'selected' : '' }}>Facturados</option>
+                        <option value="NO_FACTURADO" {{ request('estado')=='NO_FACTURADO' ? 'selected' : '' }}>No facturados</option>
+                    </optgroup>
+                    <optgroup label="Estado de proceso">
+                        @if(!$verHistoricas)
+                        <option value="PTE_COTIZACION"       {{ request('estado')=='PTE_COTIZACION'       ? 'selected' : '' }}>Pte. cotización</option>
+                        <option value="PTE_AUTORIZACION"     {{ request('estado')=='PTE_AUTORIZACION'     ? 'selected' : '' }}>Pte. autorización</option>
+                        <option value="PTE_ORDEN"            {{ request('estado')=='PTE_ORDEN'            ? 'selected' : '' }}>Solicitud de repuesto</option>
+                        <option value="RTO_INSTALADO"        {{ request('estado')=='RTO_INSTALADO'        ? 'selected' : '' }}>Llegada de repuesto</option>
+                        <option value="EN_PROCESO"           {{ request('estado')=='EN_PROCESO'           ? 'selected' : '' }}>En proceso</option>
+                        <option value="PROGRAMADO_ENTREGA"   {{ request('estado')=='PROGRAMADO_ENTREGA'   ? 'selected' : '' }}>Programado entrega</option>
+                        <option value="REPUESTOS_INSTALADOS" {{ request('estado')=='REPUESTOS_INSTALADOS' ? 'selected' : '' }}>Repuestos instalados</option>
+                        <option value="VFT"                  {{ request('estado')=='VFT'                  ? 'selected' : '' }}>Vehículo fuera taller (VFT)</option>
+                        <option value="GARANTIA"             {{ request('estado')=='GARANTIA'             ? 'selected' : '' }}>Garantía</option>
+                        <option value="ENTREGA_PARCIAL"      {{ request('estado')=='ENTREGA_PARCIAL'      ? 'selected' : '' }}>Entrega parcial</option>
+                        @else
+                        <option value="ENTREGADO"            {{ request('estado')=='ENTREGADO'            ? 'selected' : '' }}>Entregado</option>
+                        <option value="NO_AUTORIZADO"        {{ request('estado')=='NO_AUTORIZADO'        ? 'selected' : '' }}>No autorizado</option>
+                        <option value="ORDEN_ANULADA"        {{ request('estado')=='ORDEN_ANULADA'        ? 'selected' : '' }}>Orden anulada</option>
+                        <option value="PERDIDA_TOTAL"        {{ request('estado')=='PERDIDA_TOTAL'        ? 'selected' : '' }}>Pérdida total</option>
+                        <option value="GARANTIA"             {{ request('estado')=='GARANTIA'             ? 'selected' : '' }}>Garantía</option>
+                        <option value="ARREGLO_DIRECTO"      {{ request('estado')=='ARREGLO_DIRECTO'      ? 'selected' : '' }}>Arreglo directo</option>
+                        <option value="VFT"                  {{ request('estado')=='VFT'                  ? 'selected' : '' }}>Vehículo fuera taller (VFT)</option>
+                        @endif
+                    </optgroup>
                 </select>
             </div>
             <div class="col-6 col-md-2">
@@ -204,6 +211,13 @@
                             </span>
                         </div>
                         @endif
+                        @if($ot->numero_factura)
+                        <div class="mt-1">
+                            <span class="badge bg-green-lt text-truncate" style="font-size:.7rem" title="Factura #{{ $ot->numero_factura }} el {{ $ot->fecha_factura?->format('d/m/Y') }}">
+                                <x-icon name="file-invoice" style="width:12px;height:12px;" /> Fact: {{ $ot->numero_factura }}
+                            </span>
+                        </div>
+                        @endif
                     </td>
                     <td><x-semaforo :estado="$ot->estado_semaforo" /></td>
                     <td class="text-muted small">{{ $ot->fecha_ingreso->format('d/m/Y') }}</td>
@@ -257,6 +271,11 @@
                     @php $diasTarde = $ot->salida_estimada->diffInDays($ot->fecha_entrega_cliente); @endphp
                     <span class="badge bg-danger-lt text-danger" style="font-size:.7rem">
                         Tardío · {{ $diasTarde }}d
+                    </span>
+                    @endif
+                    @if($ot->numero_factura)
+                    <span class="badge bg-green-lt text-truncate" style="font-size:.7rem" title="Factura #{{ $ot->numero_factura }}">
+                        Fact: {{ $ot->numero_factura }}
                     </span>
                     @endif
                 </div>

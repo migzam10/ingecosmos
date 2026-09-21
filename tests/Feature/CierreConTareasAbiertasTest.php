@@ -19,19 +19,23 @@ class CierreConTareasAbiertasTest extends TestCase
     /** Un vehículo cualquiera; si la BD de pruebas no tiene, se crea uno. */
     private function vehiculo(): Vehiculo
     {
+        $marca = MarcaVehiculo::first() ?? MarcaVehiculo::create(['nombre' => 'RENAULT']);
         return Vehiculo::first() ?? Vehiculo::create([
             'placa'    => 'TST' . random_int(100, 999),
-            'id_marca' => MarcaVehiculo::value('id'),
+            'id_marca' => $marca->id,
         ]);
     }
 
     private function crearOT(string $estado): OrdenTrabajo
     {
+        $empresa = EmpresaCliente::first() ?? EmpresaCliente::create([
+            'nombre' => 'EMPRESA TEST', 'tipo' => 'A', 'tarifa_hora' => 50000,
+        ]);
         return OrdenTrabajo::create([
             'numero_ot'          => 900000 + random_int(1, 99999),
             'area'               => 'MECANICA',
             'id_vehiculo'        => $this->vehiculo()->id,
-            'id_empresa_cliente' => EmpresaCliente::value('id'),
+            'id_empresa_cliente' => $empresa->id,
             'estado_proceso'     => $estado,
             'estado_semaforo'    => 'A_TIEMPO',
             'fecha_ingreso'      => now()->subDays(10)->toDateString(),
@@ -45,7 +49,10 @@ class CierreConTareasAbiertasTest extends TestCase
     private function admin(): User
     {
         return User::all()->first(fn($u) => in_array('ADMIN', $u->roles ?: []))
-            ?? User::first();
+            ?? User::create([
+                'name' => 'Admin ' . random_int(1000, 9999), 'email' => 'admin' . random_int(1000, 9999) . '@test.local',
+                'password' => bcrypt('secret'), 'roles' => ['ADMIN'], 'activo' => true,
+            ]);
     }
 
     /**
@@ -59,10 +66,12 @@ class CierreConTareasAbiertasTest extends TestCase
             return [$user, $user->tecnico];
         }
 
-        $tecnico = Tecnico::first();
+        $tecnico = Tecnico::first() ?? Tecnico::create([
+            'nombre' => 'Tecnico Test', 'especialidades' => ['MEC'], 'activo' => true,
+        ]);
         $user    = User::create([
             'name'     => $tecnico->nombre,
-            'email'    => 'tec' . $tecnico->id . '@test.local',
+            'email'    => 'tec' . random_int(1000, 9999) . '@test.local',
             'password' => bcrypt('secret'),
             'roles'    => ['TECNICO'],
             'activo'   => true,
@@ -70,6 +79,13 @@ class CierreConTareasAbiertasTest extends TestCase
         $tecnico->update(['id_user' => $user->id]);
 
         return [$user, $tecnico->fresh()];
+    }
+
+    private function tecnico(): Tecnico
+    {
+        return Tecnico::first() ?? Tecnico::create([
+            'nombre' => 'Tecnico Test', 'especialidades' => ['MEC'], 'activo' => true,
+        ]);
     }
 
     /** El fix principal: finalizar la última tarea de una OT ENTREGADA NO la reabre. */
@@ -96,7 +112,7 @@ class CierreConTareasAbiertasTest extends TestCase
     public function test_no_entregar_con_tarea_en_proceso(): void
     {
         $admin = $this->admin();
-        $tecnico = Tecnico::first();
+        $tecnico = $this->tecnico();
         $ot = $this->crearOT('PROGRAMADO_ENTREGA');
         TrabajoTecnico::create([
             'id_ot' => $ot->id, 'id_tecnico' => $tecnico->id,
@@ -115,7 +131,7 @@ class CierreConTareasAbiertasTest extends TestCase
     public function test_no_cerrar_especial_con_tarea_en_proceso(): void
     {
         $admin = $this->admin();
-        $tecnico = Tecnico::first();
+        $tecnico = $this->tecnico();
         $ot = $this->crearOT('EN_PROCESO');
         TrabajoTecnico::create([
             'id_ot' => $ot->id, 'id_tecnico' => $tecnico->id,
@@ -125,7 +141,7 @@ class CierreConTareasAbiertasTest extends TestCase
         $resp = $this->actingAs($admin)
             ->from(route('ordenes.show', $ot))
             ->post(route('ot.especial', $ot), [
-                'nuevo_estado' => 'VFT',
+                'nuevo_estado' => 'NO_AUTORIZADO',
                 'comentario'   => 'prueba',
                 'fecha_evento' => now()->toDateString(),
             ]);
@@ -134,11 +150,49 @@ class CierreConTareasAbiertasTest extends TestCase
         $this->assertSame('EN_PROCESO', $ot->fresh()->estado_proceso);
     }
 
+    /** VFT es una salida temporal: permite retirar el vehículo con tareas abiertas y reingresar al taller para continuar. */
+    public function test_vft_permite_salida_con_tarea_en_proceso_y_reingreso_al_taller(): void
+    {
+        $admin = $this->admin();
+        $tecnico = $this->tecnico();
+        $ot = $this->crearOT('EN_PROCESO');
+        $trabajo = TrabajoTecnico::create([
+            'id_ot' => $ot->id, 'id_tecnico' => $tecnico->id,
+            'especialidad' => 'MEC', 'estado' => 'EN_PROCESO', 'inicio_en' => now()->subDay(),
+        ]);
+
+        // 1. Salida especial VFT es permitida con tareas abiertas
+        $resp = $this->actingAs($admin)
+            ->from(route('ordenes.show', $ot))
+            ->post(route('ot.especial', $ot), [
+                'nuevo_estado' => 'VFT',
+                'comentario'   => 'Cliente retira vehículo temporalmente',
+                'fecha_evento' => now()->toDateString(),
+            ]);
+
+        $resp->assertSessionHasNoErrors();
+        $this->assertSame('VFT', $ot->fresh()->estado_proceso);
+        // Las tareas en proceso se pausan
+        $this->assertSame('PAUSADO', $trabajo->fresh()->estado);
+
+        // 2. Reingreso al taller desde VFT
+        $respReingreso = $this->actingAs($admin)
+            ->from(route('ordenes.show', $ot))
+            ->post(route('ot.reingresar-vft', $ot), [
+                'estado_destino'  => 'EN_PROCESO',
+                'fecha_reingreso' => now()->toDateString(),
+                'comentario'      => 'Vehículo regresa al taller para continuar proceso',
+            ]);
+
+        $respReingreso->assertSessionHasNoErrors();
+        $this->assertSame('EN_PROCESO', $ot->fresh()->estado_proceso);
+    }
+
     /** Una tarea PENDIENTE (asignada pero no iniciada) también bloquea la entrega. */
     public function test_pendiente_bloquea_entrega(): void
     {
         $admin = $this->admin();
-        $tecnico = Tecnico::first();
+        $tecnico = $this->tecnico();
         $ot = $this->crearOT('PROGRAMADO_ENTREGA');
         TrabajoTecnico::create([
             'id_ot' => $ot->id, 'id_tecnico' => $tecnico->id,
@@ -157,7 +211,7 @@ class CierreConTareasAbiertasTest extends TestCase
     public function test_entrega_ok_con_todo_finalizado(): void
     {
         $admin = $this->admin();
-        $tecnico = Tecnico::first();
+        $tecnico = $this->tecnico();
         $ot = $this->crearOT('PROGRAMADO_ENTREGA');
         TrabajoTecnico::create([
             'id_ot' => $ot->id, 'id_tecnico' => $tecnico->id,

@@ -1,12 +1,13 @@
 @php
 $estado = $orden->estado_proceso;
+$esVft = ($estado === 'VFT');
 // Cierres negativos: el vehículo no se entrega como reparación terminada.
 $negativos = ['NO_AUTORIZADO','ORDEN_ANULADA','PERDIDA_TOTAL'];
 // Salidas especiales tras las cuales el carro SÍ se entrega al cliente: permiten
 // registrar la entrega real (fecha) y pasar a ENTREGADO.
-$especialesEntregables = ['VFT','GARANTIA','ARREGLO_DIRECTO','EN_OTRO_TALLER','PTE_RETIRO','REPUESTOS_INSTALADOS'];
+$especialesEntregables = ['GARANTIA','ARREGLO_DIRECTO','EN_OTRO_TALLER','PTE_RETIRO','REPUESTOS_INSTALADOS'];
 $cerrados = array_merge(['ENTREGADO'], $negativos, $especialesEntregables);
-$activo = !in_array($estado, $cerrados);
+$activo = !in_array($estado, $cerrados) && !$esVft;
 $puedeEntregarEspecial = in_array($estado, $especialesEntregables);
 @endphp
 
@@ -38,11 +39,77 @@ $puedeEntregarEspecial = in_array($estado, $especialesEntregables);
     <span class="text-muted">›</span>
     @endif
     @endforeach
+    @if($esVft)
+    <span class="badge bg-purple ms-2">Vehículo Fuera del Taller</span>
+    @endif
 </div>
 
-@if(!$activo && !$puedeEntregarEspecial)
+@if(!$activo && !$puedeEntregarEspecial && !$esVft)
 <div class="alert alert-secondary py-2">
     Esta OT está cerrada con estado <strong>{{ $estado }}</strong>.
+</div>
+@elseif($esVft)
+{{-- Vehículo fuera del taller (VFT): salida temporal que permite reingreso para continuar proceso o cierre definitivo --}}
+<div class="alert alert-warning d-flex align-items-start gap-2 py-3 mb-3">
+    <x-icon name="car" class="text-warning mt-1 flex-shrink-0" />
+    <div class="flex-grow-1">
+        <div class="fw-bold fs-4 text-dark">Vehículo Fuera del Taller (VFT)</div>
+        <div class="small mt-1 text-secondary">
+            El vehículo se encuentra actualmente fuera del taller por retiro temporal del cliente.
+            Cuando el vehículo regrese, registra su <strong>reingreso</strong> para continuar con el proceso de reparación.
+        </div>
+    </div>
+</div>
+
+<div class="card mb-3 border-primary shadow-sm">
+    <div class="card-header bg-primary-lt py-2">
+        <h3 class="card-title text-primary small fw-bold">
+            <x-icon name="rotate-2" class="me-1" /> Reingreso al Taller / Continuar Proceso
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="{{ route('ot.reingresar-vft', $orden) }}" class="row g-2 align-items-end">
+            @csrf
+            <div class="col-12 col-md-3">
+                <label class="form-label small fw-bold">Fecha de reingreso <span class="text-danger">*</span></label>
+                <input type="date" name="fecha_reingreso" class="form-control form-control-sm"
+                       value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required>
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small fw-bold">Continuar proceso en <span class="text-danger">*</span></label>
+                <select name="estado_destino" class="form-select form-select-sm" required>
+                    <option value="EN_PROCESO" selected>En proceso</option>
+                    <option value="PTE_ORDEN">Solicitud de repuesto</option>
+                    <option value="RTO_INSTALADO">Llegada de repuesto</option>
+                    <option value="PROGRAMADO_ENTREGA">Programado entrega</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small">Observación de reingreso</label>
+                <input type="text" name="comentario" class="form-control form-control-sm"
+                       placeholder="Ej. Vehículo ingresa nuevamente a continuar trabajos..." maxlength="500">
+            </div>
+            <div class="col-12 col-md-2">
+                <button type="submit" class="btn btn-success btn-sm w-100"
+                        data-confirm="¿Registrar el reingreso del vehículo al taller y continuar con el proceso?">
+                    <x-icon name="check" /> Reingresar al taller
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mb-3">
+    <button type="button" class="btn btn-sm btn-outline-secondary"
+            data-bs-toggle="collapse" data-bs-target="#panel-entregar-vft">
+        <x-icon name="truck-delivery" /> O cerrar OT y entregar definitivamente al cliente...
+    </button>
+    <div class="collapse mt-2" id="panel-entregar-vft">
+        <div class="card card-body bg-light border">
+            <h4 class="card-title text-muted small mb-2">Cierre definitivo / Entrega de la OT</h4>
+            @include('ordenes._form-entregar')
+        </div>
+    </div>
 </div>
 @elseif($puedeEntregarEspecial)
 {{-- Salida especial con entrega pendiente: registrar la entrega real al cliente --}}
@@ -186,7 +253,7 @@ $puedeEntregarEspecial = in_array($estado, $especialesEntregables);
         <div class="alert alert-warning py-2 small mb-2">
             <strong>Hay tareas de técnico sin finalizar</strong>
             ({{ $tareasSinFinalizarEsp->map(fn($t) => $t->tecnico->nombre.' ('.$t->especialidad.')')->join(', ') }}).
-            No se podrá cerrar la OT hasta que cada técnico la finalice o el administrador la quite.
+            No se podrá cerrar la OT hasta que cada técnico la finalice o el administrador la quite (excepto en <em>Vehículo Fuera del Taller</em> por salida temporal).
         </div>
         @endif
         <form method="POST" action="{{ route('ot.especial', $orden) }}" class="row g-2 align-items-end">
@@ -198,7 +265,7 @@ $puedeEntregarEspecial = in_array($estado, $especialesEntregables);
                     <option value="NO_AUTORIZADO">No Autorizado</option>
                     <option value="ORDEN_ANULADA">Orden Anulada</option>
                     <option value="PERDIDA_TOTAL">Pérdida Total</option>
-                    <option value="VFT">VFT — Vehículo Fuera del Taller</option>
+                    <option value="VFT">VFT — Vehículo Fuera del Taller (Salida temporal)</option>
                     <option value="GARANTIA">Garantía</option>
                     <option value="ARREGLO_DIRECTO">Arreglo Directo</option>
                     <option value="EN_OTRO_TALLER">En Otro Taller</option>

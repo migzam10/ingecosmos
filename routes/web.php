@@ -118,6 +118,7 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->prefix('ordenes/{orden}/e
     Route::post('/programar-entrega',  [EstadoOTController::class, 'programarEntrega'])->name('ot.programar-entrega');
     Route::post('/entregar',           [EstadoOTController::class, 'entregar'])->name('ot.entregar');
     Route::post('/especial',           [EstadoOTController::class, 'estadoEspecial'])->name('ot.especial');
+    Route::post('/reingresar-vft',     [EstadoOTController::class, 'reingresarVft'])->name('ot.reingresar-vft');
 });
 
 // Facturación de OT — solo cuando está ENTREGADA

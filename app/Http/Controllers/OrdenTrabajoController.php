@@ -27,7 +27,7 @@ class OrdenTrabajoController extends Controller
 
         $query = OrdenTrabajo::with(['vehiculo.marca', 'vehiculo.modelo', 'empresaCliente']);
 
-        if (!$verHistoricas) {
+        if (!$verHistoricas && $request->estado !== 'FACTURADO') {
             $query->whereNotIn('estado_proceso', $cerrados);
         }
 
@@ -40,7 +40,15 @@ class OrdenTrabajoController extends Controller
         }
 
         if ($request->filled('estado')) {
-            $query->where('estado_proceso', $request->estado);
+            if ($request->estado === 'FACTURADO') {
+                $query->whereNotNull('numero_factura')->where('numero_factura', '!=', '');
+            } elseif ($request->estado === 'NO_FACTURADO') {
+                $query->where(function ($q) {
+                    $q->whereNull('numero_factura')->orWhere('numero_factura', '');
+                });
+            } else {
+                $query->where('estado_proceso', $request->estado);
+            }
         }
 
         if ($request->filled('area')) {
@@ -65,7 +73,7 @@ class OrdenTrabajoController extends Controller
         // filtro. Se arma sobre el mismo alcance (activas/históricas), sin depender
         // de los demás filtros, como el autofiltro de una hoja de cálculo.
         $baseFechas = OrdenTrabajo::query();
-        if (!$verHistoricas) {
+        if (!$verHistoricas && $request->estado !== 'FACTURADO') {
             $baseFechas->whereNotIn('estado_proceso', $cerrados);
         }
         $arbolFechas = [];

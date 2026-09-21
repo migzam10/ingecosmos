@@ -202,20 +202,30 @@ class EstadoOTController extends Controller
         ]);
 
         // Tampoco se puede cerrar (salida especial) si algún técnico no ha finalizado.
-        $sinFinalizar = $this->otService->trabajosSinFinalizar($orden);
-        if ($sinFinalizar->isNotEmpty()) {
-            $nombres = $sinFinalizar
-                ->map(fn($t) => $t->tecnico->nombre . ' (' . $t->especialidad . ')')
-                ->join(', ');
-            return back()->withErrors([
-                'tareas_abiertas' => "No se puede cerrar la OT: estos técnicos no han finalizado su tarea: {$nombres}. Cada uno debe finalizarla, o el administrador quitarla (si ya la inició, primero deshacer el inicio).",
-            ])->withInput();
+        // EXCEPCIÓN: VFT (Vehículo Fuera del Taller) es una salida temporal donde el cliente
+        // retira el vehículo temporalmente mientras se reanudan o completan tareas,
+        // por lo que no debe bloquearse si hay tareas de técnicos abiertas.
+        if ($request->nuevo_estado !== 'VFT') {
+            $sinFinalizar = $this->otService->trabajosSinFinalizar($orden);
+            if ($sinFinalizar->isNotEmpty()) {
+                $nombres = $sinFinalizar
+                    ->map(fn($t) => $t->tecnico->nombre . ' (' . $t->especialidad . ')')
+                    ->join(', ');
+                return back()->withErrors([
+                    'tareas_abiertas' => "No se puede cerrar la OT: estos técnicos no han finalizado su tarea: {$nombres}. Cada uno debe finalizarla, o el administrador quitarla (si ya la inició, primero deshacer el inicio).",
+                ])->withInput();
+            }
         }
 
         DB::transaction(function () use ($orden, $request) {
             // Si la CIA rechaza, marcar cotización(es) activa(s) como RECHAZADA
             if ($request->nuevo_estado === 'NO_AUTORIZADO') {
                 $orden->cotizaciones()->where('estado', 'BORRADOR')->update(['estado' => 'RECHAZADA']);
+            }
+
+            // Si es salida temporal VFT y había tareas en proceso, pausarlas mientras el vehículo esté fuera
+            if ($request->nuevo_estado === 'VFT') {
+                $orden->trabajosTecnico()->where('estado', 'EN_PROCESO')->update(['estado' => 'PAUSADO']);
             }
 
             $this->otService->cambiarEstado(
@@ -227,5 +237,30 @@ class EstadoOTController extends Controller
         });
 
         return back()->with('success', "OT marcada como {$request->nuevo_estado}.");
+    }
+
+    public function reingresarVft(Request $request, OrdenTrabajo $orden)
+    {
+        abort_unless($orden->estado_proceso === 'VFT', 422, 'La OT no está en estado Vehículo Fuera del Taller.');
+
+        $request->validate([
+            'estado_destino'  => 'required|in:EN_PROCESO,PTE_ORDEN,RTO_INSTALADO,PROGRAMADO_ENTREGA',
+            'fecha_reingreso' => 'required|date|before_or_equal:today',
+            'comentario'      => 'nullable|string|max:500',
+        ]);
+
+        $estadoDestino = $request->estado_destino;
+        $comentario = $request->filled('comentario')
+            ? $request->comentario
+            : 'Vehículo reingresa al taller tras salida temporal (VFT) para continuar con el proceso.';
+
+        $this->otService->cambiarEstado(
+            $orden,
+            $estadoDestino,
+            $comentario,
+            $request->fecha_reingreso
+        );
+
+        return back()->with('success', "Vehículo reingresado al taller. La OT continúa en proceso ({$estadoDestino}).");
     }
 }
