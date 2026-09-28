@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\ConfiguracionEmpresa;
+use App\Models\ConfiguracionLiquidacion;
 use App\Models\PagoTecnico;
 use App\Models\Tecnico;
 use App\Models\TrabajoTecnico;
@@ -117,7 +118,7 @@ class LiquidacionController extends Controller
         $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-        $config = ConfiguracionEmpresa::getActual();
+        $config = ConfiguracionLiquidacion::getActual();
 
         $pdf = Pdf::loadView('liquidacion.recibo-pdf', compact('pago', 'meses', 'config'))
             ->setPaper([0, 0, 226, 340], 'portrait'); // media carta / recibo
@@ -161,7 +162,7 @@ class LiquidacionController extends Controller
         $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-        $config = ConfiguracionEmpresa::getActual();
+        $config = ConfiguracionLiquidacion::getActual();
 
         $pdf = Pdf::loadView('liquidacion.pdf', compact('data', 'meses', 'config', 'mes', 'anio'))
             ->setPaper('letter', 'portrait');
@@ -192,7 +193,7 @@ class LiquidacionController extends Controller
         $meses = ['','Enero','Febrero','Marzo','Abril','Mayo','Junio',
                   'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-        $config = ConfiguracionEmpresa::getActual();
+        $config = ConfiguracionLiquidacion::getActual();
 
         $pdf = Pdf::loadView('liquidacion.planilla-pdf', compact('resumen', 'deducciones', 'meses', 'mes', 'anio', 'config'))
             ->setPaper('letter', 'landscape');

@@ -289,6 +289,9 @@
                             <a href="{{ route('admin.configuracion.index') }}" class="dropdown-item {{ request()->routeIs('admin.configuracion.*') ? 'active' : '' }}">
                                 Empresa / Logo
                             </a>
+                            <a href="{{ route('admin.configuracion_liquidacion.index') }}" class="dropdown-item {{ request()->routeIs('admin.configuracion_liquidacion.*') ? 'active' : '' }}">
+                                Logo Liquidación
+                            </a>
                             @endif
                         </div>
                     </li>

@@ -296,6 +296,10 @@ Route::middleware(['auth', 'role:ADMIN'])->group(function () {
     Route::get('/admin/configuracion',              [ConfiguracionEmpresaController::class, 'index'])->name('admin.configuracion.index');
     Route::put('/admin/configuracion',              [ConfiguracionEmpresaController::class, 'update'])->name('admin.configuracion.update');
     Route::delete('/admin/configuracion/logo',      [ConfiguracionEmpresaController::class, 'eliminarLogo'])->name('admin.configuracion.eliminar-logo');
+
+    Route::get('/admin/configuracion-liquidacion',         [\App\Http\Controllers\Admin\ConfiguracionLiquidacionController::class, 'index'])->name('admin.configuracion_liquidacion.index');
+    Route::put('/admin/configuracion-liquidacion',         [\App\Http\Controllers\Admin\ConfiguracionLiquidacionController::class, 'update'])->name('admin.configuracion_liquidacion.update');
+    Route::delete('/admin/configuracion-liquidacion/logo', [\App\Http\Controllers\Admin\ConfiguracionLiquidacionController::class, 'eliminarLogo'])->name('admin.configuracion_liquidacion.eliminar-logo');
 });
 
 // Recibo PDF de pago — visible también para el técnico dueño del pago
