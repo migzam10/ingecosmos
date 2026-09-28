@@ -110,7 +110,7 @@
 @endif
 
 <div class="total-box">
-    <div style="font-size:10px;color:#555;margin-bottom:3px;">{{ $totalDed > 0 ? 'NETO ENTREGADO AL TÉCNICO' : 'VALOR PAGADO' }}</div>
+    <div style="font-size:10px;color:#555;margin-bottom:3px;">VALOR PAGO</div>
     <div class="total-monto">$ {{ number_format($neto, 0, ',', '.') }}</div>
 </div>
 

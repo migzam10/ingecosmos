@@ -101,9 +101,11 @@
                         @forelse($data['trabajos'] as $trabajo)
                         <tr>
                             <td class="text-center">
+                                @if(!$trabajo->liquidado)
                                 <input type="checkbox" class="form-check-input chk-ot"
                                        value="{{ $trabajo->ot->numero_ot }}"
                                        title="Seleccionar OT {{ $trabajo->ot->numero_ot }}">
+                                @endif
                             </td>
                             <td class="fw-bold">{{ $trabajo->ot->numero_ot }}</td>
                             <td class="small">
@@ -267,7 +269,7 @@
                     @endif
                     @endforeach
                     <tr>
-                        <td class="small ps-4 fst-italic">Total pagado</td>
+                        <td class="small ps-4 fst-italic">Valor pago</td>
                         <td class="text-end small fst-italic">$ {{ number_format($data['total_neto'], 0, ',', '.') }}</td>
                     </tr>
                     @endif

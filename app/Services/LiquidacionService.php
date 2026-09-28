@@ -43,7 +43,6 @@ class LiquidacionService
                         'EN_PROCESO', 'PROGRAMADO_ENTREGA', 'ENTREGADO',
                     ]);
                 })
-                ->where('liquidado', false)
                 ->where(function ($q) use ($mes, $anio) {
                     $q->where(function ($q2) use ($mes, $anio) {
                         $q2->whereNotNull('fin_en')
@@ -51,7 +50,6 @@ class LiquidacionService
                            ->whereYear('fin_en', $anio);
                     })->orWhere(function ($q2) use ($mes, $anio) {
                         $q2->whereNull('fin_en')
-                           ->where('estado', 'FINALIZADO')
                            ->whereMonth('fecha_asignacion', $mes)
                            ->whereYear('fecha_asignacion', $anio);
                     });

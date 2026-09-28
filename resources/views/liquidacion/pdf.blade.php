@@ -165,7 +165,7 @@ $anio = $anio ?? ($data['anio'] ?? now()->year);
             @endif
             @endforeach
             <tr>
-                <td style="padding-left:22px; font-style:italic;">Valor pagado</td>
+                <td style="padding-left:22px; font-style:italic;">Valor pago</td>
                 <td class="text-right" style="font-style:italic;">$ {{ number_format($data['total_neto'], 0, ',', '.') }}</td>
             </tr>
             @endif
