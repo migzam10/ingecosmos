@@ -40,10 +40,10 @@
                         </div>
 
                         <div class="col-12 col-md-6">
-                            <label class="form-label">NIT <span class="text-danger">*</span></label>
+                            <label class="form-label">NIT</label>
                             <input type="text" name="nit" class="form-control @error('nit') is-invalid @enderror"
                                    value="{{ old('nit', $config->nit) }}"
-                                   placeholder="Ej: 900.123.456-7" required maxlength="30">
+                                   placeholder="Ej: 900.123.456-7" maxlength="30">
                             @error('nit')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
 

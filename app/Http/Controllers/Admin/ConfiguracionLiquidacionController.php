@@ -19,7 +19,7 @@ class ConfiguracionLiquidacionController extends Controller
     {
         $data = $request->validate([
             'razon_social'   => 'required|string|max:200',
-            'nit'            => 'required|string|max:30',
+            'nit'            => 'nullable|string|max:30',
             'direccion'      => 'nullable|string|max:300',
             'ciudad'         => 'nullable|string|max:100',
             'telefono'       => 'nullable|string|max:30',
