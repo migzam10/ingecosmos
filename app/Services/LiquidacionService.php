@@ -58,7 +58,12 @@ class LiquidacionService
                 ->get();
         }
 
-        $totalGanado = $trabajos->sum('valor_liquidar');
+        if ($esHistorico) {
+            $totalGanado = $trabajos->sum('valor_liquidar');
+        } else {
+            // En la lógica nueva, los trabajos en proceso se muestran pero no suman al total a pagar hasta que se terminen
+            $totalGanado = $trabajos->filter(fn($t) => $t->fin_en !== null || $t->estado === 'FINALIZADO' || $t->liquidado)->sum('valor_liquidar');
+        }
 
         // Avances ya pagados en este mes
         $avances = PagoTecnico::where('id_tecnico', $tecnico->id)

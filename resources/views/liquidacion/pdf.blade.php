@@ -88,6 +88,7 @@ $anio = $anio ?? ($data['anio'] ?? now()->year);
             <th>Placa</th>
             <th>Vehículo</th>
             <th>Función</th>
+            <th style="width:75px">Inició el</th>
             <th style="width:75px">{{ ($anio < 2026 || ($anio == 2026 && $mes < 9)) ? 'Fecha asig.' : 'Fecha fin' }}</th>
             <th>Estado</th>
             <th class="text-right" style="width:110px">Valor</th>
@@ -100,7 +101,14 @@ $anio = $anio ?? ($data['anio'] ?? now()->year);
             <td>{{ $t->ot->vehiculo->placa }}</td>
             <td>{{ $t->ot->vehiculo->marca->nombre }}</td>
             <td>{{ $nombresEsp[$t->especialidad] ?? $t->especialidad }}</td>
-            <td>{{ $t->fin_en ? $t->fin_en->format('d/m/Y') : ($t->fecha_asignacion ? $t->fecha_asignacion->format('d/m/Y') : '—') }}</td>
+            <td>{{ $t->inicio_en ? $t->inicio_en->format('d/m/Y') : '—' }}</td>
+            <td>
+                @if($anio < 2026 || ($anio == 2026 && $mes < 9))
+                    {{ $t->fecha_asignacion ? $t->fecha_asignacion->format('d/m/Y') : '—' }}
+                @else
+                    {{ $t->fin_en ? $t->fin_en->format('d/m/Y') : '—' }}
+                @endif
+            </td>
             <td>
                 @if($t->liquidado)
                 <span class="badge-fin" style="background:#f3e8ff; color:#6b21a8;">Liquidado</span>

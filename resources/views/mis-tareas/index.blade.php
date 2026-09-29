@@ -49,7 +49,7 @@
             <div class="card-body py-3">
                 <div class="kpi-value text-success" style="font-size:1.1rem">
                     @if($ganadoMes > 0)
-                        ${{ number_format($ganadoMes/1000, 0) }}K
+                        $ {{ number_format($ganadoMes, 0, ',', '.') }}
                     @else
                         <span class="text-muted" style="font-size:0.9rem">Sin asignar</span>
                     @endif

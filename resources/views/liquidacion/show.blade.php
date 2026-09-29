@@ -87,6 +87,7 @@
                             <th># Orden</th>
                             <th>Placa / Vehículo</th>
                             <th>Función</th>
+                            <th>Inició el</th>
                             <th>{{ ($anio < 2026 || ($anio == 2026 && $mes < 9)) ? 'Asignado el' : 'Terminado el' }}</th>
                             <th>Estado trabajo</th>
                             <th class="text-end">Valor a liquidar</th>
@@ -114,7 +115,14 @@
                             </td>
                             <td class="small">{{ $nombresEsp[$trabajo->especialidad] ?? $trabajo->especialidad }}</td>
                             <td class="small text-muted">
-                                {{ $trabajo->fin_en ? $trabajo->fin_en->format('d/m/Y') : ($trabajo->fecha_asignacion ? $trabajo->fecha_asignacion->format('d/m/Y') : '—') }}
+                                {{ $trabajo->inicio_en ? $trabajo->inicio_en->format('d/m/Y') : '—' }}
+                            </td>
+                            <td class="small text-muted">
+                                @if($anio < 2026 || ($anio == 2026 && $mes < 9))
+                                    {{ $trabajo->fecha_asignacion ? $trabajo->fecha_asignacion->format('d/m/Y') : '—' }}
+                                @else
+                                    {{ $trabajo->fin_en ? $trabajo->fin_en->format('d/m/Y') : '—' }}
+                                @endif
                             </td>
                             <td>
                                 @if($trabajo->liquidado)
