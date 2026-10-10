@@ -177,9 +177,15 @@
         <div class="card mb-3">
             <div class="card-header"><h3 class="card-title">Registrar Pago / Avance</h3></div>
             <div class="card-body">
-                @error('deducciones')
-                <div class="alert alert-danger py-2 small mb-2">{{ $message }}</div>
-                @enderror
+                @if($errors->any())
+                <div class="alert alert-danger py-2 small mb-3">
+                    <ul class="mb-0 ps-3">
+                        @foreach($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+                @endif
                 <form method="POST" action="{{ route('liquidacion.avance', $data['tecnico']) }}" id="form-avance">
                     @csrf
                     <input type="hidden" name="mes"  value="{{ $mes }}">
@@ -246,7 +252,7 @@
                     <div class="mb-3">
                         <label class="form-label small">Concepto (opcional)</label>
                         <input type="text" name="concepto" id="inp-concepto" class="form-control form-control-sm"
-                               value="{{ old('concepto') }}" placeholder="Ej: Quincena mayo o selecciona OTs...">
+                               value="{{ old('concepto') }}" placeholder="Ej: Quincena mayo o selecciona OTs..." maxlength="1000">
                         <div class="form-text small text-muted">Puedes escribir texto libre o marcar las casillas de las OTs en la tabla.</div>
                     </div>
                     <button class="btn btn-success w-100 btn-sm" id="btn-avance">Registrar pago</button>

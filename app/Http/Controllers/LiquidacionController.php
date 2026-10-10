@@ -60,7 +60,7 @@ class LiquidacionController extends Controller
             'tipo'       => 'required|in:ABONO,PAGO_FINAL',
             'mes'        => 'required|integer|min:1|max:12',
             'anio'       => 'required|integer|min:2020',
-            'concepto'   => 'nullable|string|max:200',
+            'concepto'   => 'nullable|string|max:1000',
             'fecha_pago' => 'required|date|before_or_equal:today',
         ];
         foreach (array_keys(PagoTecnico::DEDUCCIONES) as $col) {
