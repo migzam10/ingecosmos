@@ -39,7 +39,7 @@ class LiquidacionController extends Controller
     // Guardar valor a liquidar por OT (lo asigna el coordinador)
     public function guardarValorOT(Request $request, TrabajoTecnico $trabajo)
     {
-        if ($trabajo->liquidado) {
+        if ($trabajo->liquidado && (float) $trabajo->valor_liquidar > 0) {
             return back()->with('error', 'No se puede modificar el valor: este trabajo ya fue liquidado.');
         }
 
@@ -51,6 +51,36 @@ class LiquidacionController extends Controller
 
         return back()->with('success', 'Valor actualizado.');
     }
+
+    public function moverMes(Request $request, TrabajoTecnico $trabajo)
+    {
+        if ($trabajo->liquidado) {
+            return back()->with('error', 'No se puede mover este trabajo porque ya está liquidado.');
+        }
+
+        $request->validate([
+            'mes_destino'  => 'required|integer|in:-1,1,2,3,4,5,6,7,8,9,10,11,12',
+            'anio_destino' => 'required|integer',
+        ]);
+
+        if ($request->mes_destino == -1) {
+            $mesCobro = $trabajo->fin_en ? $trabajo->fin_en->month : null;
+            $anioCobro = $trabajo->fin_en ? $trabajo->fin_en->year : null;
+            $trabajo->update([
+                'mes_cobro'  => $mesCobro,
+                'anio_cobro' => $anioCobro,
+            ]);
+            return back()->with('success', 'La orden fue devuelta a su mes original.');
+        }
+
+        $trabajo->update([
+            'mes_cobro'  => $request->mes_destino,
+            'anio_cobro' => $request->anio_destino,
+        ]);
+
+        return back()->with('success', 'La orden se movió correctamente al mes indicado.');
+    }
+
 
     // Registrar un avance / pago parcial
     public function registrarAvance(Request $request, Tecnico $tecnico)
@@ -93,12 +123,41 @@ class LiquidacionController extends Controller
             $datos[$col] = (float) $request->input($col, 0);
         }
 
+        if ($request->tipo === 'PAGO_FINAL') {
+            $otsJson = $request->input('ots_seleccionadas');
+            if ($otsJson) {
+                $ots = json_decode($otsJson, true);
+                if (is_array($ots) && count($ots) > 0) {
+                    $otsSinValor = TrabajoTecnico::where('id_tecnico', $tecnico->id)
+                        ->whereIn('id', $ots)
+                        ->where(function ($q) {
+                            $q->whereNull('valor_liquidar')->orWhere('valor_liquidar', '<=', 0);
+                        })
+                        ->with('ot')
+                        ->get();
+
+                    if ($otsSinValor->isNotEmpty()) {
+                        $numeros = $otsSinValor->pluck('ot.numero_ot')->unique()->join(', ');
+                        return back()->withErrors([
+                            'ots_seleccionadas' => "No se puede liquidar: la(s) orden(es) {$numeros} tienen valor $ 0. Asigna un valor antes de liquidar.",
+                        ])->withInput();
+                    }
+                }
+            }
+        }
+
         $pago = PagoTecnico::create($datos);
 
         if ($request->tipo === 'PAGO_FINAL') {
-            $resumen = $this->service->resumenTecnico($tecnico, (int) $request->mes, (int) $request->anio);
-            TrabajoTecnico::whereIn('id', $resumen['trabajos']->pluck('id'))
-                ->update(['liquidado' => true]);
+            $otsJson = $request->input('ots_seleccionadas');
+            if ($otsJson) {
+                $ots = json_decode($otsJson, true);
+                if (is_array($ots) && count($ots) > 0) {
+                    TrabajoTecnico::where('id_tecnico', $tecnico->id)
+                        ->whereIn('id', $ots)
+                        ->update(['liquidado' => true]);
+                }
+            }
         }
 
         return back()->with('success', 'Pago registrado correctamente.');
