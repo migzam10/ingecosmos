@@ -77,6 +77,17 @@
     <div class="col-12 col-lg-8">
         <div class="card">
             <div class="card-header"><h3 class="card-title">Órdenes del período</h3></div>
+            @php
+            $sinValorCount = $data['trabajos']->where('liquidado', false)->filter(fn($t) => (float)$t->valor_liquidar <= 0)->count();
+            @endphp
+            @if($sinValorCount > 0)
+            <div class="alert alert-warning py-2 px-3 m-3 mb-0 d-flex align-items-center">
+                <span class="me-2 fs-3">⚠️</span>
+                <div>
+                    Hay <strong>{{ $sinValorCount }}</strong> tarea(s) sin valor asignado ($ 0). Debes asignarles valor antes de poder liquidarlas.
+                </div>
+            </div>
+            @endif
             <div class="table-responsive">
                 <table class="table table-sm table-vcenter mb-0">
                     <thead>
@@ -98,14 +109,30 @@
                         @php
                         $nombresEsp = ['LAT'=>'Latonero','PREP'=>'Preparador','PINT'=>'Pintor',
                                        'MEC'=>'Mecánico','ELEC'=>'Electricista','AA'=>'Aire Acondicionado','SCANNER'=>'Diagnóstico'];
+                        
+                        $mesesStr = [1=>'Ene',2=>'Feb',3=>'Mar',4=>'Abr',5=>'May',6=>'Jun',7=>'Jul',8=>'Ago',9=>'Sep',10=>'Oct',11=>'Nov',12=>'Dic'];
+                        $opcionesMover = [];
+                        $currDate = \Carbon\Carbon::create($anio, $mes, 1)->addMonth();
+                        $endDate = now()->startOfMonth();
+                        while($currDate <= $endDate) {
+                            $opcionesMover[] = ['mes' => $currDate->month, 'anio' => $currDate->year, 'label' => $mesesStr[$currDate->month] . ' ' . $currDate->year];
+                            $currDate->addMonth();
+                        }
                         @endphp
                         @forelse($data['trabajos'] as $trabajo)
-                        <tr>
+                        @php
+                        $sinValor = !$trabajo->liquidado && (float)$trabajo->valor_liquidar <= 0;
+                        @endphp
+                        <tr class="{{ $sinValor ? 'table-warning-subtle' : '' }}">
                             <td class="text-center">
                                 @if(!$trabajo->liquidado)
                                 <input type="checkbox" class="form-check-input chk-ot"
-                                       value="{{ $trabajo->ot->numero_ot }}"
-                                       title="Seleccionar OT {{ $trabajo->ot->numero_ot }}">
+                                       value="{{ $trabajo->id }}"
+                                       data-ot="{{ $trabajo->ot->numero_ot }}"
+                                       data-valor="{{ $trabajo->valor_liquidar }}"
+                                       data-finalizado="{{ $trabajo->estado === 'FINALIZADO' ? '1' : '0' }}"
+                                       {{ $sinValor ? 'disabled' : '' }}
+                                       title="{{ $sinValor ? 'Asigna un valor mayor a $0 para poder seleccionar esta tarea' : 'Seleccionar OT ' . $trabajo->ot->numero_ot }}">
                                 @endif
                             </td>
                             <td class="fw-bold">{{ $trabajo->ot->numero_ot }}</td>
@@ -136,24 +163,51 @@
                                 @endif
                             </td>
                             <td class="text-end fw-bold">
-                                $ {{ number_format($trabajo->valor_liquidar, 0, ',', '.') }}
+                                @if($sinValor)
+                                    <span class="text-danger">$ 0</span>
+                                    <div><span class="badge bg-danger-lt" style="font-size:0.65rem;">Falta valor</span></div>
+                                @else
+                                    $ {{ number_format($trabajo->valor_liquidar, 0, ',', '.') }}
+                                @endif
                             </td>
                             <td>
                                 @if($trabajo->liquidado)
                                 <span class="text-muted small fst-italic">Cerrado</span>
                                 @else
-                                <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}"
-                                      class="d-flex gap-1">
+                                <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}">
                                     @csrf
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text">$</span>
+                                    <div class="input-group input-group-sm flex-nowrap" style="width: 130px;">
+                                        <span class="input-group-text px-2 {{ $sinValor ? 'border-warning bg-warning-subtle text-danger' : 'text-muted' }}">$</span>
                                         <input type="number" name="valor_liquidar"
-                                               class="form-control text-end"
+                                               class="form-control text-end px-1 {{ $sinValor ? 'border-warning bg-warning-subtle text-danger fw-bold' : '' }}"
                                                value="{{ $trabajo->valor_liquidar }}"
-                                               min="0" step="1" style="width:90px">
+                                               min="0" step="1">
+                                        <button class="btn btn-outline-secondary px-2 {{ $sinValor ? 'border-warning' : '' }}" type="submit" title="Guardar valor">
+                                            <x-icon name="check" />
+                                        </button>
                                     </div>
-                                    <button class="btn btn-sm btn-outline-secondary"><x-icon name="check" /></button>
                                 </form>
+                                @php
+                                $mesOrig = $trabajo->fin_en ? $trabajo->fin_en->month : $trabajo->fecha_asignacion->month;
+                                $anioOrig = $trabajo->fin_en ? $trabajo->fin_en->year : $trabajo->fecha_asignacion->year;
+                                $fueMovido = $trabajo->mes_cobro && ($trabajo->mes_cobro != $mesOrig || $trabajo->anio_cobro != $anioOrig);
+                                @endphp
+                                @if(count($opcionesMover) > 0 || $fueMovido)
+                                <form method="POST" action="{{ route('trabajos.mover-mes', $trabajo) }}" class="d-flex gap-1 mt-1">
+                                    @csrf
+                                    <select name="mes_destino" class="form-select form-select-sm px-1 text-muted" style="width:75px; font-size:0.75rem;" required onchange="this.form.anio_destino.value = this.options[this.selectedIndex].dataset.anio">
+                                        <option value="">Pasar a...</option>
+                                        @if($fueMovido)
+                                        <option value="-1" data-anio="-1" class="text-danger">↻ Devolver</option>
+                                        @endif
+                                        @foreach($opcionesMover as $opc)
+                                        <option value="{{ $opc['mes'] }}" data-anio="{{ $opc['anio'] }}">{{ $opc['label'] }}</option>
+                                        @endforeach
+                                    </select>
+                                    <input type="hidden" name="anio_destino" value="">
+                                    <button class="btn btn-sm btn-outline-primary px-1" title="Mover"><x-icon name="arrow-right" /></button>
+                                </form>
+                                @endif
                                 @endif
                             </td>
                         </tr>
@@ -190,6 +244,7 @@
                     @csrf
                     <input type="hidden" name="mes"  value="{{ $mes }}">
                     <input type="hidden" name="anio" value="{{ $anio }}">
+                    <input type="hidden" name="ots_seleccionadas" id="inp-ots-seleccionadas" value="[]">
 
                     <div class="mb-2">
                         <label class="form-label small">Tipo de pago</label>
@@ -254,6 +309,9 @@
                         <input type="text" name="concepto" id="inp-concepto" class="form-control form-control-sm"
                                value="{{ old('concepto') }}" placeholder="Ej: Quincena mayo o selecciona OTs..." maxlength="1000">
                         <div class="form-text small text-muted">Puedes escribir texto libre o marcar las casillas de las OTs en la tabla.</div>
+                    </div>
+                    <div class="small alert alert-warning py-1 px-2 mb-2 fw-medium" id="msg-nofin" style="display:none">
+                        ⚠️ Estás incluyendo tareas que aún no están finalizadas.
                     </div>
                     <button class="btn btn-success w-100 btn-sm" id="btn-avance">Registrar pago</button>
                 </form>
@@ -386,7 +444,11 @@
     }
 
     deds.forEach(i => i.addEventListener('input', recalc));
-    monto.addEventListener('input', () => { aplicarAhorro10(); recalc(); });
+    if(monto) monto.addEventListener('input', () => { 
+        monto.dataset.manual = 'true';
+        aplicarAhorro10(); 
+        recalc(); 
+    });
 
     aplicarAhorro10();
     recalc();
@@ -396,11 +458,32 @@
 
     function actualizarConceptoDesdeOts() {
         if (!concepto) return;
-        const seleccionadas = Array.from(chkOts)
-            .filter(c => c.checked)
-            .map(c => c.value);
+        const seleccionadas = Array.from(chkOts).filter(c => c.checked);
+        
+        const tieneNoFinalizadas = seleccionadas.some(c => c.dataset.finalizado === '0');
+        const msgNoFin = document.getElementById('msg-nofin');
+        if (msgNoFin) msgNoFin.style.display = tieneNoFinalizadas ? '' : 'none';
 
-        const nuevaCadenaOts = seleccionadas.join(' - ');
+        const ids = seleccionadas.map(c => c.value);
+        const numerosOt = seleccionadas.map(c => c.dataset.ot);
+        const nuevaCadenaOts = numerosOt.join(' - ');
+        
+        // Actualizar hidden input
+        const inpOts = document.getElementById('inp-ots-seleccionadas');
+        if (inpOts) inpOts.value = JSON.stringify(ids);
+
+        // Autocompletar monto si se marca alguna
+        if (ids.length > 0) {
+            let total = 0;
+            seleccionadas.forEach(c => total += parseFloat(c.dataset.valor) || 0);
+            if (monto && (!monto.dataset.manual || monto.dataset.manual === 'false')) {
+                monto.value = total;
+                if(typeof aplicarAhorro10 === 'function') aplicarAhorro10();
+                if(typeof recalc === 'function') recalc();
+            }
+        } else {
+            if (monto) monto.dataset.manual = 'false';
+        }
 
         let actual = concepto.value;
         if (lastOtString && actual.includes(lastOtString)) {
@@ -419,8 +502,9 @@
 
         // Actualizar estado de "seleccionar todas"
         if (chkTodas) {
-            chkTodas.checked = chkOts.length > 0 && seleccionadas.length === chkOts.length;
-            chkTodas.indeterminate = seleccionadas.length > 0 && seleccionadas.length < chkOts.length;
+            const habilitadas = Array.from(chkOts).filter(c => !c.disabled);
+            chkTodas.checked = habilitadas.length > 0 && seleccionadas.length === habilitadas.length;
+            chkTodas.indeterminate = seleccionadas.length > 0 && seleccionadas.length < habilitadas.length;
         }
     }
 
@@ -428,7 +512,9 @@
 
     if (chkTodas) {
         chkTodas.addEventListener('change', function () {
-            chkOts.forEach(c => c.checked = chkTodas.checked);
+            chkOts.forEach(c => {
+                if (!c.disabled) c.checked = chkTodas.checked;
+            });
             actualizarConceptoDesdeOts();
         });
     }

@@ -586,14 +586,22 @@
                                 <td class="small text-muted">{{ $trabajo->fin_en?->format('d/m H:i') ?? '—' }}</td>
                                 @if(in_array('ADMIN', Auth::user()->roles ?: []) || in_array('COORDINADOR', Auth::user()->roles ?: []))
                                 <td class="text-end small">
-                                    <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}" class="d-flex gap-1 justify-content-end">
+                                    @php
+                                    $sinValorOt = $trabajo->estado === 'FINALIZADO' && (!$trabajo->valor_liquidar || (float)$trabajo->valor_liquidar <= 0);
+                                    @endphp
+                                    <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}" class="d-flex flex-column align-items-end gap-1">
                                         @csrf
-                                        <div class="input-group input-group-sm" style="max-width:130px">
-                                            <span class="input-group-text">$</span>
-                                            <input type="number" name="valor_liquidar" class="form-control text-end"
-                                                   value="{{ $trabajo->valor_liquidar }}" min="0" step="1">
+                                        <div class="d-flex gap-1 justify-content-end">
+                                            <div class="input-group input-group-sm {{ $sinValorOt ? 'border border-warning rounded' : '' }}" style="max-width:130px">
+                                                <span class="input-group-text {{ $sinValorOt ? 'bg-warning-subtle text-danger' : '' }}">$</span>
+                                                <input type="number" name="valor_liquidar" class="form-control text-end {{ $sinValorOt ? 'bg-warning-subtle text-danger fw-bold' : '' }}"
+                                                       value="{{ $trabajo->valor_liquidar }}" min="0" step="1">
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-secondary {{ $sinValorOt ? 'btn-outline-warning' : '' }}" title="Guardar valor"><x-icon name="check" /></button>
                                         </div>
-                                        <button class="btn btn-sm btn-outline-secondary"><x-icon name="check" /></button>
+                                        @if($sinValorOt)
+                                        <span class="badge bg-danger-lt" style="font-size:0.65rem;">Falta valor para entrega</span>
+                                        @endif
                                     </form>
                                 </td>
                                 @endif
