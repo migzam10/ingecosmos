@@ -37,8 +37,8 @@ class MisTareasController extends Controller
         $finalizados = TrabajoTecnico::with(['ot.vehiculo.marca'])
             ->where('id_tecnico', $tecnico->id)
             ->where('estado', 'FINALIZADO')
-            ->whereMonth('fin_en', now()->month)
-            ->whereYear('fin_en', now()->year)
+            ->where('mes_cobro', now()->month)
+            ->where('anio_cobro', now()->year)
             ->orderByDesc('fin_en')
             ->get();
 
@@ -249,8 +249,10 @@ class MisTareasController extends Controller
         }
 
         $trabajo->update([
-            'estado' => 'FINALIZADO',
-            'fin_en' => $finEn,
+            'estado'     => 'FINALIZADO',
+            'fin_en'     => $finEn,
+            'mes_cobro'  => $finEn->month,
+            'anio_cobro' => $finEn->year,
         ]);
 
         $this->verificarFinOT($trabajo->ot);

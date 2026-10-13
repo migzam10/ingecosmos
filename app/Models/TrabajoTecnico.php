@@ -10,7 +10,7 @@ class TrabajoTecnico extends Model
 
     protected $fillable = [
         'id_ot', 'id_tecnico', 'especialidad', 'fecha_asignacion', 'asignado_por', 'estado',
-        'inicio_en', 'fin_en', 'valor_liquidar', 'liquidado', 'comentarios',
+        'inicio_en', 'fin_en', 'mes_cobro', 'anio_cobro', 'valor_liquidar', 'liquidado', 'comentarios',
     ];
 
     protected function casts(): array
