@@ -606,16 +606,21 @@
                                 </td>
                                 @endif
                                 <td>
-                                    @if($trabajo->estado === 'PENDIENTE')
                                     @php $r = Auth::user()->roles ?: []; @endphp
                                     @if(in_array('ADMIN',$r) || in_array('COORDINADOR',$r))
-                                    <form method="POST"
-                                          action="{{ route('ordenes.tecnicos.destroy', [$orden, $trabajo]) }}"
-                                          data-confirm="¿Quitar este técnico?">
-                                        @csrf @method('DELETE')
-                                        <button class="btn btn-sm btn-outline-danger"><x-icon name="x" /></button>
-                                    </form>
-                                    @endif
+                                        @if($trabajo->liquidado)
+                                            <form method="POST" action="{{ route('trabajos.desbloquear', $trabajo) }}" onsubmit="return confirm('¿Desbloquear esta tarea para corregir o quitar?');" class="d-inline">
+                                                @csrf
+                                                <button class="btn btn-sm btn-outline-warning py-0 px-1" title="Desbloquear tarea para corregir o quitar">🔓 Desbloquear</button>
+                                            </form>
+                                        @else
+                                            <form method="POST"
+                                                  action="{{ route('ordenes.tecnicos.destroy', [$orden, $trabajo]) }}"
+                                                  data-confirm="¿Quitar este técnico de la orden?">
+                                                @csrf @method('DELETE')
+                                                <button class="btn btn-sm btn-outline-danger" title="Quitar técnico"><x-icon name="x" /></button>
+                                            </form>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>

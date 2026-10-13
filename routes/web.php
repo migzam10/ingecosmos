@@ -143,6 +143,7 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::delete('/ordenes/{orden}/tecnicos/{trabajo}',[AsignarTecnicoController::class, 'destroy'])->name('ordenes.tecnicos.destroy');
     Route::post('/trabajos/{trabajo}/valor',            [LiquidacionController::class, 'guardarValorOT'])->name('trabajos.valor');
     Route::post('/trabajos/{trabajo}/mover-mes',        [LiquidacionController::class, 'moverMes'])->name('trabajos.mover-mes');
+    Route::post('/trabajos/{trabajo}/desbloquear',      [LiquidacionController::class, 'desbloquear'])->name('trabajos.desbloquear');
 });
 
 // Liquidación de técnicos

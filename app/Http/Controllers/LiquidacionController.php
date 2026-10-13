@@ -81,6 +81,13 @@ class LiquidacionController extends Controller
         return back()->with('success', 'La orden se movió correctamente al mes indicado.');
     }
 
+    public function desbloquear(TrabajoTecnico $trabajo)
+    {
+        $trabajo->update(['liquidado' => false]);
+
+        return back()->with('success', "La tarea de la OT #{$trabajo->ot->numero_ot} fue desbloqueada.");
+    }
+
 
     // Registrar un avance / pago parcial
     public function registrarAvance(Request $request, Tecnico $tecnico)

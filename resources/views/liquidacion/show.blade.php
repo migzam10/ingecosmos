@@ -172,7 +172,30 @@
                             </td>
                             <td>
                                 @if($trabajo->liquidado)
-                                <span class="text-muted small fst-italic">Cerrado</span>
+                                <div class="d-flex align-items-center gap-1 mb-1">
+                                    <span class="text-muted small fst-italic">Cerrado</span>
+                                    <form method="POST" action="{{ route('trabajos.desbloquear', $trabajo) }}" onsubmit="return confirm('¿Desbloquear esta orden para reabrirla?');">
+                                        @csrf
+                                        <button class="btn btn-sm btn-outline-warning py-0 px-1" title="Desbloquear / Reabrir tarea">
+                                            🔓 Desbloquear
+                                        </button>
+                                    </form>
+                                </div>
+                                @if((float)$trabajo->valor_liquidar <= 0)
+                                <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}">
+                                    @csrf
+                                    <div class="input-group input-group-sm flex-nowrap" style="width: 130px;">
+                                        <span class="input-group-text px-2 border-warning bg-warning-subtle text-danger">$</span>
+                                        <input type="number" name="valor_liquidar"
+                                               class="form-control text-end px-1 border-warning bg-warning-subtle text-danger fw-bold"
+                                               value="{{ $trabajo->valor_liquidar }}"
+                                               min="0" step="1">
+                                        <button class="btn btn-outline-secondary px-2 border-warning" type="submit" title="Guardar valor">
+                                            <x-icon name="check" />
+                                        </button>
+                                    </div>
+                                </form>
+                                @endif
                                 @else
                                 <form method="POST" action="{{ route('trabajos.valor', $trabajo) }}">
                                     @csrf

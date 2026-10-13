@@ -7,6 +7,7 @@ use App\Models\Tecnico;
 use App\Models\TrabajoTecnico;
 use App\Services\OTService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class AsignarTecnicoController extends Controller
 {
@@ -59,7 +60,13 @@ class AsignarTecnicoController extends Controller
     public function destroy(OrdenTrabajo $orden, TrabajoTecnico $trabajo)
     {
         abort_if($trabajo->id_ot !== $orden->id, 403, 'Este trabajo no pertenece a la orden indicada.');
-        abort_if($trabajo->estado !== 'PENDIENTE', 403, 'No se puede quitar un técnico que ya inició el trabajo.');
+        abort_if($trabajo->liquidado, 403, 'No se puede quitar un técnico cuyo trabajo ya fue liquidado. Desbloquéalo primero en Liquidación.');
+
+        $roles = Auth::user()->roles ?: [];
+        $isAdminOrCoord = in_array('ADMIN', $roles) || in_array('COORDINADOR', $roles);
+        if (!$isAdminOrCoord) {
+            abort_if($trabajo->estado !== 'PENDIENTE', 403, 'No se puede quitar un técnico que ya inició el trabajo.');
+        }
 
         $trabajo->delete();
 
