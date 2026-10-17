@@ -7,11 +7,14 @@ use App\Models\Cotizacion;
 use App\Models\HistorialOt;
 use App\Models\MarcaVehiculo;
 use App\Models\OrdenTrabajo;
+use App\Models\User;
 use App\Services\CotizacionService;
 use App\Services\OTService;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CotizacionController extends Controller
 {
@@ -36,9 +39,36 @@ class CotizacionController extends Controller
             $query->where('es_previa', $request->tipo === 'previa');
         }
 
+        if ($request->filled('usuario')) {
+            $query->where('creada_por', $request->usuario);
+        }
+
+        if ($request->filled('fechas')) {
+            $query->whereIn(DB::raw('DATE(created_at)'), (array) $request->fechas);
+        }
+
         $cotizaciones = $query->paginate(20)->withQueryString();
 
-        return view('cotizaciones.index', compact('cotizaciones'));
+        $usuarios = User::whereIn('id', Cotizacion::whereNotNull('creada_por')->select('creada_por'))
+            ->orderBy('name')
+            ->get();
+
+        $arbolFechas = [];
+        Cotizacion::whereNotNull('created_at')
+            ->selectRaw('DISTINCT DATE(created_at) as fecha')
+            ->pluck('fecha')
+            ->each(function ($f) use (&$arbolFechas) {
+                $dt = Carbon::parse($f);
+                $arbolFechas[$dt->format('Y')][$dt->format('m')][] = $dt->format('Y-m-d');
+            });
+        krsort($arbolFechas);
+        foreach ($arbolFechas as &$meses) {
+            ksort($meses);
+            foreach ($meses as &$dias) { sort($dias); }
+        }
+        unset($meses, $dias);
+
+        return view('cotizaciones.index', compact('cotizaciones', 'usuarios', 'arbolFechas'));
     }
 
     // ── COT ANCLADA A OT ──────────────────────────────────────────────────────

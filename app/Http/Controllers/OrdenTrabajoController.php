@@ -27,7 +27,7 @@ class OrdenTrabajoController extends Controller
 
         $query = OrdenTrabajo::with(['vehiculo.marca', 'vehiculo.modelo', 'empresaCliente']);
 
-        if (!$verHistoricas && $request->estado !== 'FACTURADO') {
+        if (!$verHistoricas && $request->estado !== 'FACTURADO' && !$request->filled('fechas_entrega')) {
             $query->whereNotIn('estado_proceso', $cerrados);
         }
 
@@ -65,15 +65,17 @@ class OrdenTrabajoController extends Controller
             $query->whereIn('fecha_ingreso', (array) $request->fechas);
         }
 
+        if ($request->filled('fechas_entrega')) {
+            $query->whereIn('fecha_entrega_cliente', (array) $request->fechas_entrega);
+        }
+
         $ordenes = $query->orderBy('fecha_ingreso', 'desc')->paginate(25)->withQueryString();
 
         $empresas = EmpresaCliente::orderBy('nombre')->get();
 
-        // Árbol de fechas disponibles (Año → Mes → Día) para el desplegable de
-        // filtro. Se arma sobre el mismo alcance (activas/históricas), sin depender
-        // de los demás filtros, como el autofiltro de una hoja de cálculo.
+        // Árbol de fechas de ingreso disponibles (Año → Mes → Día)
         $baseFechas = OrdenTrabajo::query();
-        if (!$verHistoricas && $request->estado !== 'FACTURADO') {
+        if (!$verHistoricas && $request->estado !== 'FACTURADO' && !$request->filled('fechas_entrega')) {
             $baseFechas->whereNotIn('estado_proceso', $cerrados);
         }
         $arbolFechas = [];
@@ -90,10 +92,25 @@ class OrdenTrabajoController extends Controller
         }
         unset($meses, $dias);
 
+        // Árbol de fechas de entrega disponibles (Año → Mes → Día)
+        $arbolFechasEntrega = [];
+        OrdenTrabajo::whereNotNull('fecha_entrega_cliente')
+            ->distinct()
+            ->pluck('fecha_entrega_cliente')
+            ->each(function ($f) use (&$arbolFechasEntrega) {
+                $arbolFechasEntrega[$f->format('Y')][$f->format('m')][] = $f->format('Y-m-d');
+            });
+        krsort($arbolFechasEntrega);
+        foreach ($arbolFechasEntrega as &$meses) {
+            ksort($meses);
+            foreach ($meses as &$dias) { sort($dias); }
+        }
+        unset($meses, $dias);
+
         $totalActivas    = OrdenTrabajo::whereNotIn('estado_proceso', $cerrados)->count();
         $totalHistoricas = OrdenTrabajo::whereIn('estado_proceso', $cerrados)->count();
 
-        return view('ordenes.index', compact('ordenes', 'verHistoricas', 'totalActivas', 'totalHistoricas', 'empresas', 'arbolFechas'));
+        return view('ordenes.index', compact('ordenes', 'verHistoricas', 'totalActivas', 'totalHistoricas', 'empresas', 'arbolFechas', 'arbolFechasEntrega'));
     }
 
     public function create()
