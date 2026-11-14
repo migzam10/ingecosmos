@@ -218,6 +218,7 @@ Route::middleware(['auth', 'role:ADMIN,ALMACEN,COORDINADOR'])->prefix('almacen')
     Route::get('/ots',                             [AlmacenController::class,'ots'])->name('ots.index');
     Route::get('/ots/{orden}',                     [AlmacenController::class,'otShow'])->name('ots.show');
     Route::get('/pendientes',                      [AlmacenController::class,'pendientes'])->name('pendientes');
+    Route::get('/reporte/excel',                   [AlmacenController::class,'reporteExcel'])->name('reporte.excel');
 });
 
 // Catálogo de Repuestos (solo ADMIN)

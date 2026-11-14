@@ -6,6 +6,9 @@
 <div class="d-flex gap-2 flex-wrap">
     <a href="{{ route('almacen.entradas.index') }}" class="btn btn-success btn-sm">Entradas</a>
     <a href="{{ route('almacen.salidas.index') }}" class="btn btn-warning btn-sm">Salidas</a>
+    <button type="button" class="btn btn-outline-success btn-sm" data-bs-toggle="modal" data-bs-target="#modal-reporte-almacen">
+        <x-icon name="file-spreadsheet" /> Informe Excel
+    </button>
 </div>
 @endsection
 
@@ -129,4 +132,5 @@
         </div>
     </div>
 </div>
+@include('almacen._modal-reporte-excel')
 @endsection
