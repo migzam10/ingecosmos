@@ -11,7 +11,8 @@
     body { font-family: Arial, sans-serif; font-size: 11px; color: #222; }
 
     .info-grid { display: table; width: 100%; margin-bottom: 16px; }
-    .info-col { display: table-cell; width: 50%; vertical-align: top; padding-right: 14px; }
+    .info-col { display: table-cell; width: 50%; vertical-align: top; padding-right: 8px; }
+    .info-col:last-child { padding-right: 0; padding-left: 8px; }
     .info-box { background: #f8f9fa; border: 1px solid #eef0f2; border-radius: 4px; padding: 10px 12px; }
     .info-row { margin-bottom: 5px; }
     .info-row:last-child { margin-bottom: 0; }
@@ -58,51 +59,48 @@
 
 
 @php
-    $titulo = $cotizacion->es_previa ? 'COTIZACIÓN PREVIA' : 'COTIZACIÓN';
+    $titulo = 'COTIZACIÓN';
     $fechaCot = $cotizacion->fecha_cotizacion ?? $cotizacion->created_at;
     $km = $cotizacion->kilometraje();
 @endphp
 @include('pdf._header', [
-    'config'  => $config,
-    'titulo'  => $titulo,
-    'numero'  => $cotizacion->numero_cot,
-    'fecha'   => $fechaCot->format('d/m/Y'),
-    'color'   => '#040065',
-    'logoMax' => 92,
+    'config'      => $config,
+    'titulo'      => $titulo,
+    'numero'      => $cotizacion->numero_cot,
+    'fecha'       => 'Fecha cotización: ' . $fechaCot->format('d/m/Y'),
+    'color'       => '#040065',
+    'logoMax'     => 92,
+    'fechaColor'  => '#111827',
+    'fechaSize'   => '12px',
+    'fechaWeight' => 'bold',
 ])
 
 <div class="info-grid">
     @if($cotizacion->es_previa)
-    <div class="info-col">
-        <div class="info-box">
-            <div class="info-row"><span class="label">Placa</span><br><span class="value">{{ $cotizacion->placa_previa ?? '—' }}</span></div>
-            @if($cotizacion->marcaPrevia)
-            <div class="info-row"><span class="label">Vehículo</span><br>
-                <span class="value">{{ $cotizacion->marcaPrevia->nombre }}{{ $cotizacion->modeloPrevia ? ' ' . $cotizacion->modeloPrevia->nombre : '' }}</span>
-            </div>
-            @endif
-            @if($km)
-            <div class="info-row"><span class="label">Kilometraje</span><br>
-                <span class="value">{{ number_format($km, 0, ',', '.') }} km</span>
-            </div>
-            @endif
-        </div>
-    </div>
+    {{-- CLIENTE (IZQUIERDA) --}}
     <div class="info-col">
         <div class="info-box">
             @if($cotizacion->clientePrevia)
             <div class="info-row"><span class="label">Cliente</span><br>
                 <span class="value">{{ $cotizacion->clientePrevia->nombre }}</span>
             </div>
-            @endif
-            @if($cotizacion->clientePrevia?->cedula)
+            @if($cotizacion->clientePrevia->cedula)
             <div class="info-row"><span class="label">Cédula / NIT</span><br>
                 <span class="value">{{ $cotizacion->clientePrevia->cedula }}</span>
             </div>
             @endif
-            @if($cotizacion->clientePrevia?->telefono)
+            @if($cotizacion->clientePrevia->telefono)
             <div class="info-row"><span class="label">Teléfono</span><br>
                 <span class="value">{{ $cotizacion->clientePrevia->telefono }}</span>
+            </div>
+            @endif
+            @if($cotizacion->clientePrevia->direccion)
+            <div class="info-row"><span class="label">Dirección</span><br>
+                <span class="value">{{ $cotizacion->clientePrevia->direccion }}</span>
+            </div>
+            @endif
+            <div class="info-row"><span class="label">Ciudad</span><br>
+                <span class="value">{{ $cotizacion->clientePrevia->ciudad ?: ($config->ciudad ?? 'BARRANQUILLA') }}</span>
             </div>
             @endif
             @if($cotizacion->descripcion_previa)
@@ -112,14 +110,23 @@
             @endif
         </div>
     </div>
-    @else
+    {{-- VEHÍCULO (DERECHA) --}}
     <div class="info-col">
         <div class="info-box">
-            <div class="info-row"><span class="label">OT #</span><br><span class="value">{{ $cotizacion->ot->numero_ot }}</span></div>
-            <div class="info-row"><span class="label">Placa</span><br><span class="value">{{ $cotizacion->ot->vehiculo->placa }}</span></div>
+            <div class="info-row"><span class="label">Placa</span><br><span class="value">{{ $cotizacion->placa_previa ?? '—' }}</span></div>
+            @if($cotizacion->marcaPrevia)
             <div class="info-row"><span class="label">Vehículo</span><br>
-                <span class="value">{{ $cotizacion->ot->vehiculo->marca->nombre }} {{ $cotizacion->ot->vehiculo->modelo?->nombre }}</span>
+                <span class="value">{{ $cotizacion->marcaPrevia->nombre }}{{ $cotizacion->modeloPrevia ? ' ' . $cotizacion->modeloPrevia->nombre : '' }}</span>
             </div>
+            @endif
+            @php
+                $modeloAnio = $cotizacion->anio_previa ?? ($cotizacion->placa_previa ? \App\Models\Vehiculo::where('placa', $cotizacion->placa_previa)->value('anio') : null);
+            @endphp
+            @if($modeloAnio)
+            <div class="info-row"><span class="label">Modelo</span><br>
+                <span class="value">{{ $modeloAnio }}</span>
+            </div>
+            @endif
             @if($km)
             <div class="info-row"><span class="label">Kilometraje</span><br>
                 <span class="value">{{ number_format($km, 0, ',', '.') }} km</span>
@@ -127,19 +134,59 @@
             @endif
         </div>
     </div>
+    @else
+    {{-- CLIENTE (IZQUIERDA) --}}
     <div class="info-col">
         <div class="info-box">
+            @if($cotizacion->ot->empresaCliente)
             <div class="info-row"><span class="label">CIA / Empresa</span><br>
                 <span class="value">{{ $cotizacion->ot->empresaCliente->nombre }}</span>
             </div>
+            @endif
             @if($cotizacion->ot->clientePersona)
             <div class="info-row"><span class="label">Propietario</span><br>
                 <span class="value">{{ $cotizacion->ot->clientePersona->nombre }}</span>
+            </div>
+            @if($cotizacion->ot->clientePersona->cedula)
+            <div class="info-row"><span class="label">Cédula / NIT</span><br>
+                <span class="value">{{ $cotizacion->ot->clientePersona->cedula }}</span>
+            </div>
+            @endif
+            @if($cotizacion->ot->clientePersona->telefono)
+            <div class="info-row"><span class="label">Teléfono</span><br>
+                <span class="value">{{ $cotizacion->ot->clientePersona->telefono }}</span>
+            </div>
+            @endif
+            @if($cotizacion->ot->clientePersona->direccion)
+            <div class="info-row"><span class="label">Dirección</span><br>
+                <span class="value">{{ $cotizacion->ot->clientePersona->direccion }}</span>
+            </div>
+            @endif
+            <div class="info-row"><span class="label">Ciudad</span><br>
+                <span class="value">{{ $cotizacion->clientePrevia->ciudad ?: ($config->ciudad ?? 'BARRANQUILLA') }}</span>
             </div>
             @endif
             @if($cotizacion->ot->referencia_forc)
             <div class="info-row"><span class="label">FORC</span><br>
                 <span class="value">{{ $cotizacion->ot->referencia_forc }}</span>
+            </div>
+            @endif
+        </div>
+    </div>
+    {{-- VEHÍCULO (DERECHA) --}}
+    <div class="info-col">
+        <div class="info-box">
+            <div class="info-row"><span class="label">OT #</span><br><span class="value">{{ $cotizacion->ot->numero_ot }}</span></div>
+            <div class="info-row"><span class="label">Placa</span><br><span class="value">{{ $cotizacion->ot->vehiculo->placa }}</span></div>
+            <div class="info-row"><span class="label">Vehículo</span><br>
+                <span class="value">{{ $cotizacion->ot->vehiculo->marca->nombre }} {{ $cotizacion->ot->vehiculo->modelo?->nombre }}</span>
+            </div>
+            @if($cotizacion->ot->vehiculo->anio)
+            <div class="info-row"><span class="label">Modelo</span><br><span class="value">{{ $cotizacion->ot->vehiculo->anio }}</span></div>
+            @endif
+            @if($km)
+            <div class="info-row"><span class="label">Kilometraje</span><br>
+                <span class="value">{{ number_format($km, 0, ',', '.') }} km</span>
             </div>
             @endif
         </div>

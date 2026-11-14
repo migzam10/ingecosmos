@@ -11,7 +11,7 @@ $esPrevia = $cotizacion->es_previa;
 @endphp
 @section('page_title')
 Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
-@if($esPrevia) <span class="badge bg-warning text-dark ms-2">Previa (sin OT)</span> @endif
+@if($esPrevia) <span class="badge bg-warning text-dark ms-2">Sin OT</span> @endif
 @endsection
 @section('breadcrumb', 'Cotizaciones')
 
@@ -64,7 +64,7 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
 <div class="alert alert-warning mb-3">
     <div class="d-flex flex-wrap align-items-center gap-3">
         <div class="flex-fill">
-            <strong>Cotización previa sin OT.</strong>
+            <strong>Cotización sin OT.</strong>
             Cuando el vehículo ingrese al taller, vincúlala a la OT correspondiente.
         </div>
         <form method="POST" action="{{ route('cotizaciones.vincular-ot', $cotizacion) }}" class="d-flex gap-2 align-items-center">
@@ -100,8 +100,17 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
                     @endif
                     @if($cotizacion->modeloPrevia)
                     <div class="col-6 col-md-3">
-                        <div class="text-muted small">Modelo</div>
+                        <div class="text-muted small">Línea</div>
                         <strong>{{ $cotizacion->modeloPrevia->nombre }}</strong>
+                    </div>
+                    @endif
+                    @php
+                        $modeloAnio = $cotizacion->anio_previa ?? ($cotizacion->placa_previa ? \App\Models\Vehiculo::where('placa', $cotizacion->placa_previa)->value('anio') : null);
+                    @endphp
+                    @if($modeloAnio)
+                    <div class="col-6 col-md-3">
+                        <div class="text-muted small">Modelo</div>
+                        <strong>{{ $modeloAnio }}</strong>
                     </div>
                     @endif
                     @if($cotizacion->clientePrevia)
@@ -114,6 +123,10 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
                         @if($cotizacion->clientePrevia->telefono)
                         <span class="text-muted small"> · {{ $cotizacion->clientePrevia->telefono }}</span>
                         @endif
+                        @if($cotizacion->clientePrevia->direccion)
+                        <div class="small"><span class="text-muted">Dirección:</span> {{ $cotizacion->clientePrevia->direccion }}</div>
+                        @endif
+                        <div class="small"><span class="text-muted">Ciudad:</span> {{ $cotizacion->clientePrevia->ciudad ?: (\App\Models\ConfiguracionEmpresa::first()?->ciudad ?? 'BARRANQUILLA') }}</div>
                     </div>
                     @endif
                     @if($cotizacion->descripcion_previa)
@@ -327,15 +340,26 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
 
         @if(!$esPrevia && $cotizacion->ot)
         <div class="card">
-            <div class="card-header"><h3 class="card-title">Vehículo</h3></div>
+            <div class="card-header"><h3 class="card-title">Vehículo / Cliente</h3></div>
             <div class="card-body small">
                 <div><span class="text-muted">Placa:</span> <strong>{{ $cotizacion->ot->vehiculo->placa }}</strong></div>
-                <div><span class="text-muted">Marca/Modelo:</span> {{ $cotizacion->ot->vehiculo->marca->nombre }} {{ $cotizacion->ot->vehiculo->modelo?->nombre }}</div>
+                <div><span class="text-muted">Marca/Línea:</span> {{ $cotizacion->ot->vehiculo->marca->nombre }} {{ $cotizacion->ot->vehiculo->modelo?->nombre }}</div>
+                <div><span class="text-muted">Modelo:</span> {{ $cotizacion->ot->vehiculo->anio ?? '—' }}</div>
                 @if($cotizacion->ot->empresaCliente)
                 <div><span class="text-muted">CIA/Empresa:</span> {{ $cotizacion->ot->empresaCliente->nombre }}</div>
                 @endif
                 @if($cotizacion->ot->clientePersona)
                 <div><span class="text-muted">Propietario:</span> {{ $cotizacion->ot->clientePersona->nombre }}</div>
+                @if($cotizacion->ot->clientePersona->cedula)
+                <div><span class="text-muted">Cédula/NIT:</span> {{ $cotizacion->ot->clientePersona->cedula }}</div>
+                @endif
+                @if($cotizacion->ot->clientePersona->telefono)
+                <div><span class="text-muted">Teléfono:</span> {{ $cotizacion->ot->clientePersona->telefono }}</div>
+                @endif
+                @if($cotizacion->ot->clientePersona->direccion)
+                <div><span class="text-muted">Dirección:</span> {{ $cotizacion->ot->clientePersona->direccion }}</div>
+                @endif
+                <div><span class="text-muted">Ciudad:</span> {{ $cotizacion->ot->clientePersona->ciudad ?: (\App\Models\ConfiguracionEmpresa::first()?->ciudad ?? 'BARRANQUILLA') }}</div>
                 @endif
             </div>
         </div>

@@ -14,6 +14,9 @@
     $tieneLogo   = !empty($config->logo_path) && file_exists($config->logo_path);
     $colorDoc    = $color   ?? '#1a56db';
     $logoLado    = $logoMax ?? 56;
+    $fechaColor  = $fechaColor  ?? '#6b7280';
+    $fechaSize   = $fechaSize   ?? '10px';
+    $fechaWeight = $fechaWeight ?? 'normal';
 @endphp
 <table style="width:100%; border-collapse:collapse;">
     <tr>
@@ -48,7 +51,7 @@
             </div>
             @endif
             @if(!empty($fecha))
-            <div style="font-size:10px; color:#6b7280; margin-top:5px;">{{ $fecha }}</div>
+            <div style="font-size:{{ $fechaSize }}; color:{{ $fechaColor }}; font-weight:{{ $fechaWeight }}; margin-top:5px;">{{ $fecha }}</div>
             @endif
         </td>
     </tr>

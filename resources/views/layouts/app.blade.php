@@ -279,7 +279,7 @@
                                 Proveedores
                             </a>
                             <a href="{{ route('admin.marcas.index') }}" class="dropdown-item {{ request()->routeIs('admin.marcas.*') ? 'active' : '' }}">
-                                Marcas y Modelos
+                                Marcas y Líneas
                             </a>
                             <a href="{{ route('admin.festivos.index') }}" class="dropdown-item {{ request()->routeIs('admin.festivos.*') ? 'active' : '' }}">
                                 Días Festivos

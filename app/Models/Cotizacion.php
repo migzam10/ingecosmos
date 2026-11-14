@@ -16,14 +16,15 @@ class Cotizacion extends Model
         'iva_porcentaje', 'iva_valor', 'total', 'observaciones',
         // Previa (sin OT)
         'es_previa', 'placa_previa', 'km_previa', 'id_cliente_previa',
-        'descripcion_previa', 'id_marca_previa', 'id_modelo_previa',
+        'descripcion_previa', 'id_marca_previa', 'id_modelo_previa', 'anio_previa',
     ];
 
     protected function casts(): array
     {
         return [
-            'es_previa'        => 'boolean',
-            'fecha_cotizacion' => 'date',
+            'es_previa'           => 'boolean',
+            'fecha_cotizacion'    => 'date',
+            'anio_previa'         => 'integer',
             'iva_porcentaje'      => 'decimal:2',
             'iva_valor'           => 'decimal:2',
             'descuento_porcentaje'=> 'decimal:2',

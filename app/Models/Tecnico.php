@@ -8,14 +8,23 @@ class Tecnico extends Model
 {
     protected $table = 'tecnicos';
 
-    protected $fillable = ['id_user', 'nombre', 'especialidades', 'activo'];
+    protected $fillable = ['id_user', 'nombre', 'especialidades', 'deducciones_fijas', 'activo'];
 
     protected function casts(): array
     {
         return [
-            'especialidades' => 'array',
-            'activo'         => 'boolean',
+            'especialidades'    => 'array',
+            'deducciones_fijas' => 'array',
+            'activo'            => 'boolean',
         ];
+    }
+
+    /**
+     * Obtiene el valor fijo predeterminado para una deducción.
+     */
+    public function getDeduccionFija(string $col): float
+    {
+        return (float) ($this->deducciones_fijas[$col] ?? 0);
     }
 
     public function user()

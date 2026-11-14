@@ -86,6 +86,31 @@
             @endisset
 
         </div>
+    </div>
+
+    <div class="card mt-3">
+        <div class="card-header">
+            <div>
+                <h3 class="card-title mb-0">Deducciones Fijas Mensuales</h3>
+                <small class="text-muted">Valores predeterminados que se precargarán automáticamente en cada pago de este técnico (Seguro de vida, Seguridad social, Recordar, Ahorro 2, etc.)</small>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row g-2">
+                @foreach(\App\Models\PagoTecnico::DEDUCCIONES as $col => $label)
+                <div class="col-12 col-sm-6">
+                    <label class="form-label small mb-1">{{ $label }}</label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text">$</span>
+                        <input type="number" name="deducciones_fijas[{{ $col }}]"
+                               class="form-control text-end" min="0" step="1"
+                               value="{{ old('deducciones_fijas.' . $col, isset($tecnico) ? ($tecnico->getDeduccionFija($col) > 0 ? (int)$tecnico->getDeduccionFija($col) : '') : '') }}"
+                               placeholder="0">
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
         <div class="card-footer d-flex gap-2">
             <button type="submit" class="btn btn-primary">
                 {{ isset($tecnico) ? 'Guardar Cambios' : 'Crear Técnico' }}

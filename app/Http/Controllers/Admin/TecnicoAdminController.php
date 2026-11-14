@@ -35,10 +35,11 @@ class TecnicoAdminController extends Controller
         $data = $this->validar($request);
 
         Tecnico::create([
-            'nombre'        => $data['nombre'],
-            'id_user'       => $data['id_user'] ?: null,
-            'especialidades'=> $data['especialidades'] ?? [],
-            'activo'        => true,
+            'nombre'           => $data['nombre'],
+            'id_user'          => $data['id_user'] ?: null,
+            'especialidades'   => $data['especialidades'] ?? [],
+            'deducciones_fijas'=> $this->procesarDeduccionesFijas($request->input('deducciones_fijas', [])),
+            'activo'           => true,
         ]);
 
         return redirect()->route('admin.tecnicos.index')
@@ -67,10 +68,11 @@ class TecnicoAdminController extends Controller
         $data = $this->validar($request);
 
         $tecnico->update([
-            'nombre'        => $data['nombre'],
-            'id_user'       => $data['id_user'] ?: null,
-            'especialidades'=> $data['especialidades'] ?? [],
-            'activo'        => $request->boolean('activo', true),
+            'nombre'           => $data['nombre'],
+            'id_user'          => $data['id_user'] ?: null,
+            'especialidades'   => $data['especialidades'] ?? [],
+            'deducciones_fijas'=> $this->procesarDeduccionesFijas($request->input('deducciones_fijas', [])),
+            'activo'           => $request->boolean('activo', true),
         ]);
 
         return redirect()->route('admin.tecnicos.index')
@@ -83,13 +85,27 @@ class TecnicoAdminController extends Controller
         return back()->with('success', 'Técnico desactivado.');
     }
 
+    private function procesarDeduccionesFijas(array $inputs): array
+    {
+        $procesadas = [];
+        foreach (\App\Models\PagoTecnico::DEDUCCIONES as $col => $label) {
+            $val = isset($inputs[$col]) ? (float) $inputs[$col] : 0;
+            if ($val > 0) {
+                $procesadas[$col] = $val;
+            }
+        }
+        return $procesadas;
+    }
+
     private function validar(Request $request): array
     {
         return $request->validate([
-            'nombre'          => 'required|string|max:100',
-            'id_user'         => 'nullable|exists:users,id',
-            'especialidades'  => 'required|array|min:1',
-            'especialidades.*'=> 'in:' . implode(',', self::ESPECIALIDADES),
+            'nombre'                => 'required|string|max:100',
+            'id_user'               => 'nullable|exists:users,id',
+            'especialidades'        => 'required|array|min:1',
+            'especialidades.*'      => 'in:' . implode(',', self::ESPECIALIDADES),
+            'deducciones_fijas'     => 'nullable|array',
+            'deducciones_fijas.*'   => 'nullable|numeric|min:0',
         ], [
             'nombre.required'          => 'El nombre del técnico es obligatorio.',
             'especialidades.required'  => 'Seleccione al menos una especialidad.',

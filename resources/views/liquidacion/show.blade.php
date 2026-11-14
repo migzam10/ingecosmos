@@ -295,15 +295,30 @@
 
                     {{-- Deducciones (se restan del valor de liquidación) --}}
                     <div class="border rounded p-2 mb-3 bg-light-subtle">
-                        <div class="small text-muted mb-2">Estos valores se deben restar del valor de liquidación</div>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="small text-muted">Deducciones que se restan del pago</span>
+                            <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none small"
+                                    data-bs-toggle="modal" data-bs-target="#modal-ded-fijas" title="Configurar valores fijos de este técnico">
+                                ⚙️ Fijos
+                            </button>
+                        </div>
                         @foreach(\App\Models\PagoTecnico::DEDUCCIONES as $col => $label)
+                        @php
+                            $valFijo = $data['tecnico']->getDeduccionFija($col);
+                            $valInicial = old($col, $valFijo > 0 ? (int)$valFijo : 0);
+                        @endphp
                         <div class="row g-1 align-items-center mb-1">
-                            <label class="col-6 form-label small mb-0">{{ $label }}</label>
+                            <label class="col-6 form-label small mb-0 d-flex align-items-center gap-1">
+                                {{ $label }}
+                                @if($valFijo > 0)
+                                    <span class="badge bg-secondary-lt text-muted" style="font-size:0.65rem;" title="Monto fijo predeterminado">fijo</span>
+                                @endif
+                            </label>
                             <div class="col-6">
                                 <div class="input-group input-group-sm">
                                     <span class="input-group-text">$</span>
                                     <input type="number" name="{{ $col }}" class="form-control text-end inp-ded"
-                                           min="0" step="1" value="{{ old($col, 0) }}">
+                                           min="0" step="1" value="{{ $valInicial }}">
                                 </div>
                             </div>
                         </div>
@@ -419,6 +434,41 @@
             </div>
         </div>
 
+    </div>
+</div>
+{{-- Modal Configurar Deducciones Fijas del Técnico --}}
+<div class="modal fade" id="modal-ded-fijas" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <form method="POST" action="{{ route('liquidacion.deducciones-fijas', $data['tecnico']) }}" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title">Deducciones Fijas — {{ $data['tecnico']->nombre }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted small mb-3">
+                    Define los montos que aparecerán precargados por defecto en cada pago de este técnico (ej. Seguro de vida, Seguridad social, Recordar, Ahorro 2).
+                </p>
+                <div class="row g-2">
+                    @foreach(\App\Models\PagoTecnico::DEDUCCIONES as $col => $label)
+                    <div class="col-12 col-sm-6">
+                        <label class="form-label small mb-1">{{ $label }}</label>
+                        <div class="input-group input-group-sm">
+                            <span class="input-group-text">$</span>
+                            <input type="number" name="{{ $col }}" class="form-control text-end"
+                                   min="0" step="1"
+                                   value="{{ $data['tecnico']->getDeduccionFija($col) > 0 ? (int)$data['tecnico']->getDeduccionFija($col) : '' }}"
+                                   placeholder="0">
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-primary btn-sm">Guardar Fijos</button>
+            </div>
+        </form>
     </div>
 </div>
 @endsection

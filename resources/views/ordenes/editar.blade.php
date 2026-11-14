@@ -39,9 +39,9 @@
                         </select>
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-label">Modelo</label>
+                        <label class="form-label">Línea</label>
                         <select name="id_modelo" id="select-modelo" class="form-select">
-                            <option value="">Sin modelo específico</option>
+                            <option value="">Sin línea específica</option>
                             @foreach($modelos as $modelo)
                             <option value="{{ $modelo->id }}"
                                 {{ old('id_modelo', $orden->vehiculo->id_modelo) == $modelo->id ? 'selected' : '' }}>
@@ -56,7 +56,7 @@
                                value="{{ old('color', $orden->vehiculo->color) }}" placeholder="Blanco">
                     </div>
                     <div class="col-6 col-md-2">
-                        <label class="form-label">Año</label>
+                        <label class="form-label">Modelo</label>
                         <input type="number" name="anio" class="form-control"
                                value="{{ old('anio', $orden->vehiculo->anio) }}"
                                min="1980" max="{{ date('Y') + 1 }}">
@@ -241,12 +241,12 @@ document.getElementById('select-marca').addEventListener('change', function () {
 
 function cargarModelos(idMarca, idModeloSeleccionado) {
     const sel = document.getElementById('select-modelo');
-    if (!idMarca) { sel.innerHTML = '<option value="">Sin modelo específico</option>'; return; }
+    if (!idMarca) { sel.innerHTML = '<option value="">Sin línea específica</option>'; return; }
     sel.innerHTML = '<option value="">Cargando...</option>';
     fetch(`${MODELOS_URL}?id_marca=${idMarca}`)
         .then(r => r.json())
         .then(data => {
-            sel.innerHTML = '<option value="">Sin modelo específico</option>';
+            sel.innerHTML = '<option value="">Sin línea específica</option>';
             data.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.id;

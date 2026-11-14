@@ -170,6 +170,27 @@ class LiquidacionController extends Controller
         return back()->with('success', 'Pago registrado correctamente.');
     }
 
+    public function guardarDeduccionesFijas(Request $request, Tecnico $tecnico)
+    {
+        $reglas = [];
+        foreach (array_keys(PagoTecnico::DEDUCCIONES) as $col) {
+            $reglas[$col] = 'nullable|numeric|min:0';
+        }
+        $request->validate($reglas);
+
+        $fijas = [];
+        foreach (PagoTecnico::DEDUCCIONES as $col => $label) {
+            $val = (float) $request->input($col, 0);
+            if ($val > 0) {
+                $fijas[$col] = $val;
+            }
+        }
+
+        $tecnico->update(['deducciones_fijas' => $fijas]);
+
+        return back()->with('success', "Deducciones fijas de {$tecnico->nombre} actualizadas.");
+    }
+
     // PDF recibo de un pago individual
     public function pagoReciboPdf(PagoTecnico $pago)
     {

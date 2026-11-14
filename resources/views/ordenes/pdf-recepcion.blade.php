@@ -80,7 +80,7 @@
                 <span class="value">{{ trim(($v->marca?->nombre ?? '') . ' ' . ($v->modelo?->nombre ?? '')) ?: '—' }}</span>
             </div>
             <div class="info-row"><span class="label">Color</span><br><span class="value">{{ $v->color ?? '—' }}</span></div>
-            <div class="info-row"><span class="label">Año</span><br><span class="value">{{ $v->anio ?? '—' }}</span></div>
+            <div class="info-row"><span class="label">Modelo</span><br><span class="value">{{ $v->anio ?? '—' }}</span></div>
             <div class="info-row"><span class="label">KM ingreso</span><br><span class="value">{{ number_format($orden->km_ingreso, 0, ',', '.') }}</span></div>
             <div class="info-row"><span class="label">Combustible</span><br><span class="value">{{ $orden->nivel_combustible }}/10</span></div>
         </div>

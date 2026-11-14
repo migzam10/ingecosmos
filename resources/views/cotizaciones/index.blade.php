@@ -6,7 +6,7 @@
 
 @section('page_actions')
 <a href="{{ route('cotizaciones.previa.create') }}" class="btn btn-warning btn-sm">
-    + Cotización Previa <span class="text-dark-50 ms-1 small">(sin OT)</span>
+    + Cotización <span class="text-dark-50 ms-1 small">(sin OT)</span>
 </a>
 @endsection
 
@@ -129,7 +129,7 @@
                     </td>
                     <td class="small">{{ $cot->ot->empresaCliente?->nombre }}</td>
                     @else
-                    <td><span class="badge bg-warning-lt">Previa</span></td>
+                    <td><span class="badge bg-warning-lt">Sin OT</span></td>
                     <td>
                         @if($cot->placa_previa)
                         <span class="badge bg-blue-lt">{{ $cot->placa_previa }}</span>

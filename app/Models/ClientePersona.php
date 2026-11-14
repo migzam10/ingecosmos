@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ClientePersona extends Model
 {
     protected $table = 'clientes_persona';
-    protected $fillable = ['nombre', 'cedula', 'telefono', 'email', 'direccion', 'fecha_cumpleanos'];
+    protected $fillable = ['nombre', 'cedula', 'telefono', 'email', 'direccion', 'ciudad', 'fecha_cumpleanos'];
 
     protected function casts(): array
     {

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', isset($cotizacion) ? 'Editar Cotización Previa #' . $cotizacion->numero_cot : 'Cotización Previa (sin OT)')
-@section('page_title', isset($cotizacion) ? 'Editar Cotización Previa #' . $cotizacion->numero_cot : 'Nueva Cotización Previa')
+@section('title', isset($cotizacion) ? 'Editar Cotización #' . $cotizacion->numero_cot : 'Cotización (sin OT)')
+@section('page_title', isset($cotizacion) ? 'Editar Cotización #' . $cotizacion->numero_cot : 'Nueva Cotización (sin OT)')
 @section('breadcrumb', 'Cotizaciones')
 
 @section('page_actions')
@@ -35,7 +35,7 @@
             <div class="card-header"><h3 class="card-title">Datos del Vehículo</h3></div>
             <div class="card-body">
                 <div class="row g-2">
-                    <div class="col-6 col-md-3">
+                    <div class="col-6 col-md-2">
                         <label class="form-label">Placa <span class="text-danger">*</span></label>
                         <input type="text" name="placa_previa" id="inp-placa-previa"
                                class="form-control text-uppercase @error('placa_previa') is-invalid @enderror"
@@ -57,12 +57,19 @@
                         </select>
                     </div>
                     <div class="col-6 col-md-3">
-                        <label class="form-label">Modelo</label>
+                        <label class="form-label">Línea</label>
                         <select name="id_modelo_previa" id="sel-modelo" class="form-select">
                             <option value="">Seleccionar...</option>
                         </select>
                     </div>
-                    <div class="col-6 col-md-3">
+                    <div class="col-6 col-md-2">
+                        <label class="form-label">Modelo</label>
+                        <input type="number" name="anio_previa" id="inp-anio-previa" min="1900" max="2100" step="1"
+                               class="form-control @error('anio_previa') is-invalid @enderror"
+                               value="{{ old('anio_previa', $cotizacion->anio_previa ?? '') }}" placeholder="Año...">
+                        @error('anio_previa')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                    <div class="col-6 col-md-2">
                         <label class="form-label">Kilometraje</label>
                         <div class="input-group">
                             <input type="number" name="km_previa" min="0" step="1"
@@ -105,6 +112,20 @@
                         <label class="form-label">Teléfono</label>
                         <input type="text" name="telefono_cliente" id="inp-telefono-cli" class="form-control"
                                value="{{ old('telefono_cliente', $cotizacion->clientePrevia->telefono ?? '') }}">
+                    </div>
+                </div>
+                <div class="row g-2 mt-1">
+                    <div class="col-12 col-md-8">
+                        <label class="form-label">Dirección</label>
+                        <input type="text" name="direccion_cliente" id="inp-direccion-cli" class="form-control"
+                               value="{{ old('direccion_cliente', $cotizacion->clientePrevia->direccion ?? '') }}"
+                               placeholder="Dirección del cliente...">
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <label class="form-label">Ciudad</label>
+                        <input type="text" name="ciudad_cliente" id="inp-ciudad-cli" class="form-control"
+                               value="{{ old('ciudad_cliente', $cotizacion->clientePrevia->ciudad ?? 'BARRANQUILLA') }}"
+                               placeholder="Ciudad...">
                     </div>
                 </div>
             </div>
@@ -226,7 +247,7 @@
     <div class="col-12 col-xl-4">
         <div class="card mb-3 sticky-top" style="top: 1rem;">
             <div class="card-header bg-warning text-dark">
-                <h3 class="card-title text-dark">Cotización Previa</h3>
+                <h3 class="card-title text-dark">Cotización (sin OT)</h3>
             </div>
             <div class="card-body">
                 <div class="row g-2 mb-3">
@@ -296,8 +317,8 @@
                 </table>
             </div>
             <div class="card-footer">
-                <button type="submit" class="btn btn-warning w-100 btn-lg" data-confirm="¿Guardar cotización previa?">
-                    Guardar Cotización Previa
+                <button type="submit" class="btn btn-warning w-100 btn-lg" data-confirm="¿Guardar cotización?">
+                    Guardar Cotización
                 </button>
             </div>
         </div>
@@ -576,9 +597,12 @@ document.getElementById('inp-placa-previa').addEventListener('input', function (
                 if (!d.encontrado) { hint.textContent = 'Placa nueva'; hint.className = 'form-hint small text-muted'; return; }
                 hint.textContent = '✓ Vehículo encontrado'; hint.className = 'form-hint small text-success';
                 if (d.id_marca) { document.getElementById('sel-marca').value = d.id_marca; cargarModelosSel(d.id_marca, d.id_modelo); }
-                if (d.nombre_cliente)   document.getElementById('inp-nombre-cli').value = d.nombre_cliente;
-                if (d.cedula_cliente)   document.getElementById('inp-cedula-cli').value = d.cedula_cliente;
-                if (d.telefono_cliente) document.getElementById('inp-telefono-cli').value = d.telefono_cliente;
+                if (d.anio)             document.getElementById('inp-anio-previa').value = d.anio;
+                if (d.nombre_cliente)    document.getElementById('inp-nombre-cli').value = d.nombre_cliente;
+                if (d.cedula_cliente)    document.getElementById('inp-cedula-cli').value = d.cedula_cliente;
+                if (d.telefono_cliente)  document.getElementById('inp-telefono-cli').value = d.telefono_cliente;
+                if (d.direccion_cliente) document.getElementById('inp-direccion-cli').value = d.direccion_cliente;
+                if (d.ciudad_cliente)    document.getElementById('inp-ciudad-cli').value = d.ciudad_cliente;
             });
     }, 350);
 });
@@ -594,8 +618,10 @@ document.getElementById('inp-cedula-cli').addEventListener('input', function () 
             .then(r => r.json()).then(d => {
                 if (!d.encontrado) { hint.textContent = 'Cliente nuevo'; hint.className = 'form-hint small text-muted'; return; }
                 hint.textContent = '✓ Cliente encontrado'; hint.className = 'form-hint small text-success';
-                if (d.nombre_cliente)   document.getElementById('inp-nombre-cli').value = d.nombre_cliente;
-                if (d.telefono_cliente) document.getElementById('inp-telefono-cli').value = d.telefono_cliente;
+                if (d.nombre_cliente)    document.getElementById('inp-nombre-cli').value = d.nombre_cliente;
+                if (d.telefono_cliente)  document.getElementById('inp-telefono-cli').value = d.telefono_cliente;
+                if (d.direccion_cliente) document.getElementById('inp-direccion-cli').value = d.direccion_cliente;
+                if (d.ciudad_cliente)    document.getElementById('inp-ciudad-cli').value = d.ciudad_cliente;
             });
     }, 350);
 });

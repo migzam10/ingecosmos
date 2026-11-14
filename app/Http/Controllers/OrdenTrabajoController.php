@@ -419,6 +419,7 @@ class OrdenTrabajoController extends Controller
             'telefono_cliente'         => $vehiculo->clientePersona?->telefono,
             'email_cliente'            => $vehiculo->clientePersona?->email,
             'direccion_cliente'        => $vehiculo->clientePersona?->direccion,
+            'ciudad_cliente'           => $vehiculo->clientePersona?->ciudad,
             'fecha_cumpleanos_cliente' => $vehiculo->clientePersona?->fecha_cumpleanos?->format('Y-m-d'),
         ]);
     }
@@ -440,6 +441,7 @@ class OrdenTrabajoController extends Controller
             'telefono_cliente'         => $cliente->telefono,
             'email_cliente'            => $cliente->email,
             'direccion_cliente'        => $cliente->direccion,
+            'ciudad_cliente'           => $cliente->ciudad,
             'fecha_cumpleanos_cliente' => $cliente->fecha_cumpleanos?->format('Y-m-d'),
         ]);
     }

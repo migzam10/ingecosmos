@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'Marcas y Modelos')
-@section('page_title', 'Marcas y Modelos de Vehículos')
+@section('title', 'Marcas y Líneas')
+@section('page_title', 'Marcas y Líneas de Vehículos')
 @section('breadcrumb', 'Administración')
 
 @section('content')
@@ -22,7 +22,7 @@
                         <thead>
                             <tr>
                                 <th>Marca</th>
-                                <th class="text-center" style="width:80px">Modelos</th>
+                                <th class="text-center" style="width:80px">Líneas</th>
                                 <th class="text-center" style="width:80px">Vehículos</th>
                                 <th style="width:120px"></th>
                             </tr>
@@ -74,7 +74,7 @@
                                                     title="Editar"><x-icon name="pencil" /></button>
                                             @if(!$modelo->vehiculos_count && !$modelo->catalogo_mo_count)
                                             <form method="POST" action="{{ route('admin.modelos.destroy', $modelo) }}"
-                                                  data-confirm="¿Eliminar el modelo {{ $modelo->nombre }}?"
+                                                  data-confirm="¿Eliminar la línea {{ $modelo->nombre }}?"
                                                   class="d-inline">
                                                 @csrf @method('DELETE')
                                                 <button class="btn btn-xs btn-ghost-danger p-0" title="Eliminar"><x-icon name="x" /></button>
@@ -84,14 +84,14 @@
                                         @endforeach
                                     </div>
                                     @else
-                                    <span class="text-muted small">Sin modelos registrados.</span>
+                                    <span class="text-muted small">Sin líneas registradas.</span>
                                     @endif
                                     {{-- Agregar modelo inline --}}
                                     <form method="POST" action="{{ route('admin.modelos.store', $marca) }}"
                                           class="d-flex gap-2 align-items-center mt-1">
                                         @csrf
                                         <input type="text" name="nombre" class="form-control form-control-sm"
-                                               placeholder="Nuevo modelo..." maxlength="80" required
+                                               placeholder="Nueva línea..." maxlength="80" required
                                                style="max-width:200px">
                                         <button type="submit" class="btn btn-sm btn-primary">+ Agregar</button>
                                     </form>
@@ -153,7 +153,7 @@
         {{-- Editar modelo (se muestra al dar clic en editar modelo) --}}
         <div class="card d-none" id="card-editar-modelo">
             <div class="card-header">
-                <h3 class="card-title">Editar Modelo</h3>
+                <h3 class="card-title">Editar Línea</h3>
                 <div class="card-options">
                     <button class="btn btn-sm btn-ghost-secondary" onclick="cancelarEditarModelo()"><x-icon name="x" /></button>
                 </div>
@@ -162,7 +162,7 @@
                 <form method="POST" id="form-editar-modelo">
                     @csrf @method('PUT')
                     <div class="mb-3">
-                        <label class="form-label small">Nombre del modelo</label>
+                        <label class="form-label small">Nombre de la línea</label>
                         <input type="text" name="nombre" id="input-editar-modelo"
                                class="form-control" maxlength="80" required>
                     </div>

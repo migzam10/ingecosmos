@@ -51,9 +51,9 @@
                         @error('id_marca')<div class="invalid-feedback">{{ $message }}</div>@enderror
                     </div>
                     <div class="col-12 col-md-4">
-                        <label class="form-label">Modelo</label>
+                        <label class="form-label">Línea</label>
                         <select name="id_modelo" id="select-modelo" class="form-select">
-                            <option value="">Seleccionar modelo...</option>
+                            <option value="">Seleccionar línea...</option>
                         </select>
                     </div>
                     <div class="col-6 col-md-2">
@@ -62,7 +62,7 @@
                                value="{{ old('color') }}" placeholder="Blanco">
                     </div>
                     <div class="col-6 col-md-2">
-                        <label class="form-label">Año</label>
+                        <label class="form-label">Modelo</label>
                         <input type="number" name="anio" id="input-anio" class="form-control"
                                value="{{ old('anio') }}" min="1980" max="{{ date('Y') + 1 }}" placeholder="{{ date('Y') }}">
                     </div>
@@ -385,14 +385,14 @@ function cargarModelos(idMarca, idModeloSeleccionado) {
     sel.innerHTML = '<option value="">Cargando...</option>';
 
     if (!idMarca) {
-        sel.innerHTML = '<option value="">Seleccionar modelo...</option>';
+        sel.innerHTML = '<option value="">Seleccionar línea...</option>';
         return;
     }
 
     fetch(`${MODELOS_URL}?id_marca=${idMarca}`)
         .then(r => r.json())
         .then(data => {
-            sel.innerHTML = '<option value="">Sin modelo específico</option>';
+            sel.innerHTML = '<option value="">Sin línea específica</option>';
             data.forEach(m => {
                 const opt = document.createElement('option');
                 opt.value = m.id;

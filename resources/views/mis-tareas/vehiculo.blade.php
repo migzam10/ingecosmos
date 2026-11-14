@@ -26,11 +26,11 @@
                     </dd>
                     <dt class="col-5 small">Marca</dt>
                     <dd class="col-7 small">{{ $ot->vehiculo->marca->nombre }}</dd>
-                    <dt class="col-5 small">Modelo</dt>
+                    <dt class="col-5 small">Línea</dt>
                     <dd class="col-7 small">{{ $ot->vehiculo->modelo?->nombre ?? '—' }}</dd>
                     <dt class="col-5 small">Color</dt>
                     <dd class="col-7 small">{{ $ot->vehiculo->color ?? '—' }}</dd>
-                    <dt class="col-5 small">Año</dt>
+                    <dt class="col-5 small">Modelo</dt>
                     <dd class="col-7 small">{{ $ot->vehiculo->anio ?? '—' }}</dd>
                     <dt class="col-5 small">Km ingreso</dt>
                     <dd class="col-7 small">{{ number_format($ot->km_ingreso) }} km</dd>

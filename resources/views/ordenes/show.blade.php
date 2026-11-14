@@ -190,7 +190,7 @@
                         <td>{{ $orden->vehiculo->marca->nombre }}</td>
                     </tr>
                     <tr>
-                        <td class="text-muted">Modelo</td>
+                        <td class="text-muted">Línea</td>
                         <td>{{ $orden->vehiculo->modelo?->nombre ?? '—' }}</td>
                     </tr>
                     <tr>
@@ -198,7 +198,7 @@
                         <td>{{ $orden->vehiculo->color ?? '—' }}</td>
                     </tr>
                     <tr>
-                        <td class="text-muted">Año</td>
+                        <td class="text-muted">Modelo</td>
                         <td>{{ $orden->vehiculo->anio ?? '—' }}</td>
                     </tr>
                     <tr>

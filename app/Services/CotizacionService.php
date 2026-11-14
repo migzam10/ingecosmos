@@ -121,6 +121,7 @@ class CotizacionService
                 'descripcion_previa'  => $data['descripcion_previa'] ?? null,
                 'id_marca_previa'     => $data['id_marca_previa']    ?? null,
                 'id_modelo_previa'    => $data['id_modelo_previa']   ?? null,
+                'anio_previa'         => !empty($data['anio_previa']) ? (int) $data['anio_previa'] : null,
                 'subtotal_mo'         => $subtotalMo,
                 'subtotal_rto'        => $subtotalRto,
                 'subtotal_insumos'    => $subtotalInsumos,
@@ -195,6 +196,7 @@ class CotizacionService
                 $updateCot['km_previa']          = $data['km_previa']          ?? null;
                 $updateCot['id_marca_previa']    = $data['id_marca_previa']    ?? null;
                 $updateCot['id_modelo_previa']   = $data['id_modelo_previa']   ?? null;
+                $updateCot['anio_previa']        = !empty($data['anio_previa']) ? (int) $data['anio_previa'] : null;
                 $updateCot['descripcion_previa'] = $data['descripcion_previa'] ?? null;
 
                 if (!empty($data['nombre_cliente'])) {
@@ -417,12 +419,20 @@ class CotizacionService
             return $this->buscarOCrearCliente($data);
         }
 
-        $cliente->update([
+        $updateFields = [
             'nombre'   => trim($data['nombre_cliente']),
             'cedula'   => $data['cedula_cliente']   ?? $cliente->cedula,
             'telefono' => $data['telefono_cliente'] ?? $cliente->telefono,
             'email'    => $data['email_cliente']    ?? $cliente->email,
-        ]);
+        ];
+        if (array_key_exists('direccion_cliente', $data)) {
+            $updateFields['direccion'] = $data['direccion_cliente'];
+        }
+        if (array_key_exists('ciudad_cliente', $data)) {
+            $updateFields['ciudad'] = $data['ciudad_cliente'];
+        }
+
+        $cliente->update($updateFields);
 
         return $cliente->id;
     }
@@ -433,14 +443,28 @@ class CotizacionService
 
         if (!empty($data['cedula_cliente'])) {
             $cliente = \App\Models\ClientePersona::where('cedula', $data['cedula_cliente'])->first();
-            if ($cliente) return $cliente->id;
+            if ($cliente) {
+                $updateFields = [];
+                if (!empty($data['direccion_cliente']) && empty($cliente->direccion)) {
+                    $updateFields['direccion'] = $data['direccion_cliente'];
+                }
+                if (!empty($data['ciudad_cliente']) && empty($cliente->ciudad)) {
+                    $updateFields['ciudad'] = $data['ciudad_cliente'];
+                }
+                if (!empty($updateFields)) {
+                    $cliente->update($updateFields);
+                }
+                return $cliente->id;
+            }
         }
 
         return \App\Models\ClientePersona::create([
-            'nombre'   => trim($data['nombre_cliente']),
-            'cedula'   => $data['cedula_cliente']  ?? null,
-            'telefono' => $data['telefono_cliente'] ?? null,
-            'email'    => $data['email_cliente']    ?? null,
+            'nombre'    => trim($data['nombre_cliente']),
+            'cedula'    => $data['cedula_cliente']    ?? null,
+            'telefono'  => $data['telefono_cliente']  ?? null,
+            'email'     => $data['email_cliente']     ?? null,
+            'direccion' => $data['direccion_cliente'] ?? null,
+            'ciudad'    => $data['ciudad_cliente']    ?? null,
         ])->id;
     }
 }

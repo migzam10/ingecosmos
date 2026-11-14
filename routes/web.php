@@ -154,6 +154,7 @@ Route::middleware(['auth', 'role:ADMIN,COORDINADOR'])->group(function () {
     Route::get('/liquidacion/planilla/pdf',              [LiquidacionController::class, 'planillaPdf'])->name('liquidacion.planilla.pdf');
     Route::get('/liquidacion/{tecnico}',                 [LiquidacionController::class, 'show'])->name('liquidacion.show');
     Route::post('/liquidacion/{tecnico}/avance',         [LiquidacionController::class, 'registrarAvance'])->name('liquidacion.avance');
+    Route::post('/liquidacion/{tecnico}/deducciones-fijas',[LiquidacionController::class, 'guardarDeduccionesFijas'])->name('liquidacion.deducciones-fijas');
     Route::get('/liquidacion/{tecnico}/pdf',             [LiquidacionController::class, 'pdf'])->name('liquidacion.pdf');
     Route::delete('/pagos/{pago}',                       [LiquidacionController::class, 'eliminarPago'])->name('pagos.eliminar');
 });
