@@ -124,7 +124,7 @@
                     <div class="col-12 col-md-4">
                         <label class="form-label">Ciudad</label>
                         <input type="text" name="ciudad_cliente" id="inp-ciudad-cli" class="form-control"
-                               value="{{ old('ciudad_cliente', $cotizacion->clientePrevia->ciudad ?? 'BARRANQUILLA') }}"
+                               value="{{ old('ciudad_cliente', $cotizacion->clientePrevia?->ciudad ?? '') }}"
                                placeholder="Ciudad...">
                     </div>
                 </div>

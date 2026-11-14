@@ -126,7 +126,9 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
                         @if($cotizacion->clientePrevia->direccion)
                         <div class="small"><span class="text-muted">Dirección:</span> {{ $cotizacion->clientePrevia->direccion }}</div>
                         @endif
-                        <div class="small"><span class="text-muted">Ciudad:</span> {{ $cotizacion->clientePrevia->ciudad ?: (\App\Models\ConfiguracionEmpresa::first()?->ciudad ?? 'BARRANQUILLA') }}</div>
+                        @if($cotizacion->clientePrevia?->ciudad)
+                        <div class="small"><span class="text-muted">Ciudad:</span> {{ $cotizacion->clientePrevia->ciudad }}</div>
+                        @endif
                     </div>
                     @endif
                     @if($cotizacion->descripcion_previa)
@@ -359,7 +361,9 @@ Cotización #{{ $cotizacion->numero_cot }} {!! $badgeEstadoCot !!}
                 @if($cotizacion->ot->clientePersona->direccion)
                 <div><span class="text-muted">Dirección:</span> {{ $cotizacion->ot->clientePersona->direccion }}</div>
                 @endif
-                <div><span class="text-muted">Ciudad:</span> {{ $cotizacion->ot->clientePersona->ciudad ?: (\App\Models\ConfiguracionEmpresa::first()?->ciudad ?? 'BARRANQUILLA') }}</div>
+                @if($cotizacion->ot->clientePersona?->ciudad)
+                <div><span class="text-muted">Ciudad:</span> {{ $cotizacion->ot->clientePersona->ciudad }}</div>
+                @endif
                 @endif
             </div>
         </div>

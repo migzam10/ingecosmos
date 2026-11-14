@@ -94,14 +94,16 @@
                 <span class="value">{{ $cotizacion->clientePrevia->telefono }}</span>
             </div>
             @endif
-            @if($cotizacion->clientePrevia->direccion)
+            @if($cotizacion->clientePrevia?->direccion)
             <div class="info-row"><span class="label">Dirección</span><br>
                 <span class="value">{{ $cotizacion->clientePrevia->direccion }}</span>
             </div>
             @endif
+            @if($cotizacion->clientePrevia?->ciudad)
             <div class="info-row"><span class="label">Ciudad</span><br>
-                <span class="value">{{ $cotizacion->clientePrevia->ciudad ?: ($config->ciudad ?? 'BARRANQUILLA') }}</span>
+                <span class="value">{{ $cotizacion->clientePrevia->ciudad }}</span>
             </div>
+            @endif
             @endif
             @if($cotizacion->descripcion_previa)
             <div class="info-row"><span class="label">Descripción</span><br>
@@ -162,9 +164,11 @@
                 <span class="value">{{ $cotizacion->ot->clientePersona->direccion }}</span>
             </div>
             @endif
+            @if($cotizacion->ot->clientePersona?->ciudad)
             <div class="info-row"><span class="label">Ciudad</span><br>
-                <span class="value">{{ $cotizacion->clientePrevia->ciudad ?: ($config->ciudad ?? 'BARRANQUILLA') }}</span>
+                <span class="value">{{ $cotizacion->ot->clientePersona->ciudad }}</span>
             </div>
+            @endif
             @endif
             @if($cotizacion->ot->referencia_forc)
             <div class="info-row"><span class="label">FORC</span><br>
